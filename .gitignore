@@ -1,0 +1,112 @@
+# =====================================================================
+# .NET / C# build output
+# =====================================================================
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+[Xx]64/
+[Xx]86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Bb]ld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.userprefs
+*.svclog
+*.binlog
+TestResults/
+[Tt]est[Rr]esults/
+[Bb]enchmark[Dd]otNet.Artifacts/
+
+# =====================================================================
+# Visual Studio / Rider / VS Code
+# =====================================================================
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.ntvs*
+*.njsproj
+*.sln.iml
+*.vsidx
+*.lock.json
+
+# =====================================================================
+# NuGet
+# =====================================================================
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# =====================================================================
+# MSBuild / Roslyn intermediates
+# =====================================================================
+*.tlog
+*.ilk
+*.meta
+*.iobj
+*.ipdb
+*.manifest
+*.VisualState.xml
+*.swp
+*.res
+_TeamCity*
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# =====================================================================
+# App runtime artifacts
+# =====================================================================
+# GMap.NET tile cache — large binary, regenerates at runtime
+GMap.NET/
+**/GMap.NET/
+
+# Local secrets (competition server credentials, API keys)
+appsettings.Local.json
+appsettings.*.Local.json
+*.secrets.json
+secrets.*.json
+.env
+.env.*
+
+# =====================================================================
+# Local tooling (Claude Code, AI agents)
+# =====================================================================
+.claude/
+
+# =====================================================================
+# OS / misc
+# =====================================================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.swp
+*~
+
+# =====================================================================
+# Docs / generated reports
+# =====================================================================
+_site/
+site/
+docs/_build/
+coverage/
+*.coverage
+*.coveragexml

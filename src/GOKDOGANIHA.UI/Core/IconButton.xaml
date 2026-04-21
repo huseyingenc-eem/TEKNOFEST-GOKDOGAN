@@ -1,0 +1,105 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Core.IconButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             mc:Ignorable="d"
+             x:Name="Root">
+
+    <UserControl.Resources>
+        <Style x:Key="IconButtonBase" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource TacticalTextPrimary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border x:Name="Bg"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="16">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black"
+                                                      Direction="270"
+                                                      ShadowDepth="5"
+                                                      BlurRadius="20"
+                                                      Opacity="0.55" />
+                                </Border.Effect>
+                            </Border>
+                            <!-- Inner glass highlight (top-edge light reflection) -->
+                            <Border CornerRadius="15"
+                                    Margin="1"
+                                    IsHitTestVisible="False"
+                                    BorderThickness="1,1,1,0">
+                                <Border.BorderBrush>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#45FFFFFF" Offset="0.0" />
+                                        <GradientStop Color="#00FFFFFF" Offset="1.0" />
+                                    </LinearGradientBrush>
+                                </Border.BorderBrush>
+                            </Border>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.82" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.65" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.35" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Button Command="{Binding Command, ElementName=Root}"
+            CommandParameter="{Binding CommandParameter, ElementName=Root}"
+            Width="{Binding Size, ElementName=Root}"
+            Height="{Binding Size, ElementName=Root}">
+        <Button.Style>
+            <Style TargetType="Button" BasedOn="{StaticResource IconButtonBase}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Variant, ElementName=Root}" Value="Primary">
+                        <Setter Property="Background" Value="{StaticResource TacticalSurfaceHi}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Variant, ElementName=Root}" Value="Ok">
+                        <Setter Property="Background" Value="#1F7CB342" />
+                        <Setter Property="BorderBrush" Value="{StaticResource TacticalOk}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Variant, ElementName=Root}" Value="Danger">
+                        <Setter Property="Background" Value="#1FFF5252" />
+                        <Setter Property="BorderBrush" Value="{StaticResource TacticalCritical}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Variant, ElementName=Root}" Value="Warn">
+                        <Setter Property="Background" Value="#1FFFB300" />
+                        <Setter Property="BorderBrush" Value="{StaticResource TacticalWarn}" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Button.Style>
+
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <materialIcons:MaterialIcon Kind="{Binding IconKind, ElementName=Root}"
+                                        Width="28" Height="28"
+                                        HorizontalAlignment="Center"
+                                        Foreground="{Binding IconBrush, ElementName=Root}" />
+            <TextBlock Text="{Binding Label, ElementName=Root}"
+                       FontSize="10" FontWeight="SemiBold"
+                       FontFamily="Consolas"
+                       Foreground="{StaticResource TacticalTextPrimary}"
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+    </Button>
+</UserControl>

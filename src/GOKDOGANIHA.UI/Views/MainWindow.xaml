@@ -1,0 +1,87 @@
+<Window x:Class="GOKDOGANIHA.UI.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:vm="clr-namespace:GOKDOGANIHA.UI.ViewModels"
+        xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+        xmlns:shell="clr-namespace:GOKDOGANIHA.UI.Controls.Shell"
+        xmlns:telemetry="clr-namespace:GOKDOGANIHA.UI.Controls.Telemetry"
+        xmlns:map="clr-namespace:GOKDOGANIHA.UI.Controls.Map"
+        xmlns:video="clr-namespace:GOKDOGANIHA.UI.Controls.Video"
+        xmlns:alerts="clr-namespace:GOKDOGANIHA.UI.Controls.Alerts"
+        mc:Ignorable="d"
+        Title="GÖKDOĞAN — Yer Kontrol İstasyonu"
+        Height="960" Width="1680"
+        MinHeight="780" MinWidth="1280"
+        Background="{StaticResource TacticalBgDeep}"
+        TextElement.Foreground="{StaticResource TacticalTextPrimary}"
+        TextElement.FontFamily="{materialDesign:MaterialDesignFont}"
+        FontSize="13"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+
+    <!-- Single grid: Map is the base; every other panel overlays it. -->
+    <Grid>
+        <!-- BASE: Map fills everything -->
+        <map:MapPanel DataContext="{Binding MapVm}" />
+
+        <!-- TOP overlay: status bar -->
+        <shell:TopBar VerticalAlignment="Top" />
+
+        <!-- TOP-LEFT overlay: Telemetry HUD -->
+        <telemetry:TelemetryPanel
+            VerticalAlignment="Top" HorizontalAlignment="Left"
+            Width="300"
+            Margin="16,78,0,0" />
+
+        <!-- TOP-RIGHT overlay: Mission video -->
+        <video:VideoPanel
+            VerticalAlignment="Top" HorizontalAlignment="Right"
+            Width="400" Height="280"
+            Margin="0,78,16,0" />
+
+        <!-- BOTTOM-CENTER overlay: System logs -->
+        <alerts:AlertConsole
+            VerticalAlignment="Bottom" HorizontalAlignment="Center"
+            Width="640" Height="170"
+            Margin="0,0,0,24" />
+
+        <!-- BOTTOM-LEFT overlay: Flight dial (fans up-right) -->
+        <!-- Negative margin pushes the RootGrid so the centered trigger sits near the corner.
+             RootGrid diameter = 2*Radius + ItemSize + 16 = 2*170 + 60 + 16 = 416;
+             trigger center is at 208px from each side, so Margin="-148,0,0,-148"
+             places the trigger 60px from the window's bottom-left corner. -->
+        <core:RadialMenu
+            x:Name="FlightDial"
+            VerticalAlignment="Bottom" HorizontalAlignment="Left"
+            Margin="-148,0,0,-148"
+            Radius="170" ItemSize="60"
+            StartAngle="270" SweepAngle="90"
+            TriggerIconKind="AirplaneTakeoff"
+            TriggerIconWhenOpenKind="Close">
+            <core:RadialMenuItem IconKind="ShieldCheck"     Label="ARM"    Variant="Ok"      IconBrush="{StaticResource TacticalOk}" />
+            <core:RadialMenuItem IconKind="Robot"           Label="OTONOM" Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
+            <core:RadialMenuItem IconKind="HomeMapMarker"   Label="RTL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
+            <core:RadialMenuItem IconKind="AirplaneLanding" Label="İNİŞ"   Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
+        </core:RadialMenu>
+
+        <!-- BOTTOM-RIGHT overlay: Attack dial (fans up-left) -->
+        <core:RadialMenu
+            x:Name="AttackDial"
+            VerticalAlignment="Bottom" HorizontalAlignment="Right"
+            Margin="0,0,-148,-148"
+            Radius="170" ItemSize="60"
+            StartAngle="180" SweepAngle="90"
+            TriggerIconKind="TargetAccount"
+            TriggerIconWhenOpenKind="Close">
+            <core:RadialMenuItem IconKind="Crosshairs" Label="KİLİTLE"  Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
+            <core:RadialMenuItem IconKind="Bomb"       Label="KAMİKAZE" Variant="Danger"  IconBrush="{StaticResource TacticalCritical}" />
+            <core:RadialMenuItem IconKind="Cancel"     Label="İPTAL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
+        </core:RadialMenu>
+    </Grid>
+</Window>

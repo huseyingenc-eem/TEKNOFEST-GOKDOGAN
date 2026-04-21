@@ -1,0 +1,35 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.MissionControls.MissionControlCluster"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             mc:Ignorable="d"
+             d:DesignWidth="300" d:DesignHeight="110">
+
+    <Border CornerRadius="18" Padding="12"
+            Background="{StaticResource TacticalOverlay}"
+            BorderBrush="{StaticResource TacticalOverlayBorder}"
+            BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Direction="270"
+                              ShadowDepth="2" BlurRadius="14" Opacity="0.5" />
+        </Border.Effect>
+        <StackPanel Orientation="Horizontal">
+            <core:IconButton IconKind="Crosshairs"
+                             Label="KİLİTLE"
+                             Variant="Primary"
+                             IconBrush="{StaticResource TacticalAccent}" />
+            <core:IconButton IconKind="Bomb"
+                             Label="KAMİKAZE"
+                             Variant="Danger"
+                             IconBrush="{StaticResource TacticalCritical}"
+                             Margin="8,0,0,0" />
+            <core:IconButton IconKind="Cancel"
+                             Label="İPTAL"
+                             Variant="Warn"
+                             IconBrush="{StaticResource TacticalWarn}"
+                             Margin="8,0,0,0" />
+        </StackPanel>
+    </Border>
+</UserControl>

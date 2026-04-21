@@ -1,0 +1,80 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Shell.TopBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             mc:Ignorable="d"
+             d:DesignWidth="1600" d:DesignHeight="44">
+
+    <Border Background="{StaticResource TacticalGlass}"
+            BorderBrush="{StaticResource TacticalOverlayBorder}"
+            BorderThickness="0,0,0,1"
+            Padding="16,10">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Direction="270"
+                              ShadowDepth="3" BlurRadius="18" Opacity="0.45" />
+        </Border.Effect>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Callsign + Flight mode -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="Airplane"
+                                            Width="22" Height="22"
+                                            Foreground="{StaticResource TacticalAccent}"
+                                            VerticalAlignment="Center" />
+                <TextBlock Text="{Binding CallSign}"
+                           FontSize="16" FontWeight="SemiBold"
+                           Margin="10,0,16,0"
+                           VerticalAlignment="Center" />
+                <core:StatusPill IconKind="Cog"
+                                 IconBrush="{StaticResource TacticalAccent}"
+                                 Label="MOD"
+                                 Value="{Binding FlightMode}" />
+            </StackPanel>
+
+            <!-- Center: Server clock -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="ClockOutline"
+                                            Width="16" Height="16"
+                                            Foreground="{StaticResource TacticalTextSecondary}"
+                                            VerticalAlignment="Center" />
+                <TextBlock Text="SUNUCU SAATİ"
+                           FontSize="10" FontWeight="SemiBold"
+                           Foreground="{StaticResource TacticalTextSecondary}"
+                           Margin="6,0,10,0"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding ServerTime}"
+                           FontFamily="Consolas" FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TacticalTextPrimary}"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Right: Link / API / Battery -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <core:StatusPill IconKind="AccessPoint"
+                                 IconBrush="{StaticResource TacticalOk}"
+                                 Label="LINK"
+                                 Value="{Binding LinkRssi, StringFormat={}{0} dBm}" />
+                <core:StatusPill IconKind="Server"
+                                 IconBrush="{StaticResource TacticalAccent}"
+                                 Label="API"
+                                 Value="{Binding ServerLatencyMs, StringFormat={}{0} ms}"
+                                 Margin="8,0,0,0" />
+                <core:StatusPill IconKind="BatteryHigh"
+                                 IconBrush="{StaticResource TacticalOk}"
+                                 Label="BAT"
+                                 Value="{Binding Battery, StringFormat={}{0}%}"
+                                 Margin="8,0,0,0" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

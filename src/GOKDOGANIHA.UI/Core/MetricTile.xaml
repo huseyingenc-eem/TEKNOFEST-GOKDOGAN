@@ -1,0 +1,23 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Core.MetricTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Name="Root">
+
+    <StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding Label, ElementName=Root}"
+                       FontSize="10" FontFamily="Consolas"
+                       Foreground="{StaticResource TacticalTextSecondary}" />
+            <TextBlock Text="{Binding Unit, ElementName=Root}"
+                       FontSize="10" FontFamily="Consolas"
+                       Foreground="{StaticResource TacticalTextSecondary}"
+                       Margin="4,0,0,0" />
+        </StackPanel>
+        <TextBlock Text="{Binding Value, ElementName=Root}"
+                   FontSize="22" FontWeight="SemiBold" FontFamily="Consolas"
+                   Foreground="{StaticResource TacticalTextPrimary}" />
+    </StackPanel>
+</UserControl>

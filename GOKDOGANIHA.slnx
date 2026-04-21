@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GOKDOGANIHA.Core/GOKDOGANIHA.Core.csproj" />
+    <Project Path="src/GOKDOGANIHA.Tests/GOKDOGANIHA.Tests.csproj" />
+    <Project Path="src/GOKDOGANIHA.UI/GOKDOGANIHA.UI.csproj" />
+  </Folder>
+</Solution>

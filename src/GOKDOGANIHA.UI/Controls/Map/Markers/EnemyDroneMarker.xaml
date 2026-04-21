@@ -1,0 +1,35 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Map.Markers.EnemyDroneMarker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             Width="40" Height="54">
+    <StackPanel>
+        <Grid Width="32" Height="32" HorizontalAlignment="Center"
+              RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+                <RotateTransform x:Name="Heading" Angle="0" />
+            </Grid.RenderTransform>
+            <Ellipse Width="28" Height="28"
+                     Fill="{StaticResource TacticalCritical}"
+                     Opacity="0.25" />
+            <materialIcons:MaterialIcon Kind="AirplaneMarker"
+                                        Width="20" Height="20"
+                                        Foreground="{StaticResource TacticalCritical}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center" />
+        </Grid>
+        <Border Background="{StaticResource TacticalOverlayHi}"
+                BorderBrush="{StaticResource TacticalCritical}"
+                BorderThickness="1"
+                CornerRadius="3"
+                Padding="4,1"
+                HorizontalAlignment="Center"
+                Margin="0,2,0,0">
+            <TextBlock x:Name="TeamLabel"
+                       Text="#0"
+                       FontFamily="Consolas" FontSize="10"
+                       FontWeight="SemiBold"
+                       Foreground="{StaticResource TacticalCritical}" />
+        </Border>
+    </StackPanel>
+</UserControl>

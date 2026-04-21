@@ -1,0 +1,71 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Telemetry.TelemetryPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="520">
+
+    <core:PanelFrame Header="TELEMETRİ" IconKind="GaugeEmpty">
+        <StackPanel>
+            <!-- Speed + Altitude -->
+            <Grid Margin="0,4,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <core:MetricTile Grid.Column="0" Label="HIZ" Unit="(m/s)"
+                                 Value="{Binding Airspeed, StringFormat=F1}" />
+                <core:MetricTile Grid.Column="1" Label="İRTİFA" Unit="(m)"
+                                 Value="{Binding Altitude, StringFormat=F1}" />
+            </Grid>
+
+            <!-- Heading -->
+            <core:MetricTile Label="YÖNELME" Unit="(°)"
+                             Value="{Binding Heading, StringFormat=F0}"
+                             Margin="0,0,0,12" />
+
+            <!-- Pitch + Roll -->
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <core:MetricTile Grid.Column="0" Label="DİKİLME" Unit="(°)"
+                                 Value="{Binding Pitch, StringFormat=F1}" />
+                <core:MetricTile Grid.Column="1" Label="YATIŞ" Unit="(°)"
+                                 Value="{Binding Roll, StringFormat=F1}" />
+            </Grid>
+
+            <Separator Background="{StaticResource TacticalBorder}" Margin="0,6,0,10" />
+
+            <!-- Coordinates -->
+            <TextBlock Text="KONUM" Style="{StaticResource PanelHeader}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="LAT"
+                           Style="{StaticResource MetricLabel}" Margin="0,2,8,2" />
+                <TextBlock Grid.Row="0" Grid.Column="1"
+                           Text="{Binding Latitude, StringFormat=F6}"
+                           FontFamily="Consolas" FontSize="12"
+                           Foreground="{StaticResource TacticalTextPrimary}"
+                           Margin="0,2" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="LON"
+                           Style="{StaticResource MetricLabel}" Margin="0,2,8,2" />
+                <TextBlock Grid.Row="1" Grid.Column="1"
+                           Text="{Binding Longitude, StringFormat=F6}"
+                           FontFamily="Consolas" FontSize="12"
+                           Foreground="{StaticResource TacticalTextPrimary}"
+                           Margin="0,2" />
+            </Grid>
+        </StackPanel>
+    </core:PanelFrame>
+</UserControl>

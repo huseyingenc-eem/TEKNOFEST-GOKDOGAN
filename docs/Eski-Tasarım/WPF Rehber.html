@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>GÖKDOĞAN · WPF XAML Geçiş Rehberi</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { overflow: auto; }
+  .page { max-width: 1100px; margin: 0 auto; padding: 40px 28px 80px; }
+  h1 { font-family: var(--font-display); font-size: 32px; letter-spacing: 0.1em; color: #fff; margin: 0 0 4px; }
+  h1 span { color: var(--accent); }
+  h2 { font-family: var(--font-display); font-size: 18px; letter-spacing: 0.15em; color: var(--accent-bright); margin: 36px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  h3 { font-family: var(--font-display); font-size: 14px; letter-spacing: 0.1em; color: #fff; margin: 20px 0 8px; }
+  p, li { color: #c9d1da; line-height: 1.6; }
+  .lead { color: var(--text-secondary); font-size: 13px; margin-bottom: 28px; }
+  .section { margin-bottom: 8px; }
+  pre {
+    background: #0a0d12; border: 1px solid var(--border-dim); border-left: 2px solid var(--accent);
+    padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12px;
+    line-height: 1.55; color: #d5dae3; margin: 8px 0 14px;
+  }
+  code { font-family: var(--font-mono); font-size: 12px; color: var(--accent-bright); background: rgba(255,140,66,0.06); padding: 1px 5px; border-radius: 2px; }
+  .kw { color: #7dd3fc; } .str { color: #a3e635; } .attr { color: #ffa560; } .tag { color: #f87171; } .com { color: #6a7380; font-style: italic; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--bg-secondary); border: 1px solid var(--border-dim); padding: 14px; }
+  .card h4 { font-family: var(--font-display); color: var(--accent-bright); margin: 0 0 6px; letter-spacing: 0.1em; font-size: 13px; }
+  .back { display: inline-block; margin-bottom: 24px; color: var(--accent-bright); text-decoration: none; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; }
+  .back:hover { color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 12.5px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-dim); }
+  th { color: var(--accent-bright); font-family: var(--font-display); letter-spacing: 0.1em; font-size: 11px; text-transform: uppercase; }
+  td { color: #c9d1da; font-family: var(--font-mono); font-size: 11.5px; }
+  .tag-chip { display: inline-block; padding: 1px 6px; border: 1px solid var(--border); color: var(--accent-bright); font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="GOKDOGAN GCS.html" class="back">← GCS prototipe dön</a>
+  <h1>GÖKDOĞAN · <span>WPF'e Geçiş Rehberi</span></h1>
+  <p class="lead">HTML/React prototipindeki her component'in WPF XAML karşılığı. <b>.NET 8 + WPF</b> için yazılmıştır. Harita için <b>MapsUI</b> veya <b>Microsoft.Maui.Controls.Maps</b> paketlerini önerilir; video için <b>LibVLCSharp.WPF</b>.</p>
+
+  <!-- NuGet paketleri -->
+  <h2>▸ GEREKLİ NuGet PAKETLERİ</h2>
+  <pre><span class="com">&lt;!-- .csproj içine --&gt;</span>
+&lt;ItemGroup&gt;
+  &lt;PackageReference Include=<span class="str">"Mapsui.Wpf"</span> Version=<span class="str">"4.1.7"</span> /&gt;       <span class="com">&lt;!-- Harita --&gt;</span>
+  &lt;PackageReference Include=<span class="str">"LibVLCSharp.WPF"</span> Version=<span class="str">"3.8.2"</span> /&gt;  <span class="com">&lt;!-- Video --&gt;</span>
+  &lt;PackageReference Include=<span class="str">"VideoLAN.LibVLC.Windows"</span> Version=<span class="str">"3.0.20"</span> /&gt;
+  &lt;PackageReference Include=<span class="str">"CommunityToolkit.Mvvm"</span> Version=<span class="str">"8.2.2"</span> /&gt; <span class="com">&lt;!-- MVVM --&gt;</span>
+  &lt;PackageReference Include=<span class="str">"Newtonsoft.Json"</span> Version=<span class="str">"13.0.3"</span> /&gt;      <span class="com">&lt;!-- API --&gt;</span>
+  &lt;PackageReference Include=<span class="str">"MaterialDesignThemes"</span> Version=<span class="str">"5.0.0"</span> /&gt;    <span class="com">&lt;!-- İkonlar --&gt;</span>
+&lt;/ItemGroup&gt;</pre>
+
+  <!-- Renk sistemi -->
+  <h2>▸ DESIGN SYSTEM → RESOURCE DICTIONARY</h2>
+  <p><code>assets/design-system.css</code> dosyasındaki CSS değişkenleri, WPF'de <b>Resource Dictionary</b> olarak tanımlanır. <code>App.xaml</code> içinde proje genelinde erişilebilir hale gelir.</p>
+  <pre><span class="com">&lt;!-- App.xaml --&gt;</span>
+&lt;<span class="tag">Application.Resources</span>&gt;
+    &lt;<span class="tag">ResourceDictionary</span>&gt;
+        <span class="com">&lt;!-- Renkler --&gt;</span>
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"BgPrimary"</span>&gt;#0d1014&lt;/<span class="tag">Color</span>&gt;
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"BgSecondary"</span>&gt;#14181f&lt;/<span class="tag">Color</span>&gt;
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"Accent"</span>&gt;#ff8c42&lt;/<span class="tag">Color</span>&gt;
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"AccentBright"</span>&gt;#ffa560&lt;/<span class="tag">Color</span>&gt;
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"HudGreen"</span>&gt;#39ff7a&lt;/<span class="tag">Color</span>&gt;
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"Danger"</span>&gt;#ff2e4c&lt;/<span class="tag">Color</span>&gt;
+        &lt;<span class="tag">Color</span> <span class="attr">x:Key</span>=<span class="str">"Warn"</span>&gt;#ffb800&lt;/<span class="tag">Color</span>&gt;
+
+        <span class="com">&lt;!-- Brush'lar (UI element'lerinde kullanım) --&gt;</span>
+        &lt;<span class="tag">SolidColorBrush</span> <span class="attr">x:Key</span>=<span class="str">"BgPrimaryBrush"</span> <span class="attr">Color</span>=<span class="str">"{StaticResource BgPrimary}"</span> /&gt;
+        &lt;<span class="tag">SolidColorBrush</span> <span class="attr">x:Key</span>=<span class="str">"AccentBrush"</span> <span class="attr">Color</span>=<span class="str">"{StaticResource Accent}"</span> /&gt;
+        &lt;<span class="tag">SolidColorBrush</span> <span class="attr">x:Key</span>=<span class="str">"BorderBrush"</span> <span class="attr">Color</span>=<span class="str">"#66ff8c42"</span> /&gt;
+
+        <span class="com">&lt;!-- Fontlar --&gt;</span>
+        &lt;<span class="tag">FontFamily</span> <span class="attr">x:Key</span>=<span class="str">"FontDisplay"</span>&gt;Rajdhani, Segoe UI&lt;/<span class="tag">FontFamily</span>&gt;
+        &lt;<span class="tag">FontFamily</span> <span class="attr">x:Key</span>=<span class="str">"FontMono"</span>&gt;JetBrains Mono, Consolas&lt;/<span class="tag">FontFamily</span>&gt;
+    &lt;/<span class="tag">ResourceDictionary</span>&gt;
+&lt;/<span class="tag">Application.Resources</span>&gt;</pre>
+
+  <!-- HUD Button Style -->
+  <h2>▸ HUD BUTON STİLİ</h2>
+  <p>HTML'deki <code>.hud-btn</code> sınıfının WPF karşılığı. Stili bir kez tanımla, her butonda kullan.</p>
+  <pre>&lt;<span class="tag">Style</span> <span class="attr">x:Key</span>=<span class="str">"HudButton"</span> <span class="attr">TargetType</span>=<span class="str">"Button"</span>&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"Background"</span> <span class="attr">Value</span>=<span class="str">"#14ff8c42"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"BorderBrush"</span> <span class="attr">Value</span>=<span class="str">"{StaticResource AccentBrush}"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"BorderThickness"</span> <span class="attr">Value</span>=<span class="str">"1"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"Foreground"</span> <span class="attr">Value</span>=<span class="str">"#ffa560"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"FontFamily"</span> <span class="attr">Value</span>=<span class="str">"{StaticResource FontDisplay}"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"FontSize"</span> <span class="attr">Value</span>=<span class="str">"13"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"FontWeight"</span> <span class="attr">Value</span>=<span class="str">"SemiBold"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"Padding"</span> <span class="attr">Value</span>=<span class="str">"18,10"</span> /&gt;
+    &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"Cursor"</span> <span class="attr">Value</span>=<span class="str">"Hand"</span> /&gt;
+    &lt;<span class="tag">Style.Triggers</span>&gt;
+        &lt;<span class="tag">Trigger</span> <span class="attr">Property</span>=<span class="str">"IsMouseOver"</span> <span class="attr">Value</span>=<span class="str">"True"</span>&gt;
+            &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"Background"</span> <span class="attr">Value</span>=<span class="str">"#33ff8c42"</span> /&gt;
+            &lt;<span class="tag">Setter</span> <span class="attr">Property</span>=<span class="str">"Foreground"</span> <span class="attr">Value</span>=<span class="str">"White"</span> /&gt;
+        &lt;/<span class="tag">Trigger</span>&gt;
+    &lt;/<span class="tag">Style.Triggers</span>&gt;
+&lt;/<span class="tag">Style</span>&gt;
+
+<span class="com">&lt;!-- Kullanım --&gt;</span>
+&lt;<span class="tag">Button</span> <span class="attr">Style</span>=<span class="str">"{StaticResource HudButton}"</span> <span class="attr">Content</span>=<span class="str">"ARM"</span> <span class="attr">Command</span>=<span class="str">"{Binding ArmCommand}"</span> /&gt;</pre>
+
+  <!-- Ana pencere layout -->
+  <h2>▸ ANA PENCERE (MainWindow.xaml)</h2>
+  <p>Sol sidebar + büyük harita + sağ rail yapısı, Grid ile kurulur.</p>
+  <pre>&lt;<span class="tag">Window</span> <span class="attr">x:Class</span>=<span class="str">"GokdoganGCS.MainWindow"</span>
+        <span class="attr">Title</span>=<span class="str">"GÖKDOĞAN · TEKNOFEST Savaşan İHA"</span>
+        <span class="attr">WindowState</span>=<span class="str">"Maximized"</span>
+        <span class="attr">Background</span>=<span class="str">"{StaticResource BgPrimaryBrush}"</span>&gt;
+    &lt;<span class="tag">Grid</span>&gt;
+        &lt;<span class="tag">Grid.RowDefinitions</span>&gt;
+            &lt;<span class="tag">RowDefinition</span> <span class="attr">Height</span>=<span class="str">"56"</span> /&gt;   <span class="com">&lt;!-- Top bar --&gt;</span>
+            &lt;<span class="tag">RowDefinition</span> <span class="attr">Height</span>=<span class="str">"*"</span> /&gt;
+        &lt;/<span class="tag">Grid.RowDefinitions</span>&gt;
+
+        &lt;<span class="tag">local:TopBar</span> <span class="attr">Grid.Row</span>=<span class="str">"0"</span> /&gt;
+
+        &lt;<span class="tag">Grid</span> <span class="attr">Grid.Row</span>=<span class="str">"1"</span>&gt;
+            &lt;<span class="tag">Grid.ColumnDefinitions</span>&gt;
+                &lt;<span class="tag">ColumnDefinition</span> <span class="attr">Width</span>=<span class="str">"280"</span> /&gt;  <span class="com">&lt;!-- Sol sidebar --&gt;</span>
+                &lt;<span class="tag">ColumnDefinition</span> <span class="attr">Width</span>=<span class="str">"*"</span> /&gt;     <span class="com">&lt;!-- Harita --&gt;</span>
+                &lt;<span class="tag">ColumnDefinition</span> <span class="attr">Width</span>=<span class="str">"320"</span> /&gt;  <span class="com">&lt;!-- Sağ rail --&gt;</span>
+            &lt;/<span class="tag">Grid.ColumnDefinitions</span>&gt;
+
+            &lt;<span class="tag">StackPanel</span> <span class="attr">Grid.Column</span>=<span class="str">"0"</span> <span class="attr">Background</span>=<span class="str">"{StaticResource BgSecondaryBrush}"</span>&gt;
+                &lt;<span class="tag">local:PFDControl</span> <span class="attr">DataContext</span>=<span class="str">"{Binding Flight}"</span> /&gt;
+                &lt;<span class="tag">local:TelemetryPanel</span> <span class="attr">DataContext</span>=<span class="str">"{Binding Telemetry}"</span> /&gt;
+                &lt;<span class="tag">local:EmergencyControls</span> /&gt;
+            &lt;/<span class="tag">StackPanel</span>&gt;
+
+            &lt;<span class="tag">local:MapControl</span> <span class="attr">Grid.Column</span>=<span class="str">"1"</span>
+                <span class="attr">OwnAircraft</span>=<span class="str">"{Binding OwnAircraft}"</span>
+                <span class="attr">Contacts</span>=<span class="str">"{Binding Contacts}"</span>
+                <span class="attr">Waypoints</span>=<span class="str">"{Binding Waypoints}"</span> /&gt;
+
+            &lt;<span class="tag">TabControl</span> <span class="attr">Grid.Column</span>=<span class="str">"2"</span>&gt;
+                &lt;<span class="tag">TabItem</span> <span class="attr">Header</span>=<span class="str">"HAVA RESMİ"</span>&gt;
+                    &lt;<span class="tag">local:ContactList</span> /&gt;
+                &lt;/<span class="tag">TabItem</span>&gt;
+                &lt;<span class="tag">TabItem</span> <span class="attr">Header</span>=<span class="str">"HSS · QR"</span>&gt;
+                    &lt;<span class="tag">local:HSSPanel</span> /&gt;
+                &lt;/<span class="tag">TabItem</span>&gt;
+            &lt;/<span class="tag">TabControl</span>&gt;
+        &lt;/<span class="tag">Grid</span>&gt;
+    &lt;/<span class="tag">Grid</span>&gt;
+&lt;/<span class="tag">Window</span>&gt;</pre>
+
+  <!-- PFD -->
+  <h2>▸ PFD (Suni Ufuk) UserControl</h2>
+  <p>Pitch/Roll için <b>RotateTransform</b> + <b>TranslateTransform</b>, binding ile değiştirilir. Hızlı çözüm: arka planı iki renkli Grid, üstüne RotateTransform uygulanır.</p>
+  <pre>&lt;<span class="tag">UserControl</span> <span class="attr">x:Class</span>=<span class="str">"GokdoganGCS.Controls.PFDControl"</span>&gt;
+    &lt;<span class="tag">Grid</span> <span class="attr">Width</span>=<span class="str">"260"</span> <span class="attr">Height</span>=<span class="str">"260"</span> <span class="attr">ClipToBounds</span>=<span class="str">"True"</span>&gt;
+        &lt;<span class="tag">Grid.RenderTransform</span>&gt;
+            &lt;<span class="tag">RotateTransform</span> <span class="attr">Angle</span>=<span class="str">"{Binding Roll, Converter={StaticResource NegateConv}}"</span>
+                             <span class="attr">CenterX</span>=<span class="str">"130"</span> <span class="attr">CenterY</span>=<span class="str">"130"</span> /&gt;
+        &lt;/<span class="tag">Grid.RenderTransform</span>&gt;
+
+        <span class="com">&lt;!-- Gökyüzü (üst) + Zemin (alt) --&gt;</span>
+        &lt;<span class="tag">Grid.Background</span>&gt;
+            &lt;<span class="tag">LinearGradientBrush</span> <span class="attr">StartPoint</span>=<span class="str">"0,0"</span> <span class="attr">EndPoint</span>=<span class="str">"0,1"</span>&gt;
+                &lt;<span class="tag">GradientStop</span> <span class="attr">Color</span>=<span class="str">"#1a3550"</span> <span class="attr">Offset</span>=<span class="str">"0"</span> /&gt;
+                &lt;<span class="tag">GradientStop</span> <span class="attr">Color</span>=<span class="str">"#0e1e30"</span> <span class="attr">Offset</span>=<span class="str">"0.5"</span> /&gt;
+                &lt;<span class="tag">GradientStop</span> <span class="attr">Color</span>=<span class="str">"#2d1a0c"</span> <span class="attr">Offset</span>=<span class="str">"0.5"</span> /&gt;
+                &lt;<span class="tag">GradientStop</span> <span class="attr">Color</span>=<span class="str">"#1a0e08"</span> <span class="attr">Offset</span>=<span class="str">"1"</span> /&gt;
+            &lt;/<span class="tag">LinearGradientBrush</span>&gt;
+        &lt;/<span class="tag">Grid.Background</span>&gt;
+
+        <span class="com">&lt;!-- Pitch çizgileri Canvas üzerinde kodla çizilir (code-behind) --&gt;</span>
+        &lt;<span class="tag">Canvas</span> <span class="attr">x:Name</span>=<span class="str">"PitchLadder"</span>&gt;
+            &lt;<span class="tag">Canvas.RenderTransform</span>&gt;
+                &lt;<span class="tag">TranslateTransform</span> <span class="attr">Y</span>=<span class="str">"{Binding Pitch, Converter={StaticResource PitchConv}}"</span> /&gt;
+            &lt;/<span class="tag">Canvas.RenderTransform</span>&gt;
+        &lt;/<span class="tag">Canvas</span>&gt;
+
+        <span class="com">&lt;!-- Sabit uçak sembolü (rotasyondan etkilenmez) --&gt;</span>
+        &lt;<span class="tag">Path</span> <span class="attr">Stroke</span>=<span class="str">"{StaticResource AccentBrush}"</span> <span class="attr">StrokeThickness</span>=<span class="str">"2.5"</span>
+              <span class="attr">Data</span>=<span class="str">"M 80 130 L 115 130 M 145 130 L 180 130 M 115 130 L 115 138 M 145 130 L 145 138"</span> /&gt;
+    &lt;/<span class="tag">Grid</span>&gt;
+&lt;/<span class="tag">UserControl</span>&gt;</pre>
+
+  <!-- Harita -->
+  <h2>▸ HARİTA - Mapsui</h2>
+  <p><b>Mapsui.Wpf</b> paketi, uydu/topo toggle ve marker desteği sağlar. OpenStreetMap + Esri World Imagery katmanları birlikte kullanılabilir.</p>
+  <pre><span class="com">// MapView.xaml.cs</span>
+<span class="kw">using</span> Mapsui;
+<span class="kw">using</span> Mapsui.Tiling;
+<span class="kw">using</span> Mapsui.UI.Wpf;
+
+<span class="kw">public partial class</span> MapView : UserControl
+{
+    <span class="kw">private</span> MapControl _mapControl;
+
+    <span class="kw">public</span> MapView()
+    {
+        InitializeComponent();
+        _mapControl = <span class="kw">new</span> MapControl();
+
+        <span class="com">// Uydu katmanı (Esri World Imagery)</span>
+        _mapControl.Map.Layers.Add(OpenStreetMap.CreateTileLayer());
+
+        <span class="com">// Başlangıç konumu (İstanbul)</span>
+        <span class="kw">var</span> center = Mapsui.Projections.SphericalMercator.FromLonLat(29.0, 41.0).ToMPoint();
+        _mapControl.Map.Home = n => n.CenterOnAndZoomTo(center, n.Resolutions[14]);
+
+        MapGrid.Children.Add(_mapControl);
+    }
+
+    <span class="com">// İHA marker'ı güncelle (1 Hz timer'dan çağrılır)</span>
+    <span class="kw">public void</span> UpdateAircraft(<span class="kw">double</span> lat, <span class="kw">double</span> lng, <span class="kw">double</span> heading)
+    {
+        <span class="kw">var</span> point = SphericalMercator.FromLonLat(lng, lat).ToMPoint();
+        <span class="com">// Marker layer'a ekle / güncelle...</span>
+    }
+}</pre>
+
+  <!-- Video -->
+  <h2>▸ KAMERA - LibVLCSharp</h2>
+  <p>RTSP/UDP stream'i için <b>LibVLCSharp.WPF</b>. HUD overlay'i <code>Grid</code> ile video üstüne bindirilir.</p>
+  <pre>&lt;<span class="tag">Grid</span>&gt;
+    &lt;<span class="tag">vlc:VideoView</span> <span class="attr">x:Name</span>=<span class="str">"VideoView"</span> <span class="attr">xmlns:vlc</span>=<span class="str">"clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"</span> /&gt;
+
+    <span class="com">&lt;!-- HUD overlay --&gt;</span>
+    &lt;<span class="tag">Canvas</span>&gt;
+        &lt;<span class="tag">local:Crosshair</span> <span class="attr">Canvas.Left</span>=<span class="str">"{Binding CrosshairX}"</span>
+                         <span class="attr">Canvas.Top</span>=<span class="str">"{Binding CrosshairY}"</span> /&gt;
+        &lt;<span class="tag">local:TargetBox</span> <span class="attr">Visibility</span>=<span class="str">"{Binding HasTarget, Converter={StaticResource BoolToVis}}"</span> /&gt;
+    &lt;/<span class="tag">Canvas</span>&gt;
+&lt;/<span class="tag">Grid</span>&gt;</pre>
+  <pre><span class="com">// Code-behind</span>
+<span class="kw">using</span> LibVLCSharp.Shared;
+
+Core.Initialize();
+<span class="kw">var</span> libVLC = <span class="kw">new</span> LibVLC();
+<span class="kw">var</span> mediaPlayer = <span class="kw">new</span> MediaPlayer(libVLC);
+VideoView.MediaPlayer = mediaPlayer;
+
+<span class="kw">var</span> media = <span class="kw">new</span> Media(libVLC, <span class="kw">new</span> Uri(<span class="str">"rtsp://192.168.1.100:554/stream"</span>));
+mediaPlayer.Play(media);</pre>
+
+  <!-- TEKNOFEST API -->
+  <h2>▸ TEKNOFEST API ENTEGRASYONU</h2>
+  <p>Şartname gereği <code>HttpClient</code> ile JSON POST. <b>Telemetri gönderim sıklığı en fazla 2 Hz</b> (2 Hz üstü 400 hatası).</p>
+  <pre><span class="kw">public class</span> TeknofestApi
+{
+    <span class="kw">private readonly</span> HttpClient _http;
+    <span class="kw">private string</span> _cookie;
+
+    <span class="kw">public async</span> Task Giris(<span class="kw">string</span> kullaniciAdi, <span class="kw">string</span> sifre)
+    {
+        <span class="kw">var</span> body = <span class="kw">new</span> { kadi = kullaniciAdi, sifre };
+        <span class="kw">var</span> res = <span class="kw">await</span> _http.PostAsJsonAsync(<span class="str">"/api/giris"</span>, body);
+        _cookie = res.Headers.GetValues(<span class="str">"Set-Cookie"</span>).FirstOrDefault();
+    }
+
+    <span class="com">// 1 Hz timer ile çağrılır (2 Hz'den fazla OLMASIN)</span>
+    <span class="kw">public async</span> Task&lt;TelemetriCevap&gt; TelemetriGonder(TelemetriIstek t)
+    {
+        <span class="kw">var</span> res = <span class="kw">await</span> _http.PostAsJsonAsync(<span class="str">"/api/telemetri_gonder"</span>, t);
+        <span class="kw">return await</span> res.Content.ReadFromJsonAsync&lt;TelemetriCevap&gt;();
+    }
+
+    <span class="kw">public async</span> Task&lt;List&lt;HssKoordinat&gt;&gt; HssKoordinatlari()
+        =&gt; <span class="kw">await</span> _http.GetFromJsonAsync&lt;List&lt;HssKoordinat&gt;&gt;(<span class="str">"/api/hss_koordinatlari"</span>);
+
+    <span class="kw">public async</span> Task KilitlenmeBildir(KilitlenmeBilgisi k)
+        =&gt; <span class="kw">await</span> _http.PostAsJsonAsync(<span class="str">"/api/kilitlenme_bilgisi"</span>, k);
+
+    <span class="kw">public async</span> Task KamikazeBildir(KamikazeBilgisi k)
+        =&gt; <span class="kw">await</span> _http.PostAsJsonAsync(<span class="str">"/api/kamikaze_bilgisi"</span>, k);
+}
+
+<span class="com">// Telemetri istek modeli (şartname Ek-1)</span>
+<span class="kw">public class</span> TelemetriIstek
+{
+    <span class="kw">public int</span> takim_numarasi { <span class="kw">get; set;</span> }
+    <span class="kw">public double</span> iha_enlem { <span class="kw">get; set;</span> }
+    <span class="kw">public double</span> iha_boylam { <span class="kw">get; set;</span> }
+    <span class="kw">public double</span> iha_irtifa { <span class="kw">get; set;</span> }
+    <span class="kw">public double</span> iha_dikilme { <span class="kw">get; set;</span> }  <span class="com">// pitch</span>
+    <span class="kw">public double</span> iha_yonelme { <span class="kw">get; set;</span> }  <span class="com">// heading</span>
+    <span class="kw">public double</span> iha_yatis { <span class="kw">get; set;</span> }     <span class="com">// roll</span>
+    <span class="kw">public double</span> iha_hiz { <span class="kw">get; set;</span> }
+    <span class="kw">public int</span> iha_batarya { <span class="kw">get; set;</span> }
+    <span class="kw">public int</span> iha_otonom { <span class="kw">get; set;</span> }      <span class="com">// 0 = manuel, 1 = otonom</span>
+    <span class="kw">public int</span> iha_kilitlenme { <span class="kw">get; set;</span> }  <span class="com">// 0 veya 1</span>
+    <span class="kw">public int</span> hedef_merkez_X { <span class="kw">get; set;</span> }
+    <span class="kw">public int</span> hedef_merkez_Y { <span class="kw">get; set;</span> }
+    <span class="kw">public int</span> hedef_genislik { <span class="kw">get; set;</span> }
+    <span class="kw">public int</span> hedef_yukseklik { <span class="kw">get; set;</span> }
+    <span class="kw">public string</span> gps_saati { <span class="kw">get; set;</span> }     <span class="com">// "HH:mm:ss.fff"</span>
+}</pre>
+
+  <!-- MVVM -->
+  <h2>▸ MVVM YAPISI (CommunityToolkit.Mvvm)</h2>
+  <pre><span class="kw">using</span> CommunityToolkit.Mvvm.ComponentModel;
+<span class="kw">using</span> CommunityToolkit.Mvvm.Input;
+
+<span class="kw">public partial class</span> MainViewModel : ObservableObject
+{
+    [<span class="attr">ObservableProperty</span>] <span class="kw">private double</span> airspeed;
+    [<span class="attr">ObservableProperty</span>] <span class="kw">private double</span> altitude;
+    [<span class="attr">ObservableProperty</span>] <span class="kw">private double</span> heading;
+    [<span class="attr">ObservableProperty</span>] <span class="kw">private bool</span> armed;
+
+    <span class="kw">private</span> DispatcherTimer _timer;
+    <span class="kw">private</span> TeknofestApi _api;
+
+    <span class="kw">public</span> MainViewModel()
+    {
+        _api = <span class="kw">new</span> TeknofestApi();
+        _timer = <span class="kw">new</span> DispatcherTimer { Interval = TimeSpan.FromSeconds(1) }; <span class="com">// 1 Hz</span>
+        _timer.Tick += <span class="kw">async</span> (s, e) =&gt; <span class="kw">await</span> SendTelemetry();
+        _timer.Start();
+    }
+
+    [<span class="attr">RelayCommand</span>]
+    <span class="kw">private void</span> Arm() { Armed = !Armed; }
+
+    [<span class="attr">RelayCommand</span>]
+    <span class="kw">private void</span> Rtl() { <span class="com">/* Return to Launch */</span> }
+}</pre>
+
+  <!-- MAVLink -->
+  <h2>▸ İHA İLE HABERLEŞME - MAVLink</h2>
+  <p>Pixhawk/ArduPilot otopilotu ile konuşmak için <b>MAVLink.NET</b> veya <b>MAVSDK</b>. UDP üzerinden telemetri alınır.</p>
+  <pre>&lt;<span class="tag">PackageReference</span> <span class="attr">Include</span>=<span class="str">"MAVLink"</span> <span class="attr">Version</span>=<span class="str">"1.0.12"</span> /&gt;</pre>
+  <pre><span class="kw">using</span> MAVLink;
+
+<span class="kw">var</span> parser = <span class="kw">new</span> MavlinkParse();
+<span class="kw">var</span> udp = <span class="kw">new</span> UdpClient(14550);
+
+<span class="kw">while</span> (<span class="kw">true</span>)
+{
+    <span class="kw">var</span> data = <span class="kw">await</span> udp.ReceiveAsync();
+    <span class="kw">var</span> packet = parser.ReadPacket(<span class="kw">new</span> MemoryStream(data.Buffer));
+
+    <span class="kw">if</span> (packet?.data <span class="kw">is</span> mavlink_global_position_int_t pos)
+    {
+        OwnAircraft.Lat = pos.lat / 1e7;
+        OwnAircraft.Lng = pos.lon / 1e7;
+        OwnAircraft.Alt = pos.relative_alt / 1000.0;
+    }
+    <span class="kw">else if</span> (packet?.data <span class="kw">is</span> mavlink_attitude_t att)
+    {
+        Flight.Roll = att.roll * 180.0 / Math.PI;
+        Flight.Pitch = att.pitch * 180.0 / Math.PI;
+    }
+}</pre>
+
+  <!-- Proje yapısı -->
+  <h2>▸ ÖNERİLEN PROJE YAPISI</h2>
+  <pre>GokdoganGCS/
+├── App.xaml                   <span class="com">// Resource dictionary (renkler, stiller)</span>
+├── MainWindow.xaml            <span class="com">// Ana layout</span>
+├── Controls/                  <span class="com">// UserControl'ler (her component ayrı)</span>
+│   ├── TopBar.xaml
+│   ├── PFDControl.xaml
+│   ├── TelemetryPanel.xaml
+│   ├── MapView.xaml
+│   ├── CameraView.xaml        <span class="com">// Video + HUD overlay</span>
+│   ├── ContactList.xaml
+│   ├── HSSPanel.xaml
+│   ├── EmergencyControls.xaml
+│   └── LogConsole.xaml
+├── ViewModels/
+│   ├── MainViewModel.cs
+│   ├── FlightViewModel.cs
+│   └── ContactViewModel.cs
+├── Models/                    <span class="com">// API istek/cevap DTO'ları</span>
+│   ├── TelemetriIstek.cs
+│   ├── HssKoordinat.cs
+│   └── Kilitlenme.cs
+├── Services/
+│   ├── TeknofestApi.cs        <span class="com">// TEKNOFEST REST API client</span>
+│   ├── MavlinkService.cs      <span class="com">// İHA haberleşme</span>
+│   └── VideoService.cs        <span class="com">// RTSP stream yönetimi</span>
+└── Converters/                <span class="com">// Binding converter'lar (pitch→pixel vb.)</span>
+    ├── NegateConverter.cs
+    └── BoolToVisibilityConverter.cs</pre>
+
+  <!-- Mapping tablo -->
+  <h2>▸ COMPONENT KARŞILIK TABLOSU</h2>
+  <table>
+    <thead><tr><th>HTML/React</th><th>WPF Karşılığı</th><th>Notlar</th></tr></thead>
+    <tbody>
+      <tr><td>TopBar.jsx</td><td>TopBar.xaml (UserControl)</td><td>DockPanel + StackPanel</td></tr>
+      <tr><td>PFD.jsx</td><td>PFDControl.xaml</td><td>RotateTransform + Canvas</td></tr>
+      <tr><td>TelemetryPanel.jsx</td><td>TelemetryPanel.xaml</td><td>ProgressBar stili + Grid</td></tr>
+      <tr><td>MapView.jsx</td><td>MapView.xaml + Mapsui</td><td>Esri/OSM tile layers</td></tr>
+      <tr><td>CameraHUD.jsx</td><td>CameraView.xaml + LibVLCSharp</td><td>VideoView + Overlay Grid</td></tr>
+      <tr><td>ContactList.jsx</td><td>ListBox + ItemTemplate</td><td>ItemsSource binding</td></tr>
+      <tr><td>MissionPanel.jsx</td><td>ListView + DataTemplate</td><td>Drag&drop için GongSolutions.WPF</td></tr>
+      <tr><td>EmergencyControls.jsx</td><td>UniformGrid + HudButton</td><td>RelayCommand ile bağlama</td></tr>
+      <tr><td>LogConsole.jsx</td><td>ItemsControl + VirtualizingStackPanel</td><td>Auto-scroll gerekir</td></tr>
+      <tr><td>useSimulation.jsx</td><td>MainViewModel</td><td>DispatcherTimer + ObservableCollection</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Font yükleme -->
+  <h2>▸ ÖZEL FONT YÜKLEME</h2>
+  <p>Rajdhani ve JetBrains Mono'yu Google Fonts'tan indir, projeye <code>Fonts/</code> klasörü olarak ekle, Build Action → Resource.</p>
+  <pre>&lt;<span class="tag">TextBlock</span> <span class="attr">FontFamily</span>=<span class="str">"pack://application:,,,/Fonts/#Rajdhani"</span>
+           <span class="attr">Text</span>=<span class="str">"GÖKDOĞAN"</span> /&gt;</pre>
+
+  <h2>▸ İPUÇLARI</h2>
+  <ul>
+    <li><b>Performans:</b> Haritada 50+ marker olunca <code>VirtualizingPanel.IsVirtualizing="True"</code> kullan.</li>
+    <li><b>Thread safety:</b> MAVLink UDP loop'u arka thread'de; UI güncellemesi için <code>Dispatcher.Invoke</code>.</li>
+    <li><b>Telemetri timer'ı:</b> <code>DispatcherTimer</code> 1000ms. <b>Asla 2 Hz üstüne çıkma</b> - şartname 400 hatası veriyor.</li>
+    <li><b>HSS durumu:</b> <code>/api/hss_koordinatlari</code> boş liste dönebilir - hakem duyurmadan önce. Null check şart.</li>
+    <li><b>Kilitlenme:</b> Hedef kutusu ekranda minimum <code>hedef_genislik × hedef_yukseklik</code> olmalı ve <code>hedef_merkez_X/Y</code> ekran merkezine yeterince yakın olmalı (şartnameye bakın).</li>
+    <li><b>GPS saati:</b> <code>gps_saati</code> formatı zorunlu — <code>DateTime.UtcNow.ToString("HH:mm:ss.fff")</code>.</li>
+    <li><b>Cookie yönetimi:</b> <code>HttpClientHandler.CookieContainer</code> ile otomatik. Manuel header atma.</li>
+  </ul>
+
+  <div style="margin-top: 40px; padding: 16px; border: 1px solid var(--border); background: rgba(255,140,66,0.04); text-align: center;">
+    <span class="hud-label-dim">▸ BAŞARILAR GÖKDOĞAN · TEKNOFEST 2026</span>
+  </div>
+</div>
+</body>
+</html>

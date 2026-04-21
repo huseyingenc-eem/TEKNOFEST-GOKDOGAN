@@ -1,0 +1,62 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Core.RadialMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             mc:Ignorable="d"
+             x:Name="Root">
+
+    <Grid x:Name="RootGrid"
+          Background="Transparent">
+        <!-- Fan-out items -->
+        <Canvas x:Name="ItemsHost"
+                IsHitTestVisible="{Binding IsOpen, ElementName=Root}" />
+
+        <!-- Center trigger -->
+        <Button x:Name="TriggerBtn"
+                Click="OnTriggerClick"
+                Cursor="Hand"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="68" Height="68">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            CornerRadius="34"
+                            Background="{StaticResource TacticalOverlayHi}"
+                            BorderBrush="{StaticResource TacticalAccent}"
+                            BorderThickness="1.5">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black"
+                                              Direction="270"
+                                              ShadowDepth="3"
+                                              BlurRadius="16"
+                                              Opacity="0.55" />
+                        </Border.Effect>
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.85" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.7" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+
+            <materialIcons:MaterialIcon x:Name="TriggerIcon"
+                                        Kind="DotsGrid"
+                                        Width="28" Height="28"
+                                        Foreground="{StaticResource TacticalAccent}"
+                                        RenderTransformOrigin="0.5,0.5">
+                <materialIcons:MaterialIcon.RenderTransform>
+                    <RotateTransform Angle="0" />
+                </materialIcons:MaterialIcon.RenderTransform>
+            </materialIcons:MaterialIcon>
+        </Button>
+    </Grid>
+</UserControl>

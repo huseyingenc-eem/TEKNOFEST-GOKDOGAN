@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Tactical palette -->
+    <Color x:Key="TacticalBgDeepColor">#FF0B0F14</Color>
+    <Color x:Key="TacticalSurfaceColor">#FF131A22</Color>
+    <Color x:Key="TacticalSurfaceHiColor">#FF1B2430</Color>
+    <Color x:Key="TacticalBorderColor">#FF2A3340</Color>
+    <Color x:Key="TacticalAccentColor">#FF00D1C7</Color>
+    <Color x:Key="TacticalWarnColor">#FFFFB300</Color>
+    <Color x:Key="TacticalCriticalColor">#FFFF5252</Color>
+    <Color x:Key="TacticalOkColor">#FF7CB342</Color>
+    <Color x:Key="TacticalTextPrimaryColor">#FFE6ECF2</Color>
+    <Color x:Key="TacticalTextSecondaryColor">#FF8796A5</Color>
+
+    <SolidColorBrush x:Key="TacticalBgDeep" Color="{StaticResource TacticalBgDeepColor}" />
+    <SolidColorBrush x:Key="TacticalSurface" Color="{StaticResource TacticalSurfaceColor}" />
+    <SolidColorBrush x:Key="TacticalSurfaceHi" Color="{StaticResource TacticalSurfaceHiColor}" />
+    <SolidColorBrush x:Key="TacticalBorder" Color="{StaticResource TacticalBorderColor}" />
+    <SolidColorBrush x:Key="TacticalAccent" Color="{StaticResource TacticalAccentColor}" />
+    <SolidColorBrush x:Key="TacticalWarn" Color="{StaticResource TacticalWarnColor}" />
+    <SolidColorBrush x:Key="TacticalCritical" Color="{StaticResource TacticalCriticalColor}" />
+    <SolidColorBrush x:Key="TacticalOk" Color="{StaticResource TacticalOkColor}" />
+    <SolidColorBrush x:Key="TacticalTextPrimary" Color="{StaticResource TacticalTextPrimaryColor}" />
+    <SolidColorBrush x:Key="TacticalTextSecondary" Color="{StaticResource TacticalTextSecondaryColor}" />
+
+    <!-- Overlay (translucent) surfaces for panels that float over the map.
+         Two-stop vertical gradient + subtle inner highlight gives a "tactical glass"
+         feel without breaking the dark palette. -->
+    <Color x:Key="TacticalOverlayColor">#B3131A22</Color>
+    <Color x:Key="TacticalOverlayHiColor">#CC1B2430</Color>
+    <Color x:Key="TacticalOverlayBorderColor">#803F4B5A</Color>
+    <Color x:Key="TacticalOverlayHighlightColor">#1AFFFFFF</Color>
+
+    <SolidColorBrush x:Key="TacticalOverlay" Color="{StaticResource TacticalOverlayColor}" />
+    <SolidColorBrush x:Key="TacticalOverlayHi" Color="{StaticResource TacticalOverlayHiColor}" />
+    <SolidColorBrush x:Key="TacticalOverlayBorder" Color="{StaticResource TacticalOverlayBorderColor}" />
+    <SolidColorBrush x:Key="TacticalOverlayHighlight" Color="{StaticResource TacticalOverlayHighlightColor}" />
+
+    <!-- "Glass" gradient — top slightly lighter than bottom, suggests a reflective surface. -->
+    <LinearGradientBrush x:Key="TacticalGlass" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#CC1D2632" Offset="0.0" />
+        <GradientStop Color="#A30F1620" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="TacticalGlassStrong" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#E0243040" Offset="0.0" />
+        <GradientStop Color="#BF131A22" Offset="1.0" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>

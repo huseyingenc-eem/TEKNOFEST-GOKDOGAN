@@ -1,0 +1,237 @@
+/* =========================================================
+   GÖKDOĞAN - Savaşan İHA GCS Tasarım Sistemi
+   Askeri / Futuristik HUD Stili
+   ========================================================= */
+
+:root {
+  /* Renkler - Modern tactical GCS, daha açık ve okunaklı */
+  --bg-primary: #1a2030;
+  --bg-secondary: #212838;
+  --bg-tertiary: #2a3244;
+  --bg-panel: rgba(33, 40, 56, 0.92);
+  --bg-panel-solid: #212838;
+
+  /* Accent - Amber (daha yumuşak) */
+  --accent: #ff8c42;
+  --accent-dim: #d66a28;
+  --accent-bright: #ffb780;
+  --accent-glow: rgba(255, 140, 66, 0.4);
+
+  /* HUD yeşili (pozitif telemetri, friendly) */
+  --hud-green: #39ff7a;
+  --hud-green-dim: #1fb855;
+
+  /* Uyarı & tehlike */
+  --warn: #ffb800;
+  --danger: #ff2e4c;
+  --danger-bright: #ff5470;
+
+  /* Hostile / düşman İHA */
+  --hostile: #ff2e4c;
+  --friendly: #39ff7a;
+  --unknown: #ffb800;
+  --self: #ff6b1a;
+
+  /* Metin */
+  --text-primary: #f0f3f8;
+  --text-secondary: #a8b2c1;
+  --text-dim: #6b7588;
+  --text-hud: #ff8c42;
+
+  /* Çizgi & kenar */
+  --border: rgba(168, 178, 193, 0.18);
+  --border-strong: rgba(255, 140, 66, 0.55);
+  --border-dim: rgba(168, 178, 193, 0.12);
+  --grid-line: rgba(168, 178, 193, 0.06);
+
+  /* Gölge */
+  --glow-accent: 0 0 12px rgba(255, 107, 26, 0.4);
+  --glow-green: 0 0 12px rgba(57, 255, 122, 0.4);
+  --glow-danger: 0 0 14px rgba(255, 46, 76, 0.5);
+
+  /* Tipografi */
+  --font-mono: 'JetBrains Mono', 'Roboto Mono', ui-monospace, monospace;
+  --font-display: 'Rajdhani', 'Orbitron', 'Barlow', sans-serif;
+  --font-ui: 'Barlow', 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ------ Genel HUD sınıfları ------ */
+
+.hud-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+}
+
+/* Köşe süsleri - askeri HUD klasik corner brackets */
+.hud-corners::before,
+.hud-corners::after,
+.hud-corners > .corner-bl,
+.hud-corners > .corner-br {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--accent);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.hud-corners::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+.hud-corners::after { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+.hud-corners > .corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+.hud-corners > .corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+
+/* Başlık etiketi - panel üstünde küçük label */
+.hud-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.hud-label-dim {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.hud-value {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Scanline efekti - sadece kamera için, harita açık olsun */
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.015) 4px,
+    rgba(255, 255, 255, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Grid arka plan */
+.hud-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Butonlar */
+.hud-btn {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(255, 107, 26, 0.08);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-bright);
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.hud-btn:hover {
+  background: rgba(255, 107, 26, 0.2);
+  color: #fff;
+  box-shadow: var(--glow-accent);
+}
+.hud-btn:active { transform: translateY(1px); }
+
+.hud-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger-bright);
+  background: rgba(255, 46, 76, 0.08);
+}
+.hud-btn.danger:hover { background: rgba(255, 46, 76, 0.22); color: #fff; box-shadow: var(--glow-danger); }
+
+.hud-btn.ghost {
+  background: transparent;
+  border-color: var(--border-dim);
+  color: var(--text-secondary);
+}
+.hud-btn.ghost:hover { color: var(--accent-bright); border-color: var(--border-strong); }
+
+.hud-btn.primary {
+  background: var(--accent);
+  color: #0b0d11;
+  border-color: var(--accent-bright);
+}
+.hud-btn.primary:hover { background: var(--accent-bright); box-shadow: var(--glow-accent); }
+
+/* Chip / Badge */
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 107, 26, 0.06);
+  color: var(--accent-bright);
+}
+.hud-chip.green { border-color: rgba(57, 255, 122, 0.5); color: var(--hud-green); background: rgba(57, 255, 122, 0.08); }
+.hud-chip.red { border-color: rgba(255, 46, 76, 0.55); color: var(--danger-bright); background: rgba(255, 46, 76, 0.08); }
+.hud-chip.yellow { border-color: rgba(255, 184, 0, 0.5); color: var(--warn); background: rgba(255, 184, 0, 0.08); }
+
+/* Blink (uyarı) */
+@keyframes hud-blink { 0%, 60% { opacity: 1; } 60.01%, 100% { opacity: 0.25; } }
+.blink { animation: hud-blink 1s infinite; }
+
+/* Pulse (canlı sinyal) */
+@keyframes hud-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+.pulse { animation: hud-pulse 1.6s ease-in-out infinite; }
+
+/* Scroll çubuğu */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Utility */
+.row { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.gap-1 { gap: 4px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+.flex-1 { flex: 1; } .flex-none { flex: none; }
+.mono { font-family: var(--font-mono); }
+.display { font-family: var(--font-display); }
+.uppercase { text-transform: uppercase; letter-spacing: 0.1em; }
+.tabular { font-variant-numeric: tabular-nums; }

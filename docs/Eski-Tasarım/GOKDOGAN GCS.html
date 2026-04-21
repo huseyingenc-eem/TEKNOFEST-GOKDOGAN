@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>GÖKDOĞAN · TEKNOFEST Savaşan İHA GCS</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body, #root { width: 100vw; height: 100vh; overflow: hidden; }
+  .app-shell {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: var(--bg-primary);
+  }
+  .main-view { position: relative; flex: 1; overflow: hidden; }
+  /* Tweaks panel */
+  #tweaks-panel {
+    position: fixed; bottom: 20px; right: 280px; z-index: 9999;
+    width: 260px; padding: 14px;
+    background: rgba(14,18,24,0.95); border: 1px solid var(--accent);
+    display: none; font-family: var(--font-mono); font-size: 11px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+  #tweaks-panel.visible { display: block; }
+  #tweaks-panel .tw-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; gap: 8px; }
+  #tweaks-panel .tw-label { color: var(--text-secondary); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+  #tweaks-panel input[type="color"] { width: 28px; height: 24px; border: none; background: transparent; cursor: pointer; }
+  #tweaks-panel select, #tweaks-panel input[type="range"] { background: rgba(255,107,26,0.08); color: var(--accent-bright); border: 1px solid var(--border); padding: 2px 6px; font-family: inherit; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- WPF rehber linki -->
+<a href="WPF Rehber.html" style="position: fixed; top: 14px; right: 14px; z-index: 10000; padding: 6px 12px; background: rgba(255,107,26,0.15); border: 1px solid var(--accent); color: var(--accent-bright); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-decoration: none; text-transform: uppercase;">▸ WPF/XAML Rehber</a>
+
+<!-- Tweaks panel -->
+<div id="tweaks-panel">
+  <div style="color: var(--accent-bright); font-weight: 700; letter-spacing: 0.2em; margin-bottom: 10px; font-size: 11px;">▸ TWEAKS</div>
+  <div class="tw-row">
+    <span class="tw-label">Accent Rengi</span>
+    <input id="tw-accent" type="color" value="#ff6b1a">
+  </div>
+  <div class="tw-row">
+    <span class="tw-label">Tema</span>
+    <select id="tw-theme">
+      <option value="amber">Amber (Savaşçı)</option>
+      <option value="cyan">Cyan (Recon)</option>
+      <option value="green">Green (NVG)</option>
+      <option value="red">Red (Tactical)</option>
+    </select>
+  </div>
+  <div class="tw-row">
+    <span class="tw-label">Scanlines</span>
+    <input id="tw-scan" type="checkbox" checked>
+  </div>
+  <div class="tw-row">
+    <span class="tw-label">Grid</span>
+    <input id="tw-grid" type="checkbox" checked>
+  </div>
+  <div class="tw-row">
+    <span class="tw-label">HUD Yoğunluğu</span>
+    <input id="tw-density" type="range" min="0.6" max="1" step="0.05" value="1">
+  </div>
+</div>
+
+<script type="application/json" id="tweak-defaults">
+/*EDITMODE-BEGIN*/{
+  "accent": "#00d9ff",
+  "theme": "cyan",
+  "scanlines": true,
+  "grid": true,
+  "density": 1
+}/*EDITMODE-END*/
+</script>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Components -->
+<script type="text/babel" src="components/AlertSystem.jsx"></script>
+<script type="text/babel" src="components/BorderOverlay.jsx"></script>
+<script type="text/babel" src="components/HSSPanel.jsx"></script>
+<script type="text/babel" src="components/useSimulation.jsx"></script>
+<script type="text/babel" src="components/TopBar.jsx"></script>
+<script type="text/babel" src="components/TelemetryPanel.jsx"></script>
+<script type="text/babel" src="components/PFD.jsx"></script>
+<script type="text/babel" src="components/MapView.jsx"></script>
+<script type="text/babel" src="components/MapControls.jsx"></script>
+<script type="text/babel" src="components/EmergencyControls.jsx"></script>
+<script type="text/babel" src="components/CameraHUD.jsx"></script>
+<script type="text/babel" src="components/MissionPanel.jsx"></script>
+<script type="text/babel" src="components/ContactList.jsx"></script>
+<script type="text/babel" src="components/LogConsole.jsx"></script>
+<script type="text/babel" src="screens/MapScreen.jsx"></script>
+<script type="text/babel" src="screens/CameraScreen.jsx"></script>
+<script type="text/babel" src="screens/MissionScreen.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function App() {
+  const [view, setView] = useState(() => localStorage.getItem('gcs-view') || 'map');
+  const sim = window.useSimulation();
+
+  useEffect(() => { localStorage.setItem('gcs-view', view); }, [view]);
+
+  return (
+    <div className="app-shell">
+      <window.TopBar
+        activeView={view}
+        onViewChange={setView}
+        missionTime={sim.missionTime}
+        connection={sim.connection}
+      />
+      <div className="main-view" data-screen-label={
+        view === 'map' ? '01 Map' : view === 'camera' ? '02 Camera' : '03 Mission'
+      }>
+        {view === 'map' && <window.MapScreen/>}
+        {view === 'camera' && <window.CameraScreen/>}
+        {view === 'mission' && <window.MissionScreen/>}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+// ---- Tweaks ----
+const themes = {
+  amber:  { accent: '#ff6b1a', bright: '#ffa560', dim: '#cc5414', glow: 'rgba(255,107,26,0.45)' },
+  cyan:   { accent: '#00d9ff', bright: '#7de9ff', dim: '#0088aa', glow: 'rgba(0,217,255,0.45)' },
+  green:  { accent: '#39ff7a', bright: '#8fffab', dim: '#1fb855', glow: 'rgba(57,255,122,0.45)' },
+  red:    { accent: '#ff2e4c', bright: '#ff7a92', dim: '#b01a30', glow: 'rgba(255,46,76,0.45)' },
+};
+
+function applyTweaks(t) {
+  const theme = themes[t.theme] || themes.amber;
+  const accent = t.accent || theme.accent;
+  const r = document.documentElement.style;
+  r.setProperty('--accent', accent);
+  r.setProperty('--accent-bright', theme.bright);
+  r.setProperty('--accent-dim', theme.dim);
+  r.setProperty('--accent-glow', theme.glow);
+  r.setProperty('--text-hud', accent);
+  r.setProperty('--border', accent + '40');
+  r.setProperty('--border-strong', accent + '8c');
+  r.setProperty('--grid-line', accent + (t.grid ? '15' : '00'));
+  document.querySelectorAll('.scanlines').forEach(e => e.style.display = t.scanlines ? '' : 'none');
+  document.body.style.opacity = t.density;
+}
+
+const defaults = JSON.parse(document.getElementById('tweak-defaults').textContent.replace(/\/\*EDITMODE-(BEGIN|END)\*\//g, ''));
+let tweaks = { ...defaults };
+applyTweaks(tweaks);
+
+// Tweak inputs
+document.getElementById('tw-accent').addEventListener('input', e => { tweaks.accent = e.target.value; applyTweaks(tweaks); saveTweaks(); });
+document.getElementById('tw-theme').addEventListener('change', e => {
+  tweaks.theme = e.target.value; tweaks.accent = themes[e.target.value].accent;
+  document.getElementById('tw-accent').value = tweaks.accent;
+  applyTweaks(tweaks); saveTweaks();
+});
+document.getElementById('tw-scan').addEventListener('change', e => { tweaks.scanlines = e.target.checked; applyTweaks(tweaks); saveTweaks(); });
+document.getElementById('tw-grid').addEventListener('change', e => { tweaks.grid = e.target.checked; applyTweaks(tweaks); saveTweaks(); });
+document.getElementById('tw-density').addEventListener('input', e => { tweaks.density = +e.target.value; applyTweaks(tweaks); saveTweaks(); });
+
+function saveTweaks() {
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: tweaks }, '*');
+}
+
+// Edit mode toggle protocol
+window.addEventListener('message', (e) => {
+  if (e.data?.type === '__activate_edit_mode') document.getElementById('tweaks-panel').classList.add('visible');
+  if (e.data?.type === '__deactivate_edit_mode') document.getElementById('tweaks-panel').classList.remove('visible');
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+</script>
+</body>
+</html>

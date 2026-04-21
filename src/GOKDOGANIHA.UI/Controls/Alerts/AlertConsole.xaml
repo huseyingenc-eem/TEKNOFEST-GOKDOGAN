@@ -1,0 +1,31 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Alerts.AlertConsole"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             mc:Ignorable="d"
+             d:DesignWidth="700" d:DesignHeight="180">
+
+    <core:PanelFrame Header="SİSTEM LOGLARI" IconKind="AlertCircleOutline">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3">
+                    <Run Foreground="{StaticResource TacticalOk}" Text="[SYS]" />
+                    <Run Foreground="{StaticResource TacticalTextSecondary}"
+                         Text=" Sistem hazır. Sunucuya bağlanmayı bekliyor..." />
+                </TextBlock>
+                <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3">
+                    <Run Foreground="{StaticResource TacticalAccent}" Text="[API]" />
+                    <Run Foreground="{StaticResource TacticalTextSecondary}"
+                         Text=" /api/giris bekleniyor..." />
+                </TextBlock>
+                <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3">
+                    <Run Foreground="{StaticResource TacticalWarn}" Text="[UAV]" />
+                    <Run Foreground="{StaticResource TacticalTextSecondary}"
+                         Text=" Telemetri bağlantısı yok." />
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
+    </core:PanelFrame>
+</UserControl>
