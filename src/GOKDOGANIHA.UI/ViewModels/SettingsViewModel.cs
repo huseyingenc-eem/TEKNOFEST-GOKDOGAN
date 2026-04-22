@@ -102,9 +102,12 @@ public partial class SettingsViewModel : ObservableObject
         try
         {
             var response = await _gameServer.GirisAsync();
-            // Login success: authoritative TakimNumarasi comes from response, pulled
-            // into _serverOptions by the client. Mirror it back into the VM.
-            if (_serverOptions is not null) TeamNumber = _serverOptions.TakimNumarasi;
+            // GameServerClient already wrote response.TakimNumarasi into _options —
+            // mirror it back into the VM from the response itself (not from options)
+            // so the binding updates even if the wire path is temporarily out of
+            // sync. Assigning TeamNumber re-triggers OnTeamNumberChanged which
+            // writes to options again (idempotent — same value).
+            TeamNumber = response.TakimNumarasi;
 
             MessageBox.Show(
                 $"Giriş başarılı.\nTakım numarası: {response.TakimNumarasi}",

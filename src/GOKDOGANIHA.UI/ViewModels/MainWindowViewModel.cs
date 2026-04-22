@@ -12,12 +12,10 @@ public partial class MainWindowViewModel : ObservableObject
     // Runtime: Settings gets the live App.ServerOptions + GameServer, so
     // every setter change propagates to the actual service layer.
     public MainWindowViewModel()
-        : this(new MapViewModel(),
-               App.ServerOptions is null
-                   ? new SettingsViewModel()
-                   : new SettingsViewModel(App.ServerOptions, App.GameServer)) { }
+        : this(new MapViewModel(), CreateRuntimeSettings()) { }
 
-    public MainWindowViewModel(MapViewModel mapVm) : this(mapVm, new SettingsViewModel()) { }
+    public MainWindowViewModel(MapViewModel mapVm)
+        : this(mapVm, new SettingsViewModel()) { }
 
     public MainWindowViewModel(MapViewModel mapVm, SettingsViewModel settings)
     {
@@ -26,10 +24,15 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     public MainWindowViewModel(TelemetryPollService telemetryPoll, HssPollService hssPoll)
-        : this(new MapViewModel(telemetryPoll, hssPoll),
-               App.ServerOptions is null
-                   ? new SettingsViewModel()
-                   : new SettingsViewModel(App.ServerOptions, App.GameServer)) { }
+        : this(new MapViewModel(telemetryPoll, hssPoll), CreateRuntimeSettings()) { }
+
+    // Factory for the runtime-wired SettingsViewModel. Falls back to a plain
+    // (unwired) VM if App statics aren't bootstrapped — happens in unit tests
+    // and sometimes in the XAML designer.
+    private static SettingsViewModel CreateRuntimeSettings()
+        => App.ServerOptions is null
+            ? new SettingsViewModel()
+            : new SettingsViewModel(App.ServerOptions, App.GameServer);
 
     public MapViewModel MapVm { get; }
     public SettingsViewModel Settings { get; }
