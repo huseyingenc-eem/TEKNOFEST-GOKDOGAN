@@ -79,6 +79,14 @@ public partial class App : Application
 
             // Packet pump — FlightState'ten paket kurup TelemetryPoll'a besler
             StartPacketPump();
+
+            // Hz ayarı değişince poll servisine yansıt (AYARLAR → TELEMETRİ slider'ı)
+            AppOptions.Telemetry.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName != nameof(AppOptions.Telemetry.Hz)) return;
+                var hz = Math.Max(0.1, AppOptions.Telemetry.Hz);
+                TelemetryPoll?.SetInterval(TimeSpan.FromSeconds(1.0 / hz));
+            };
         }
         catch (Exception ex)
         {
