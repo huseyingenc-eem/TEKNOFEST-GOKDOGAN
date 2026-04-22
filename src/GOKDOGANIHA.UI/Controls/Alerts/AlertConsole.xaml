@@ -7,25 +7,31 @@
              mc:Ignorable="d"
              d:DesignWidth="700" d:DesignHeight="180">
 
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="LevelInfo" Color="#FF00D1C7" />
+        <SolidColorBrush x:Key="LevelWarn" Color="#FFFFB300" />
+        <SolidColorBrush x:Key="LevelDanger" Color="#FFFF5252" />
+    </UserControl.Resources>
+
     <core:PanelFrame Header="SİSTEM LOGLARI" IconKind="AlertCircleOutline">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3">
-                    <Run Foreground="{StaticResource TacticalOk}" Text="[SYS]" />
-                    <Run Foreground="{StaticResource TacticalTextSecondary}"
-                         Text=" Sistem hazır. Sunucuya bağlanmayı bekliyor..." />
-                </TextBlock>
-                <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3">
-                    <Run Foreground="{StaticResource TacticalAccent}" Text="[API]" />
-                    <Run Foreground="{StaticResource TacticalTextSecondary}"
-                         Text=" /api/giris bekleniyor..." />
-                </TextBlock>
-                <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3">
-                    <Run Foreground="{StaticResource TacticalWarn}" Text="[UAV]" />
-                    <Run Foreground="{StaticResource TacticalTextSecondary}"
-                         Text=" Telemetri bağlantısı yok." />
-                </TextBlock>
-            </StackPanel>
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="AlertItems">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3"
+                                   TextWrapping="Wrap">
+                            <Run Text="{Binding TimeLabel, Mode=OneTime}"
+                                 Foreground="{StaticResource TacticalTextSecondary}" />
+                            <Run Text=" " />
+                            <Run Text="{Binding Tag, Mode=OneTime}"
+                                 Foreground="{Binding LevelBrush, Mode=OneTime}" />
+                            <Run Text=" " />
+                            <Run Text="{Binding Message, Mode=OneTime}"
+                                 Foreground="{StaticResource TacticalTextPrimary}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </ScrollViewer>
     </core:PanelFrame>
 </UserControl>
