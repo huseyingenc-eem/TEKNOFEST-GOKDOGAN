@@ -85,21 +85,21 @@
             <core:RadialMenuItem IconKind="Cancel"     Label="İPTAL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
         </core:RadialMenu>
 
-        <!-- OVERLAY: Camera fullscreen (starts below TopBar so context stays visible) -->
+        <!-- OVERLAY: Camera fullscreen — edge-to-edge, header (TopBar) stays visible above -->
         <core:OverlayHost IsOpen="{Binding IsCameraFullscreen, Mode=TwoWay}"
                           Title="GÖREV KAMERASI"
                           Subtitle="Tam ekran · ESC veya arka plana tıklayarak kapat"
                           HeaderIconKind="Video"
-                          ContentMargin="24,72,24,24">
+                          ContentMargin="0,60,0,0">
             <video:CameraFullscreenView />
         </core:OverlayHost>
 
-        <!-- OVERLAY: Settings -->
+        <!-- OVERLAY: Settings — edge-to-edge, header stays visible -->
         <core:OverlayHost IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}"
                           Title="AYARLAR"
                           Subtitle="GÖKDOĞAN YKİ yapılandırması"
                           HeaderIconKind="Cog"
-                          ContentMargin="120,72,120,48">
+                          ContentMargin="0,60,0,0">
             <views:SettingsView DataContext="{Binding Settings}" />
         </core:OverlayHost>
     </Grid>

@@ -10,9 +10,9 @@
              d:DesignWidth="440" d:DesignHeight="520">
 
     <core:PanelFrame Header="GÖREV VİDEOSU" IconKind="Video">
-        <!-- Entire video area wrapped in a chrome-less Button so Command binding
-             reliably resolves against the inherited DataContext (MouseBinding on a
-             Freezable cannot walk to DataContext). -->
+        <!-- Entire video area clickable. No panel-wide hover visual; the small
+             expand button at top-right is the discoverable affordance and has
+             its own hover. -->
         <Button Command="{Binding ExpandCameraCommand}"
                 Click="OnExpandClick"
                 Cursor="Hand"
@@ -24,15 +24,9 @@
                 ToolTip="Tam ekrana genişlet">
             <Button.Template>
                 <ControlTemplate TargetType="Button">
-                    <Grid x:Name="Root" Background="{TemplateBinding Background}">
+                    <Grid Background="{TemplateBinding Background}">
                         <ContentPresenter />
-                        <Rectangle x:Name="Hover" Fill="#22FFFFFF" Opacity="0" IsHitTestVisible="False" />
                     </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Hover" Property="Opacity" Value="1" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Button.Template>
 
@@ -52,36 +46,43 @@
                           Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
                 </Grid>
 
-                <!-- Lock badge -->
-                <Border HorizontalAlignment="Right" VerticalAlignment="Top"
-                        Margin="0,8,8,0"
-                        CornerRadius="2" Padding="6,2"
-                        Background="{StaticResource TacticalCritical}"
-                        Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
-                    <TextBlock Text="KİLİTLİ"
-                               FontSize="10" FontWeight="Bold"
-                               Foreground="White" />
-                </Border>
+                <!-- Top-right stack: lock badge + expand icon, side by side -->
+                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Orientation="Horizontal" Margin="0,8,8,0">
 
-                <!-- Expand affordance (bottom-right) -->
-                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                        Margin="0,0,8,8"
-                        Background="#80000000"
-                        BorderBrush="{StaticResource TacticalOverlayBorder}"
-                        BorderThickness="1" CornerRadius="3"
-                        Padding="6,3">
-                    <StackPanel Orientation="Horizontal">
+                    <!-- Lock badge — only while a target is locked -->
+                    <Border Margin="0,0,6,0"
+                            CornerRadius="2" Padding="6,2"
+                            Background="{StaticResource TacticalCritical}"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                        <TextBlock Text="KİLİTLİ"
+                                   FontSize="10" FontWeight="Bold"
+                                   Foreground="White" />
+                    </Border>
+
+                    <!-- Expand affordance — isolated hover target -->
+                    <Border Width="26" Height="26" CornerRadius="3">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#99000000" />
+                                <Setter Property="BorderBrush" Value="{StaticResource TacticalOverlayBorder}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#CC00D1C7" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <materialIcons:MaterialIcon Kind="Fullscreen"
-                                                    Width="14" Height="14"
+                                                    Width="16" Height="16"
                                                     Foreground="{StaticResource TacticalAccent}"
+                                                    HorizontalAlignment="Center"
                                                     VerticalAlignment="Center" />
-                        <TextBlock Text="BÜYÜT"
-                                   FontSize="10" FontWeight="SemiBold"
-                                   FontFamily="Consolas"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   Margin="6,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Border>
+                    </Border>
+                </StackPanel>
             </Grid>
         </Button>
     </core:PanelFrame>
