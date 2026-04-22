@@ -8,10 +8,19 @@
              d:DesignWidth="1600" d:DesignHeight="900">
 
     <Grid>
-        <!-- Real tile map -->
+        <!-- Real tile map (default: Stadia Alidade Smooth Dark) -->
         <gmap:GMapControl x:Name="MapCtrl" />
 
-        <!-- Tactical dark tint so overlays stay legible over bright OSM tiles -->
-        <Rectangle Fill="#55061018" IsHitTestVisible="False" />
+        <!-- Very light tint — Stadia's dark basemap is already muted,
+             a heavy tint would wash it out. -->
+        <Rectangle Fill="#20061018" IsHitTestVisible="False" />
+
+        <!-- Attribution (required by Stadia + OSM ODbL) -->
+        <TextBlock Text="© Stadia Maps  © OpenStreetMap contributors"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,0,8,6"
+                   FontSize="9"
+                   Foreground="#99E6ECF2"
+                   IsHitTestVisible="False" />
     </Grid>
 </UserControl>

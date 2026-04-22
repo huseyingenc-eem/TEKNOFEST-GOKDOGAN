@@ -18,7 +18,7 @@ public partial class MapSettingsViewModel : OptionsBackedViewModel<MapOptions>
         _showHssZones = options.ShowHssZones;
     }
 
-    [ObservableProperty] private string _tileProvider = "GoogleMap";
+    [ObservableProperty] private string _tileProvider = "StadiaAlidadeSmoothDark";
     [ObservableProperty] private bool _showGrid = true;
     [ObservableProperty] private bool _showBoundary = true;
     [ObservableProperty] private bool _showHssZones = true;
