@@ -23,8 +23,10 @@ public partial class MapPanel : UserControl
     private GMapMarker? _ownMarker;
     private OwnDroneMarker? _ownVisual;
     private GMapMarker? _qrMarker;
+    private GMapPolygon? _boundaryPoly;
 
     private MapViewModel? _vm;
+    private MapOptions? _mapOptions;
 
     public MapPanel()
     {
@@ -48,19 +50,86 @@ public partial class MapPanel : UserControl
         MapCtrl.CanDragMap = true;
         MapCtrl.OnMapZoomChanged += OnMapZoomChanged;
 
-        Loaded += (_, __) => DrawBoundary();
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
         DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        // MapOptions (live INPC) — ayarlar değişince harita anında adapte olur.
+        _mapOptions = App.AppOptions?.Map;
+        if (_mapOptions is not null)
+        {
+            _mapOptions.PropertyChanged += OnMapOptionsChanged;
+            ApplyAllMapOptions();
+        }
+        else
+        {
+            DrawBoundary();
+        }
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (_mapOptions is not null)
+            _mapOptions.PropertyChanged -= OnMapOptionsChanged;
+    }
+
+    private void OnMapOptionsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MapOptions.TileProvider): ApplyTileProvider(); break;
+            case nameof(MapOptions.ShowBoundary): ApplyBoundary(); break;
+            case nameof(MapOptions.ShowHssZones): RebuildHss(); break;
+            case nameof(MapOptions.ShowGrid): /* reserved */ break;
+        }
+    }
+
+    private void ApplyAllMapOptions()
+    {
+        ApplyTileProvider();
+        ApplyBoundary();
+        RebuildHss();
+    }
+
+    private void ApplyTileProvider()
+    {
+        if (_mapOptions is null) return;
+        MapCtrl.MapProvider = _mapOptions.TileProvider switch
+        {
+            "OpenStreetMap" => GMapProviders.OpenStreetMap,
+            "GoogleSatelliteMap" or "Google Satellite" => GMapProviders.GoogleSatelliteMap,
+            "GoogleHybridMap" => GMapProviders.GoogleHybridMap,
+            _ => GMapProviders.GoogleMap
+        };
+    }
+
+    private void ApplyBoundary()
+    {
+        if (_mapOptions is null) return;
+        if (_mapOptions.ShowBoundary) DrawBoundary();
+        else RemoveBoundary();
     }
 
     private void DrawBoundary()
     {
+        if (_boundaryPoly is not null) return; // already drawn
         var points = CompetitionBoundary.Corners
             .Select(c => new PointLatLng(c.Lat, c.Lng))
             .ToList();
         if (points.Count < 3) return;
 
-        var poly = new GMapPolygon(points) { Tag = "boundary" };
-        MapCtrl.Markers.Add(poly);
+        _boundaryPoly = new GMapPolygon(points) { Tag = "boundary" };
+        MapCtrl.Markers.Add(_boundaryPoly);
+    }
+
+    private void RemoveBoundary()
+    {
+        if (_boundaryPoly is null) return;
+        MapCtrl.Markers.Remove(_boundaryPoly);
+        _boundaryPoly = null;
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -131,6 +200,9 @@ public partial class MapPanel : UserControl
         if (_vm is null) return;
         foreach (var (marker, _, _) in _hssMarkers.Values) MapCtrl.Markers.Remove(marker);
         _hssMarkers.Clear();
+
+        // ShowHssZones = false → çiz, boşaltıldıktan sonra geri çıkma
+        if (_mapOptions is { ShowHssZones: false }) return;
 
         foreach (var h in _vm.HssZones)
         {
