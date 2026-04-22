@@ -4,37 +4,85 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
              mc:Ignorable="d"
              d:DesignWidth="440" d:DesignHeight="520">
 
     <core:PanelFrame Header="GÖREV VİDEOSU" IconKind="Video">
-        <Grid Background="{StaticResource TacticalBgDeep}">
-            <TextBlock Text="— CANLI VİDEO AKIŞI —"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Foreground="{StaticResource TacticalTextSecondary}"
-                       FontFamily="Consolas" FontSize="12" />
+        <!-- Entire video area wrapped in a chrome-less Button so Command binding
+             reliably resolves against the inherited DataContext (MouseBinding on a
+             Freezable cannot walk to DataContext). -->
+        <Button Command="{Binding ExpandCameraCommand}"
+                Click="OnExpandClick"
+                Cursor="Hand"
+                Background="{StaticResource TacticalBgDeep}"
+                BorderThickness="0"
+                Padding="0"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                ToolTip="Tam ekrana genişlet">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" Background="{TemplateBinding Background}">
+                        <ContentPresenter />
+                        <Rectangle x:Name="Hover" Fill="#22FFFFFF" Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Hover" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
 
-            <!-- Crosshair reticle -->
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-                  Width="60" Height="60" Opacity="0.35">
-                <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                <Line X1="30" Y1="10" X2="30" Y2="50"
-                      Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                <Line X1="10" Y1="30" X2="50" Y2="30"
-                      Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+            <Grid>
+                <TextBlock Text="— CANLI VİDEO AKIŞI —"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource TacticalTextSecondary}"
+                           FontFamily="Consolas" FontSize="12" />
+
+                <!-- Crosshair reticle -->
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Width="60" Height="60" Opacity="0.35">
+                    <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                    <Line X1="30" Y1="10" X2="30" Y2="50"
+                          Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                    <Line X1="10" Y1="30" X2="50" Y2="30"
+                          Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                </Grid>
+
+                <!-- Lock badge -->
+                <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,8,8,0"
+                        CornerRadius="2" Padding="6,2"
+                        Background="{StaticResource TacticalCritical}"
+                        Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                    <TextBlock Text="KİLİTLİ"
+                               FontSize="10" FontWeight="Bold"
+                               Foreground="White" />
+                </Border>
+
+                <!-- Expand affordance (bottom-right) -->
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Margin="0,0,8,8"
+                        Background="#80000000"
+                        BorderBrush="{StaticResource TacticalOverlayBorder}"
+                        BorderThickness="1" CornerRadius="3"
+                        Padding="6,3">
+                    <StackPanel Orientation="Horizontal">
+                        <materialIcons:MaterialIcon Kind="Fullscreen"
+                                                    Width="14" Height="14"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="BÜYÜT"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   FontFamily="Consolas"
+                                   Foreground="{StaticResource TacticalAccent}"
+                                   Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
             </Grid>
-
-            <!-- Lock badge -->
-            <Border HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Margin="0,8,8,0"
-                    CornerRadius="2" Padding="6,2"
-                    Background="{StaticResource TacticalCritical}"
-                    Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
-                <TextBlock Text="KİLİTLİ"
-                           FontSize="10" FontWeight="Bold"
-                           Foreground="White" />
-            </Border>
-        </Grid>
+        </Button>
     </core:PanelFrame>
 </UserControl>

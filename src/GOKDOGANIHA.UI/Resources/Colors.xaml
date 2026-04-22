@@ -37,6 +37,10 @@
     <SolidColorBrush x:Key="TacticalOverlayBorder" Color="{StaticResource TacticalOverlayBorderColor}" />
     <SolidColorBrush x:Key="TacticalOverlayHighlight" Color="{StaticResource TacticalOverlayHighlightColor}" />
 
+    <!-- Modal backdrop (used by OverlayHost to dim the screen behind floating cards). -->
+    <Color x:Key="TacticalBackdropColor">#D0060A10</Color>
+    <SolidColorBrush x:Key="TacticalBackdrop" Color="{StaticResource TacticalBackdropColor}" />
+
     <!-- "Glass" gradient — top slightly lighter than bottom, suggests a reflective surface. -->
     <LinearGradientBrush x:Key="TacticalGlass" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#CC1D2632" Offset="0.0" />

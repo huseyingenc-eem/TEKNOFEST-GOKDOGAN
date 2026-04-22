@@ -1,0 +1,240 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             mc:Ignorable="d"
+             d:DesignWidth="760" d:DesignHeight="560">
+
+    <UserControl.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="MinWidth" Value="140" />
+        </Style>
+
+        <Style x:Key="GroupHeader" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+
+        <Style x:Key="GroupCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource TacticalBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="18,14" />
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+
+        <Style x:Key="FieldRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,6,0,6" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Padding="24,18,24,18">
+        <StackPanel MaxWidth="720" HorizontalAlignment="Stretch">
+
+            <!-- ========== YARIŞMA SUNUCUSU ========== -->
+            <Border Style="{StaticResource GroupCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource GroupHeader}">
+                        <materialIcons:MaterialIcon Kind="Server" Width="16" Height="16"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="YARIŞMA SUNUCUSU" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Sunucu adresi" Style="{StaticResource FieldLabel}" />
+                        <TextBox Grid.Column="1" Text="{Binding ServerBaseUrl, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="http://127.0.0.25:5000" />
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Kullanıcı adı" Style="{StaticResource FieldLabel}" />
+                        <TextBox Grid.Column="1" Text="{Binding TeamUsername, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Şifre" Style="{StaticResource FieldLabel}" />
+                        <PasswordBox Grid.Column="1" x:Name="PasswordInput"
+                                     PasswordChanged="OnPasswordChanged" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Content="BAĞLANTIYI TEST ET" Padding="16,6" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== TELEMETRİ ========== -->
+            <Border Style="{StaticResource GroupCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource GroupHeader}">
+                        <materialIcons:MaterialIcon Kind="AccessPoint" Width="16" Height="16"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="TELEMETRİ" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Gönderim frekansı" Style="{StaticResource FieldLabel}" />
+                        <Slider Grid.Column="1" Minimum="0.5" Maximum="2.0" TickFrequency="0.5"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding TelemetryHz}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                   Foreground="{StaticResource TacticalAccent}"
+                                   VerticalAlignment="Center" TextAlignment="Right">
+                            <TextBlock.Text>
+                                <Binding Path="TelemetryHz" StringFormat="{}{0:0.0} Hz" />
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+
+                    <CheckBox IsChecked="{Binding AutoReconnect}"
+                              Content="Bağlantı kopunca otomatik yeniden bağlan"
+                              Margin="0,6,0,0" />
+
+                    <TextBlock Text="Şartname: 2 Hz üzeri telemetri 400 döner."
+                               FontSize="10" FontStyle="Italic"
+                               Foreground="{StaticResource TacticalWarn}"
+                               Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- ========== VİDEO ========== -->
+            <Border Style="{StaticResource GroupCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource GroupHeader}">
+                        <materialIcons:MaterialIcon Kind="Video" Width="16" Height="16"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="VİDEO AKIŞI" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="RTSP URL" Style="{StaticResource FieldLabel}" />
+                        <TextBox Grid.Column="1" Text="{Binding VideoRtspUrl, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Profil" Style="{StaticResource FieldLabel}" />
+                        <ComboBox SelectedValue="{Binding VideoPreset}" SelectedValuePath="Content">
+                            <ComboBoxItem Content="720p/30" />
+                            <ComboBoxItem Content="1080p/30" />
+                            <ComboBoxItem Content="1080p/60" />
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== HARİTA ========== -->
+            <Border Style="{StaticResource GroupCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource GroupHeader}">
+                        <materialIcons:MaterialIcon Kind="Map" Width="16" Height="16"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="HARİTA" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Tile sağlayıcı" Style="{StaticResource FieldLabel}" />
+                        <ComboBox SelectedValue="{Binding MapTileProvider}" SelectedValuePath="Content">
+                            <ComboBoxItem Content="OpenStreetMap" />
+                            <ComboBoxItem Content="Esri World Imagery" />
+                            <ComboBoxItem Content="Google Satellite" />
+                        </ComboBox>
+                    </Grid>
+
+                    <CheckBox IsChecked="{Binding ShowGrid}" Content="Grid katmanı" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding ShowBoundary}" Content="Uçuş sahası sınırı" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding ShowHssZones}" Content="HSS bölgeleri" Margin="0,6,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- ========== UYARILAR ========== -->
+            <Border Style="{StaticResource GroupCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource GroupHeader}">
+                        <materialIcons:MaterialIcon Kind="BellRing" Width="16" Height="16"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="UYARILAR" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <CheckBox IsChecked="{Binding EnableAudioAlerts}" Content="Sesli uyarılar" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding EnableLockBeep}" Content="Kilitlenme bip sesi" Margin="0,6,0,0" />
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Düşük batarya eşiği"
+                                   Style="{StaticResource FieldLabel}" />
+                        <Slider Grid.Column="1" Minimum="18" Maximum="30" TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding LowBatteryThreshold}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                   Foreground="{StaticResource TacticalWarn}"
+                                   VerticalAlignment="Center" TextAlignment="Right">
+                            <TextBlock.Text>
+                                <Binding Path="LowBatteryThreshold" StringFormat="{}{0} V" />
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
