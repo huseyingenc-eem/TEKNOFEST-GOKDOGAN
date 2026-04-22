@@ -12,6 +12,7 @@ using GOKDOGANIHA.Core.Services.Polling;
 using GOKDOGANIHA.Core.Services.Session;
 using GOKDOGANIHA.Core.Services.Telemetry;
 using GOKDOGANIHA.Core.Services.Time;
+using GOKDOGANIHA.UI.Services;
 
 namespace GOKDOGANIHA.UI;
 
@@ -32,6 +33,8 @@ public partial class App : Application
     public static SimulatedFlightSource? FlightSimulator { get; private set; }
     public static BatteryMonitor? Battery { get; private set; }
     public static ConnectionOrchestrator? Connection { get; private set; }
+    public static IDialogService Dialogs { get; } = new DialogService();
+    public static ISettingsViewModelFactory? SettingsFactory { get; private set; }
 
     private PeriodicTimer? _packetPump;
     private CancellationTokenSource? _pumpCts;
@@ -73,6 +76,7 @@ public partial class App : Application
             FlightSimulator = new SimulatedFlightSource(FlightState);
             Battery = new BatteryMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock);
             Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock);
+            SettingsFactory = new SettingsViewModelFactory(AppOptions, client, Dialogs);
 
             // FlightState'i simülasyonla besle (gerçek hardware gelene kadar)
             FlightSimulator.Start();

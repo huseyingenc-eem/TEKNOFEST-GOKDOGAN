@@ -1,27 +1,32 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Services.Api;
 using System;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace GOKDOGANIHA.UI.ViewModels.Settings;
 
 /// <summary>
 /// SUNUCU sekmesi — yarışma API adresi ve takım kimlik bilgileri.
-/// GameServerOptions'a çift yönlü bağlanır.
+/// GameServerOptions'a çift yönlü bağlanır. Dialog gösterimi için
+/// <see cref="IDialogService"/> enjekte edilir (MVVM SRP).
 /// </summary>
 public partial class ServerSettingsViewModel : OptionsBackedViewModel<GameServerOptions>
 {
     private readonly IGameServerClient? _gameServer;
+    private readonly IDialogService? _dialog;
 
     public ServerSettingsViewModel() { }
 
-    public ServerSettingsViewModel(GameServerOptions options, IGameServerClient? gameServer = null)
-        : base(options)
+    public ServerSettingsViewModel(
+        GameServerOptions options,
+        IGameServerClient? gameServer = null,
+        IDialogService? dialog = null) : base(options)
     {
         _gameServer = gameServer;
+        _dialog = dialog;
         _serverBaseUrl = string.IsNullOrWhiteSpace(options.BaseUrl) ? _serverBaseUrl : options.BaseUrl;
         _teamUsername = string.IsNullOrWhiteSpace(options.KullaniciAdi) ? _teamUsername : options.KullaniciAdi;
         _teamPassword = options.Sifre;
@@ -40,31 +45,23 @@ public partial class ServerSettingsViewModel : OptionsBackedViewModel<GameServer
     {
         if (_gameServer is null)
         {
-            MessageBox.Show(
-                "API istemcisi başlatılmadı.",
-                "BAĞLANTI TESTİ",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (_dialog is not null)
+                await _dialog.ShowWarnAsync("BAĞLANTI TESTİ", "API istemcisi başlatılmadı.");
             return;
         }
 
         try
         {
             var response = await _gameServer.GirisAsync();
-            MessageBox.Show(
-                $"Giriş başarılı.\nTakım numarası: {response.TakimNumarasi}",
-                "BAĞLANTI TESTİ",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            // OnLoginSucceeded event fire edilirse TeamSettingsViewModel senkron
-            // olur — şimdilik GameServerClient zaten _options.TakimNumarasi'na
-            // yazdığı için başka VM'ler takip edebilir.
             LoginSucceeded?.Invoke(this, response.TakimNumarasi);
+            if (_dialog is not null)
+                await _dialog.ShowInfoAsync("BAĞLANTI TESTİ",
+                    $"Giriş başarılı.\nTakım numarası: {response.TakimNumarasi}");
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                $"Bağlantı başarısız:\n\n{ex.Message}",
-                "BAĞLANTI TESTİ",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            if (_dialog is not null)
+                await _dialog.ShowErrorAsync("BAĞLANTI TESTİ", $"Bağlantı başarısız:\n\n{ex.Message}");
         }
     }
 

@@ -25,10 +25,10 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(TelemetryPollService telemetryPoll, HssPollService hssPoll)
         : this(new MapViewModel(telemetryPoll, hssPoll), CreateRuntimeSettings()) { }
 
+    // SettingsFactory üzerinden — statik App coupling yalnızca buraya sıkıştı.
+    // Test'ler doğrudan SettingsViewModel constructor'ı ile ilerleyebilir.
     private static SettingsViewModel CreateRuntimeSettings()
-        => App.AppOptions is null
-            ? new SettingsViewModel()
-            : new SettingsViewModel(App.AppOptions, App.GameServer);
+        => App.SettingsFactory?.Create() ?? new SettingsViewModel();
 
     public MapViewModel MapVm { get; }
     public SettingsViewModel Settings { get; }
