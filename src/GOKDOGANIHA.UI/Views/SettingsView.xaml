@@ -265,6 +265,7 @@
                         <TextBlock Grid.Column="0" Text="Tile sağlayıcı" Style="{StaticResource FieldLabel}" />
                         <ComboBox Grid.Column="1"
                                   SelectedValue="{Binding Map.TileProvider}" SelectedValuePath="Content">
+                            <ComboBoxItem Content="StadiaAlidadeSmoothDark" />
                             <ComboBoxItem Content="GoogleMap" />
                             <ComboBoxItem Content="GoogleSatelliteMap" />
                             <ComboBoxItem Content="GoogleHybridMap" />

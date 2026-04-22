@@ -12,7 +12,7 @@ public class ApplicationOptionsTests
         Assert.Equal("http://127.0.0.25:5000", opts.GameServer.BaseUrl);
         Assert.Equal(1.0, opts.Telemetry.Hz);                // şartname: max 2 Hz
         Assert.True(opts.Telemetry.AutoReconnect);
-        Assert.Equal("GoogleMap", opts.Map.TileProvider);
+        Assert.Equal("StadiaAlidadeSmoothDark", opts.Map.TileProvider);
         Assert.True(opts.Map.ShowBoundary);
         Assert.Equal(22, opts.Alerts.LowBatteryThreshold);
         Assert.Equal(500, opts.Alerts.OpponentProximityThreshold);

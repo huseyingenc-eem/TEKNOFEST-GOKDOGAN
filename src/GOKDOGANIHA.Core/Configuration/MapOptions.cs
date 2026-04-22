@@ -9,7 +9,7 @@ namespace GOKDOGANIHA.Core.Configuration;
 /// </summary>
 public sealed class MapOptions : INotifyPropertyChanged
 {
-    private string _tileProvider = "GoogleMap";
+    private string _tileProvider = "StadiaAlidadeSmoothDark";
     private bool _showGrid = true;
     private bool _showBoundary = true;
     private bool _showHssZones = true;

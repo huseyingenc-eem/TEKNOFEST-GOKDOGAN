@@ -12,6 +12,7 @@ using GMap.NET.WindowsPresentation;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.UI.Controls.Map.Markers;
+using GOKDOGANIHA.UI.Controls.Map.Providers;
 using GOKDOGANIHA.UI.ViewModels;
 
 namespace GOKDOGANIHA.UI.Controls.Map;
@@ -32,14 +33,14 @@ public partial class MapPanel : UserControl
     {
         InitializeComponent();
 
-        // Google tiles are used instead of OpenStreetMap: OSM volunteer-run
-        // servers rate-limit/block heavy tactical use, and their tile policy
-        // requires a specific UA + Referer combination that GMap.NET doesn't
-        // expose cleanly. Google works without an API key via GMap.NET.
+        // Stadia Maps "Alidade Smooth Dark" — dark tactical basemap with
+        // terrain/contour shading. Free tier allows localhost use without
+        // an API key; for competition deployment, set
+        // StadiaAlidadeSmoothDarkProvider.ApiKey at app startup.
         GMapProvider.UserAgent = "GOKDOGAN-YKI/1.0 (+TEKNOFEST-2026-SavasanIHA)";
 
         GMaps.Instance.Mode = AccessMode.ServerAndCache;
-        MapCtrl.MapProvider = GMapProviders.GoogleMap;
+        MapCtrl.MapProvider = StadiaAlidadeSmoothDarkProvider.Instance;
         MapCtrl.Position = new PointLatLng(CompetitionBoundary.Center.Lat, CompetitionBoundary.Center.Lng);
         MapCtrl.MinZoom = 5;
         MapCtrl.MaxZoom = 19;
@@ -100,9 +101,11 @@ public partial class MapPanel : UserControl
         MapCtrl.MapProvider = _mapOptions.TileProvider switch
         {
             "OpenStreetMap" => GMapProviders.OpenStreetMap,
+            "GoogleMap" => GMapProviders.GoogleMap,
             "GoogleSatelliteMap" or "Google Satellite" => GMapProviders.GoogleSatelliteMap,
             "GoogleHybridMap" => GMapProviders.GoogleHybridMap,
-            _ => GMapProviders.GoogleMap
+            // Default: tactical dark basemap
+            _ => StadiaAlidadeSmoothDarkProvider.Instance
         };
     }
 
