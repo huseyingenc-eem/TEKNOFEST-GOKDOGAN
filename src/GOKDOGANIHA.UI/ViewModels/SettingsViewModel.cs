@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.UI.ViewModels.Settings;
@@ -27,9 +28,12 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     // Runtime: tüm Options'lar root ApplicationOptions'dan gelir.
-    public SettingsViewModel(ApplicationOptions app, IGameServerClient? gameServer = null)
+    public SettingsViewModel(
+        ApplicationOptions app,
+        IGameServerClient? gameServer = null,
+        IDialogService? dialog = null)
     {
-        Server = new ServerSettingsViewModel(app.GameServer, gameServer);
+        Server = new ServerSettingsViewModel(app.GameServer, gameServer, dialog);
         Team = new TeamSettingsViewModel(app.GameServer);
         Telemetry = new TelemetrySettingsViewModel(app.Telemetry);
         Video = new VideoSettingsViewModel(app.Video);
