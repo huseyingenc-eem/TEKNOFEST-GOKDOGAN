@@ -3,10 +3,73 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
              mc:Ignorable="d"
              d:DesignWidth="1600" d:DesignHeight="44">
+
+    <UserControl.Resources>
+        <!-- Pill-shaped icon button (matches StatusPill metrics so header reads as one unit). -->
+        <Style x:Key="HeaderIconPillButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="{StaticResource TacticalSurfaceHi}" />
+            <Setter Property="BorderBrush" Value="{StaticResource TacticalOverlayBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Pill"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                Padding="10,6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Pill" Property="Background"
+                                        Value="{StaticResource TacticalSurface}" />
+                                <Setter TargetName="Pill" Property="BorderBrush"
+                                        Value="{StaticResource TacticalAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Pill" Property="Background"
+                                        Value="{StaticResource TacticalBgDeep}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Active overlay "breadcrumb" chip — shown while Camera / Settings overlay is open. -->
+        <Style x:Key="OverlayChipCloseButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BtnBg" Background="Transparent" CornerRadius="2" Padding="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BtnBg" Property="Background" Value="#33FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
     <Border Background="{StaticResource TacticalGlass}"
             BorderBrush="{StaticResource TacticalOverlayBorder}"
@@ -23,7 +86,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Left: Callsign + Flight mode -->
+            <!-- ========== LEFT: Identity (logo + callsign) ========== -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <materialIcons:MaterialIcon Kind="Airplane"
                                             Width="22" Height="22"
@@ -31,15 +94,11 @@
                                             VerticalAlignment="Center" />
                 <TextBlock Text="{Binding CallSign}"
                            FontSize="16" FontWeight="SemiBold"
-                           Margin="10,0,16,0"
+                           Margin="10,0,0,0"
                            VerticalAlignment="Center" />
-                <core:StatusPill IconKind="Cog"
-                                 IconBrush="{StaticResource TacticalAccent}"
-                                 Label="MOD"
-                                 Value="{Binding FlightMode}" />
             </StackPanel>
 
-            <!-- Center: Server clock -->
+            <!-- ========== CENTER: Server clock ========== -->
             <StackPanel Grid.Column="1" Orientation="Horizontal"
                         HorizontalAlignment="Center" VerticalAlignment="Center">
                 <materialIcons:MaterialIcon Kind="ClockOutline"
@@ -58,12 +117,65 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- Right: Link / API / Battery -->
+            <!-- ========== RIGHT: Active overlay · Mode · Link · API · Battery · Settings ========== -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+                <!-- Active overlay chip — Camera -->
+                <Border Background="#3300D1C7"
+                        BorderBrush="{StaticResource TacticalAccent}"
+                        BorderThickness="1" CornerRadius="3"
+                        Padding="8,4" Margin="0,0,8,0"
+                        Visibility="{Binding IsCameraFullscreen, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialIcons:MaterialIcon Kind="Video" Width="13" Height="13"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="KAMERA"
+                                   FontFamily="Consolas" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalAccent}"
+                                   Margin="6,0,8,0" VerticalAlignment="Center" />
+                        <Button Command="{Binding CloseActiveOverlayCommand}"
+                                Style="{StaticResource OverlayChipCloseButton}"
+                                ToolTip="Kapat">
+                            <materialIcons:MaterialIcon Kind="Close" Width="12" Height="12"
+                                                        Foreground="{StaticResource TacticalAccent}" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Active overlay chip — Settings -->
+                <Border Background="#3300D1C7"
+                        BorderBrush="{StaticResource TacticalAccent}"
+                        BorderThickness="1" CornerRadius="3"
+                        Padding="8,4" Margin="0,0,8,0"
+                        Visibility="{Binding IsSettingsOpen, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialIcons:MaterialIcon Kind="Cog" Width="13" Height="13"
+                                                    Foreground="{StaticResource TacticalAccent}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Text="AYARLAR"
+                                   FontFamily="Consolas" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalAccent}"
+                                   Margin="6,0,8,0" VerticalAlignment="Center" />
+                        <Button Command="{Binding CloseActiveOverlayCommand}"
+                                Style="{StaticResource OverlayChipCloseButton}"
+                                ToolTip="Kapat">
+                            <materialIcons:MaterialIcon Kind="Close" Width="12" Height="12"
+                                                        Foreground="{StaticResource TacticalAccent}" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Telemetry / status pills -->
+                <core:StatusPill IconKind="Cog"
+                                 IconBrush="{StaticResource TacticalAccent}"
+                                 Label="MOD"
+                                 Value="{Binding FlightMode}" />
                 <core:StatusPill IconKind="AccessPoint"
                                  IconBrush="{StaticResource TacticalOk}"
                                  Label="LINK"
-                                 Value="{Binding LinkRssi, StringFormat={}{0} dBm}" />
+                                 Value="{Binding LinkRssi, StringFormat={}{0} dBm}"
+                                 Margin="8,0,0,0" />
                 <core:StatusPill IconKind="Server"
                                  IconBrush="{StaticResource TacticalAccent}"
                                  Label="API"
@@ -74,6 +186,16 @@
                                  Label="BAT"
                                  Value="{Binding Battery, StringFormat={}{0}%}"
                                  Margin="8,0,0,0" />
+
+                <!-- Settings pill-button (matches StatusPill geometry) -->
+                <Button Command="{Binding OpenSettingsCommand}"
+                        Click="OnSettingsClick"
+                        Style="{StaticResource HeaderIconPillButton}"
+                        ToolTip="Ayarlar"
+                        Margin="8,0,0,0">
+                    <materialIcons:MaterialIcon Kind="Cog" Width="16" Height="16"
+                                                Foreground="{StaticResource TacticalTextSecondary}" />
+                </Button>
             </StackPanel>
         </Grid>
     </Border>

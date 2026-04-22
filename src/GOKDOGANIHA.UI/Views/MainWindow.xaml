@@ -11,6 +11,7 @@
         xmlns:map="clr-namespace:GOKDOGANIHA.UI.Controls.Map"
         xmlns:video="clr-namespace:GOKDOGANIHA.UI.Controls.Video"
         xmlns:alerts="clr-namespace:GOKDOGANIHA.UI.Controls.Alerts"
+        xmlns:views="clr-namespace:GOKDOGANIHA.UI.Views"
         mc:Ignorable="d"
         Title="GÖKDOĞAN — Yer Kontrol İstasyonu"
         Height="960" Width="1680"
@@ -83,5 +84,23 @@
             <core:RadialMenuItem IconKind="Bomb"       Label="KAMİKAZE" Variant="Danger"  IconBrush="{StaticResource TacticalCritical}" />
             <core:RadialMenuItem IconKind="Cancel"     Label="İPTAL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
         </core:RadialMenu>
+
+        <!-- OVERLAY: Camera fullscreen (starts below TopBar so context stays visible) -->
+        <core:OverlayHost IsOpen="{Binding IsCameraFullscreen, Mode=TwoWay}"
+                          Title="GÖREV KAMERASI"
+                          Subtitle="Tam ekran · ESC veya arka plana tıklayarak kapat"
+                          HeaderIconKind="Video"
+                          ContentMargin="24,72,24,24">
+            <video:CameraFullscreenView />
+        </core:OverlayHost>
+
+        <!-- OVERLAY: Settings -->
+        <core:OverlayHost IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}"
+                          Title="AYARLAR"
+                          Subtitle="GÖKDOĞAN YKİ yapılandırması"
+                          HeaderIconKind="Cog"
+                          ContentMargin="120,72,120,48">
+            <views:SettingsView DataContext="{Binding Settings}" />
+        </core:OverlayHost>
     </Grid>
 </Window>
