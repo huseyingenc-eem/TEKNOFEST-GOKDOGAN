@@ -2,26 +2,38 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GOKDOGANIHA.Core.Services.Polling;
+using GOKDOGANIHA.UI;
 
 namespace GOKDOGANIHA.UI.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    public MainWindowViewModel() : this(new MapViewModel()) { }
+    // Design-time: parameterless Settings (no service wiring).
+    // Runtime: Settings gets the live App.ServerOptions + GameServer, so
+    // every setter change propagates to the actual service layer.
+    public MainWindowViewModel()
+        : this(new MapViewModel(),
+               App.ServerOptions is null
+                   ? new SettingsViewModel()
+                   : new SettingsViewModel(App.ServerOptions, App.GameServer)) { }
 
-    public MainWindowViewModel(MapViewModel mapVm)
+    public MainWindowViewModel(MapViewModel mapVm) : this(mapVm, new SettingsViewModel()) { }
+
+    public MainWindowViewModel(MapViewModel mapVm, SettingsViewModel settings)
     {
         MapVm = mapVm;
-        Settings = new SettingsViewModel();
+        Settings = settings;
     }
 
     public MainWindowViewModel(TelemetryPollService telemetryPoll, HssPollService hssPoll)
-        : this(new MapViewModel(telemetryPoll, hssPoll)) { }
+        : this(new MapViewModel(telemetryPoll, hssPoll),
+               App.ServerOptions is null
+                   ? new SettingsViewModel()
+                   : new SettingsViewModel(App.ServerOptions, App.GameServer)) { }
 
     public MapViewModel MapVm { get; }
     public SettingsViewModel Settings { get; }
 
-    [ObservableProperty] private string _callSign = "GÖKDOĞAN-1";
     [ObservableProperty] private string _serverTime = "00:00:00.000";
     [ObservableProperty] private string _flightMode = "MANUAL";
     [ObservableProperty] private bool _isConnected;
