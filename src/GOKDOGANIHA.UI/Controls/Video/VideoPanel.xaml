@@ -10,80 +10,72 @@
              d:DesignWidth="440" d:DesignHeight="520">
 
     <core:PanelFrame Header="GÖREV VİDEOSU" IconKind="Video">
-        <!-- Entire video area clickable. No panel-wide hover visual; the small
-             expand button at top-right is the discoverable affordance and has
-             its own hover. -->
-        <Button Command="{Binding ExpandCameraCommand}"
-                Click="OnExpandClick"
-                Cursor="Hand"
-                Background="{StaticResource TacticalBgDeep}"
-                BorderThickness="0"
-                Padding="0"
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                ToolTip="Tam ekrana genişlet">
-            <Button.Template>
-                <ControlTemplate TargetType="Button">
-                    <Grid Background="{TemplateBinding Background}">
-                        <ContentPresenter />
-                    </Grid>
-                </ControlTemplate>
-            </Button.Template>
+        <!-- Solid video surface fills the entire panel. Nothing on this surface
+             is clickable except the explicit expand button in the top-right. -->
+        <Grid Background="{StaticResource TacticalBgDeep}">
 
-            <Grid>
-                <TextBlock Text="— CANLI VİDEO AKIŞI —"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="{StaticResource TacticalTextSecondary}"
-                           FontFamily="Consolas" FontSize="12" />
+            <TextBlock Text="— CANLI VİDEO AKIŞI —"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{StaticResource TacticalTextSecondary}"
+                       FontFamily="Consolas" FontSize="12" />
 
-                <!-- Crosshair reticle -->
-                <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Width="60" Height="60" Opacity="0.35">
-                    <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                    <Line X1="30" Y1="10" X2="30" Y2="50"
-                          Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                    <Line X1="10" Y1="30" X2="50" Y2="30"
-                          Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                </Grid>
-
-                <!-- Top-right stack: lock badge + expand icon, side by side -->
-                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Orientation="Horizontal" Margin="0,8,8,0">
-
-                    <!-- Lock badge — only while a target is locked -->
-                    <Border Margin="0,0,6,0"
-                            CornerRadius="2" Padding="6,2"
-                            Background="{StaticResource TacticalCritical}"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
-                        <TextBlock Text="KİLİTLİ"
-                                   FontSize="10" FontWeight="Bold"
-                                   Foreground="White" />
-                    </Border>
-
-                    <!-- Expand affordance — isolated hover target -->
-                    <Border Width="26" Height="26" CornerRadius="3">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="#99000000" />
-                                <Setter Property="BorderBrush" Value="{StaticResource TacticalOverlayBorder}" />
-                                <Setter Property="BorderThickness" Value="1" />
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#CC00D1C7" />
-                                        <Setter Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <materialIcons:MaterialIcon Kind="Fullscreen"
-                                                    Width="16" Height="16"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center" />
-                    </Border>
-                </StackPanel>
+            <!-- Crosshair reticle -->
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Width="60" Height="60" Opacity="0.35">
+                <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                <Line X1="30" Y1="10" X2="30" Y2="50"
+                      Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                <Line X1="10" Y1="30" X2="50" Y2="30"
+                      Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
             </Grid>
-        </Button>
+
+            <!-- Top-right stack: lock badge + expand button -->
+            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Orientation="Horizontal" Margin="0,8,8,0">
+
+                <!-- Lock badge — only while a target is locked -->
+                <Border Margin="0,0,6,0"
+                        CornerRadius="2" Padding="6,2"
+                        Background="{StaticResource TacticalCritical}"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                    <TextBlock Text="KİLİTLİ"
+                               FontSize="10" FontWeight="Bold"
+                               Foreground="White" />
+                </Border>
+
+                <!-- Expand button — the ONLY clickable element on the panel surface -->
+                <Button Command="{Binding ExpandCameraCommand}"
+                        Click="OnExpandClick"
+                        Cursor="Hand"
+                        Width="26" Height="26"
+                        Padding="0"
+                        Focusable="False"
+                        ToolTip="Tam ekrana genişlet">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd"
+                                    Background="#99000000"
+                                    BorderBrush="{StaticResource TacticalOverlayBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="3">
+                                <materialIcons:MaterialIcon Kind="Fullscreen"
+                                                            Width="16" Height="16"
+                                                            Foreground="{StaticResource TacticalAccent}"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#CC00D1C7" />
+                                    <Setter TargetName="Bd" Property="BorderBrush"
+                                            Value="{StaticResource TacticalAccent}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+        </Grid>
     </core:PanelFrame>
 </UserControl>
