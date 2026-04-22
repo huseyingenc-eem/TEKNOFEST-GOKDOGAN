@@ -13,6 +13,6 @@ public partial class SettingsView : UserControl
     private void OnPasswordChanged(object sender, RoutedEventArgs e)
     {
         if (DataContext is SettingsViewModel vm && sender is PasswordBox pb)
-            vm.TeamPassword = pb.Password;
+            vm.Server.TeamPassword = pb.Password;
     }
 }

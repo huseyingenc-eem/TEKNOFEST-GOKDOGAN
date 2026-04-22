@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GOKDOGANIHA.Core\GOKDOGANIHA.Core.csproj" />
+    <ProjectReference Include="..\GOKDOGANIHA.UI\GOKDOGANIHA.UI.csproj" />
   </ItemGroup>
 
 </Project>

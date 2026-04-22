@@ -8,9 +8,8 @@ namespace GOKDOGANIHA.UI.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    // Design-time: parameterless Settings (no service wiring).
-    // Runtime: Settings gets the live App.ServerOptions + GameServer, so
-    // every setter change propagates to the actual service layer.
+    // Design-time / parameterless: SettingsViewModel unwired (no service push).
+    // Runtime: uses ApplicationOptions + GameServer from App composition root.
     public MainWindowViewModel()
         : this(new MapViewModel(), CreateRuntimeSettings()) { }
 
@@ -26,13 +25,10 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(TelemetryPollService telemetryPoll, HssPollService hssPoll)
         : this(new MapViewModel(telemetryPoll, hssPoll), CreateRuntimeSettings()) { }
 
-    // Factory for the runtime-wired SettingsViewModel. Falls back to a plain
-    // (unwired) VM if App statics aren't bootstrapped — happens in unit tests
-    // and sometimes in the XAML designer.
     private static SettingsViewModel CreateRuntimeSettings()
-        => App.ServerOptions is null
+        => App.AppOptions is null
             ? new SettingsViewModel()
-            : new SettingsViewModel(App.ServerOptions, App.GameServer);
+            : new SettingsViewModel(App.AppOptions, App.GameServer);
 
     public MapViewModel MapVm { get; }
     public SettingsViewModel Settings { get; }
@@ -85,31 +81,17 @@ public partial class MainWindowViewModel : ObservableObject
         if (value) IsCameraFullscreen = false;
     }
 
-    [RelayCommand]
-    private void ExpandCamera() => IsCameraFullscreen = true;
-
-    [RelayCommand]
-    private void OpenSettings() => IsSettingsOpen = true;
-
+    [RelayCommand] private void ExpandCamera() => IsCameraFullscreen = true;
+    [RelayCommand] private void OpenSettings() => IsSettingsOpen = true;
     [RelayCommand]
     private void CloseActiveOverlay()
     {
         IsCameraFullscreen = false;
         IsSettingsOpen = false;
     }
-
-    [RelayCommand]
-    private void ToggleLock() => IsLocked = !IsLocked;
-
-    [RelayCommand]
-    private void CameraZoomIn() => CameraZoom = Math.Min(20.0, CameraZoom + 0.5);
-
-    [RelayCommand]
-    private void CameraZoomOut() => CameraZoom = Math.Max(1.0, CameraZoom - 0.5);
-
-    [RelayCommand]
-    private void ToggleCameraBand() { /* EO / IR toggle — bağlanacak */ }
-
-    [RelayCommand]
-    private void CameraSnapshot() { /* snapshot — bağlanacak */ }
+    [RelayCommand] private void ToggleLock() => IsLocked = !IsLocked;
+    [RelayCommand] private void CameraZoomIn() => CameraZoom = Math.Min(20.0, CameraZoom + 0.5);
+    [RelayCommand] private void CameraZoomOut() => CameraZoom = Math.Max(1.0, CameraZoom - 0.5);
+    [RelayCommand] private void ToggleCameraBand() { /* EO / IR — bağlanacak */ }
+    [RelayCommand] private void CameraSnapshot() { /* snapshot — bağlanacak */ }
 }

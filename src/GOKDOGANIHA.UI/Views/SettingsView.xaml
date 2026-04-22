@@ -61,7 +61,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Sunucu adresi" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Column="1"
-                                 Text="{Binding ServerBaseUrl, UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{Binding Server.ServerBaseUrl, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="http://127.0.0.25:5000" />
                     </Grid>
 
@@ -72,7 +72,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Kullanıcı adı" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Column="1"
-                                 Text="{Binding TeamUsername, UpdateSourceTrigger=PropertyChanged}" />
+                                 Text="{Binding Server.TeamUsername, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
 
                     <Grid Style="{StaticResource FieldRow}">
@@ -88,7 +88,7 @@
                     <StackPanel Orientation="Horizontal" Margin="160,16,0,0">
                         <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Content="BAĞLANTIYI TEST ET"
-                                Command="{Binding TestConnectionCommand}"
+                                Command="{Binding Server.TestConnectionCommand}"
                                 Padding="18,8" FontSize="11" />
                     </StackPanel>
                 </StackPanel>
@@ -120,7 +120,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Takım numarası" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Column="1"
-                                 Text="{Binding TeamNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{Binding Team.TeamNumber, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="Hakemler tarafından verilir" />
                     </Grid>
 
@@ -131,7 +131,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Çağrı işareti" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Column="1"
-                                 Text="{Binding CallSign, UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{Binding Team.CallSign, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="GÖKDOĞAN-1" />
                     </Grid>
 
@@ -169,17 +169,17 @@
                         <TextBlock Grid.Column="0" Text="Gönderim frekansı" Style="{StaticResource FieldLabel}" />
                         <Slider Grid.Column="1" Minimum="0.5" Maximum="2.0" TickFrequency="0.5"
                                 IsSnapToTickEnabled="True"
-                                Value="{Binding TelemetryHz}" VerticalAlignment="Center" />
+                                Value="{Binding Telemetry.Hz}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
                                    Foreground="{StaticResource TacticalAccent}"
                                    VerticalAlignment="Center" TextAlignment="Right">
                             <TextBlock.Text>
-                                <Binding Path="TelemetryHz" StringFormat="{}{0:0.0} Hz" />
+                                <Binding Path="Telemetry.Hz" StringFormat="{}{0:0.0} Hz" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
 
-                    <CheckBox IsChecked="{Binding AutoReconnect}"
+                    <CheckBox IsChecked="{Binding Telemetry.AutoReconnect}"
                               Content="Bağlantı kopunca otomatik yeniden bağlan"
                               Margin="160,10,0,0" />
 
@@ -215,7 +215,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="RTSP URL" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Column="1"
-                                 Text="{Binding VideoRtspUrl, UpdateSourceTrigger=PropertyChanged}" />
+                                 Text="{Binding Video.RtspUrl, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
 
                     <Grid Style="{StaticResource FieldRow}">
@@ -225,7 +225,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Profil" Style="{StaticResource FieldLabel}" />
                         <ComboBox Grid.Column="1"
-                                  SelectedValue="{Binding VideoPreset}" SelectedValuePath="Content">
+                                  SelectedValue="{Binding Video.Preset}" SelectedValuePath="Content">
                             <ComboBoxItem Content="720p/30" />
                             <ComboBoxItem Content="1080p/30" />
                             <ComboBoxItem Content="1080p/60" />
@@ -259,16 +259,16 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Tile sağlayıcı" Style="{StaticResource FieldLabel}" />
                         <ComboBox Grid.Column="1"
-                                  SelectedValue="{Binding MapTileProvider}" SelectedValuePath="Content">
+                                  SelectedValue="{Binding Map.TileProvider}" SelectedValuePath="Content">
                             <ComboBoxItem Content="OpenStreetMap" />
                             <ComboBoxItem Content="Esri World Imagery" />
                             <ComboBoxItem Content="Google Satellite" />
                         </ComboBox>
                     </Grid>
 
-                    <CheckBox IsChecked="{Binding ShowGrid}" Content="Grid katmanı" Margin="160,10,0,0" />
-                    <CheckBox IsChecked="{Binding ShowBoundary}" Content="Uçuş sahası sınırı" Margin="160,8,0,0" />
-                    <CheckBox IsChecked="{Binding ShowHssZones}" Content="HSS bölgeleri" Margin="160,8,0,0" />
+                    <CheckBox IsChecked="{Binding Map.ShowGrid}" Content="Grid katmanı" Margin="160,10,0,0" />
+                    <CheckBox IsChecked="{Binding Map.ShowBoundary}" Content="Uçuş sahası sınırı" Margin="160,8,0,0" />
+                    <CheckBox IsChecked="{Binding Map.ShowHssZones}" Content="HSS bölgeleri" Margin="160,8,0,0" />
                 </StackPanel>
             </ScrollViewer>
         </core:IconTabItem>
@@ -290,8 +290,8 @@
                                    Margin="12,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
 
-                    <CheckBox IsChecked="{Binding EnableAudioAlerts}" Content="Sesli uyarılar" Margin="0,8,0,0" />
-                    <CheckBox IsChecked="{Binding EnableLockBeep}" Content="Kilitlenme bip sesi" Margin="0,8,0,0" />
+                    <CheckBox IsChecked="{Binding Alerts.EnableAudioAlerts}" Content="Sesli uyarılar" Margin="0,8,0,0" />
+                    <CheckBox IsChecked="{Binding Alerts.EnableLockBeep}" Content="Kilitlenme bip sesi" Margin="0,8,0,0" />
 
                     <Grid Style="{StaticResource FieldRow}" Margin="0,16,0,8">
                         <Grid.ColumnDefinitions>
@@ -302,12 +302,12 @@
                         <TextBlock Grid.Column="0" Text="Düşük batarya eşiği" Style="{StaticResource FieldLabel}" />
                         <Slider Grid.Column="1" Minimum="18" Maximum="30" TickFrequency="1"
                                 IsSnapToTickEnabled="True"
-                                Value="{Binding LowBatteryThreshold}" VerticalAlignment="Center" />
+                                Value="{Binding Alerts.LowBatteryThreshold}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
                                    Foreground="{StaticResource TacticalWarn}"
                                    VerticalAlignment="Center" TextAlignment="Right">
                             <TextBlock.Text>
-                                <Binding Path="LowBatteryThreshold" StringFormat="{}{0} V" />
+                                <Binding Path="Alerts.LowBatteryThreshold" StringFormat="{}{0} V" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
@@ -326,12 +326,12 @@
                         <TextBlock Grid.Column="0" Text="Rakip İHA yakınlığı" Style="{StaticResource FieldLabel}" />
                         <Slider Grid.Column="1" Minimum="100" Maximum="2000" TickFrequency="100"
                                 IsSnapToTickEnabled="True"
-                                Value="{Binding OpponentProximityThreshold}" VerticalAlignment="Center" />
+                                Value="{Binding Alerts.OpponentProximityThreshold}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
                                    Foreground="{StaticResource TacticalAccent}"
                                    VerticalAlignment="Center" TextAlignment="Right">
                             <TextBlock.Text>
-                                <Binding Path="OpponentProximityThreshold" StringFormat="{}{0:0} m" />
+                                <Binding Path="Alerts.OpponentProximityThreshold" StringFormat="{}{0:0} m" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
@@ -345,12 +345,12 @@
                         <TextBlock Grid.Column="0" Text="HSS tampon mesafesi" Style="{StaticResource FieldLabel}" />
                         <Slider Grid.Column="1" Minimum="20" Maximum="300" TickFrequency="10"
                                 IsSnapToTickEnabled="True"
-                                Value="{Binding HssProximityThreshold}" VerticalAlignment="Center" />
+                                Value="{Binding Alerts.HssProximityThreshold}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
                                    Foreground="{StaticResource TacticalCritical}"
                                    VerticalAlignment="Center" TextAlignment="Right">
                             <TextBlock.Text>
-                                <Binding Path="HssProximityThreshold" StringFormat="{}{0:0} m" />
+                                <Binding Path="Alerts.HssProximityThreshold" StringFormat="{}{0:0} m" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
@@ -364,12 +364,12 @@
                         <TextBlock Grid.Column="0" Text="Saha sınırı yakınlığı" Style="{StaticResource FieldLabel}" />
                         <Slider Grid.Column="1" Minimum="50" Maximum="500" TickFrequency="25"
                                 IsSnapToTickEnabled="True"
-                                Value="{Binding BoundaryProximityThreshold}" VerticalAlignment="Center" />
+                                Value="{Binding Alerts.BoundaryProximityThreshold}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
                                    Foreground="{StaticResource TacticalWarn}"
                                    VerticalAlignment="Center" TextAlignment="Right">
                             <TextBlock.Text>
-                                <Binding Path="BoundaryProximityThreshold" StringFormat="{}{0:0} m" />
+                                <Binding Path="Alerts.BoundaryProximityThreshold" StringFormat="{}{0:0} m" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
@@ -383,12 +383,12 @@
                         <TextBlock Grid.Column="0" Text="Haberleşme gecikme" Style="{StaticResource FieldLabel}" />
                         <Slider Grid.Column="1" Minimum="100" Maximum="2000" TickFrequency="100"
                                 IsSnapToTickEnabled="True"
-                                Value="{Binding CommLatencyThreshold}" VerticalAlignment="Center" />
+                                Value="{Binding Alerts.CommLatencyThreshold}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
                                    Foreground="{StaticResource TacticalWarn}"
                                    VerticalAlignment="Center" TextAlignment="Right">
                             <TextBlock.Text>
-                                <Binding Path="CommLatencyThreshold" StringFormat="{}{0} ms" />
+                                <Binding Path="Alerts.CommLatencyThreshold" StringFormat="{}{0} ms" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
