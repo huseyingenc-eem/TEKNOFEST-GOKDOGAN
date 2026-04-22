@@ -12,4 +12,7 @@ public sealed class ApplicationOptions
     public VideoOptions Video { get; } = new();
     public MapOptions Map { get; } = new();
     public AlertOptions Alerts { get; } = new();
+    public GeofenceOptions Geofence { get; } = new();
+    public FailsafeOptions Failsafe { get; } = new();
+    public AutonomyOptions Autonomy { get; } = new();
 }
