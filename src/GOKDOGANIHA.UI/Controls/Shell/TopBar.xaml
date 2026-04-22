@@ -92,7 +92,7 @@
                                             Width="22" Height="22"
                                             Foreground="{StaticResource TacticalAccent}"
                                             VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Settings.CallSign}"
+                <TextBlock Text="{Binding Settings.Team.CallSign}"
                            FontSize="16" FontWeight="SemiBold"
                            Margin="10,0,0,0"
                            VerticalAlignment="Center" />
