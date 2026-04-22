@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Services.Api;
+using GOKDOGANIHA.Core.Services.Session;
 using GOKDOGANIHA.UI.ViewModels.Settings;
 
 namespace GOKDOGANIHA.UI.ViewModels;
@@ -31,9 +32,10 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(
         ApplicationOptions app,
         IGameServerClient? gameServer = null,
-        IDialogService? dialog = null)
+        IDialogService? dialog = null,
+        ConnectionOrchestrator? orchestrator = null)
     {
-        Server = new ServerSettingsViewModel(app.GameServer, gameServer, dialog);
+        Server = new ServerSettingsViewModel(app.GameServer, gameServer, dialog, orchestrator);
         Team = new TeamSettingsViewModel(app.GameServer);
         Telemetry = new TelemetrySettingsViewModel(app.Telemetry);
         Video = new VideoSettingsViewModel(app.Video);

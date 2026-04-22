@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Models;
 
 namespace GOKDOGANIHA.Core.Services.Telemetry;
@@ -8,9 +9,9 @@ namespace GOKDOGANIHA.Core.Services.Telemetry;
 /// <summary>
 /// Gerçek donanım gelene kadar <see cref="FlightState"/>'i tatlı bir döngüde güncelleyen
 /// geçici besleyici. Merkez (41.02, 29.01) etrafında dairesel uçuş, batarya yavaş iner.
-/// MAVLink adapter eklendiğinde bu sınıfın yerine geçecek (OCP).
+/// MAVLink adapter eklendiğinde aynı <see cref="IFlightStateSource"/> ile takılır (OCP).
 /// </summary>
-public sealed class SimulatedFlightSource : IDisposable
+public sealed class SimulatedFlightSource : IFlightStateSource
 {
     private readonly FlightState _state;
     private CancellationTokenSource? _cts;

@@ -14,10 +14,20 @@
              is clickable except the explicit expand button in the top-right. -->
         <Grid Background="{StaticResource TacticalBgDeep}">
 
-            <TextBlock Text="— CANLI VİDEO AKIŞI —"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Foreground="{StaticResource TacticalTextSecondary}"
-                       FontFamily="Consolas" FontSize="12" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="— CANLI VİDEO AKIŞI —"
+                           HorizontalAlignment="Center"
+                           Foreground="{StaticResource TacticalTextSecondary}"
+                           FontFamily="Consolas" FontSize="12" />
+                <!-- Geçici: LibVLCSharp entegrasyonu gelene kadar şu anki RTSP
+                     URL'i göster — ayarların canlı etki ettiğini kanıtlar. -->
+                <TextBlock x:Name="StreamLabel"
+                           HorizontalAlignment="Center"
+                           Foreground="{StaticResource TacticalTextSecondary}"
+                           FontFamily="Consolas" FontSize="10"
+                           Margin="0,6,0,0"
+                           Opacity="0.45" />
+            </StackPanel>
 
             <!-- Crosshair reticle -->
             <Grid HorizontalAlignment="Center" VerticalAlignment="Center"

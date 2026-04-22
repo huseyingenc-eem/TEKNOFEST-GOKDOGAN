@@ -10,6 +10,7 @@ using GOKDOGANIHA.Core.Services.Alerts.Monitors;
 using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.Core.Services.Polling;
 using GOKDOGANIHA.Core.Services.Session;
+using GOKDOGANIHA.Core.Services.Failsafe;
 using GOKDOGANIHA.Core.Services.Telemetry;
 using GOKDOGANIHA.Core.Services.Time;
 using GOKDOGANIHA.UI.Services;
@@ -32,6 +33,12 @@ public partial class App : Application
     public static TelemetryPacketBuilder? PacketBuilder { get; private set; }
     public static SimulatedFlightSource? FlightSimulator { get; private set; }
     public static BatteryMonitor? Battery { get; private set; }
+    public static BoundaryProximityMonitor? BoundaryProximity { get; private set; }
+    public static OpponentProximityMonitor? OpponentProximity { get; private set; }
+    public static HssProximityMonitor? HssProximity { get; private set; }
+    public static CommLatencyMonitor? CommLatency { get; private set; }
+    public static FailsafeMonitor? Failsafe { get; private set; }
+    public static IFlightCommandSink? Commands { get; private set; }
     public static ConnectionOrchestrator? Connection { get; private set; }
     public static IDialogService Dialogs { get; } = new DialogService();
     public static ISettingsViewModelFactory? SettingsFactory { get; private set; }
@@ -39,6 +46,8 @@ public partial class App : Application
     private PeriodicTimer? _packetPump;
     private CancellationTokenSource? _pumpCts;
     private Task? _pumpTask;
+    private PeriodicTimer? _failsafePump;
+    private Task? _failsafeTask;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -75,14 +84,26 @@ public partial class App : Application
             PacketBuilder = new TelemetryPacketBuilder(FlightState, AppOptions.GameServer);
             FlightSimulator = new SimulatedFlightSource(FlightState);
             Battery = new BatteryMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock);
+            BoundaryProximity = new BoundaryProximityMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock);
+            OpponentProximity = new OpponentProximityMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock, TelemetryPoll);
+            HssProximity = new HssProximityMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock, HssPoll);
+            CommLatency = new CommLatencyMonitor(AppOptions.Alerts, AlertBus, Clock, TelemetryPoll);
+            Commands = new NullFlightCommandSink();
+            Failsafe = new FailsafeMonitor(AppOptions.Failsafe, AlertBus, Commands, Clock);
             Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock);
-            SettingsFactory = new SettingsViewModelFactory(AppOptions, client, Dialogs);
+            SettingsFactory = new SettingsViewModelFactory(AppOptions, client, Dialogs, Connection);
+
+            // Telemetri her başarılı cevabında failsafe heartbeat'i resetle
+            TelemetryPoll.TelemetryReceived += (_, _) => Failsafe?.RecordHeartbeat();
 
             // FlightState'i simülasyonla besle (gerçek hardware gelene kadar)
             FlightSimulator.Start();
 
             // Packet pump — FlightState'ten paket kurup TelemetryPoll'a besler
             StartPacketPump();
+
+            // Failsafe tick — 1 Hz, GCS timeout'u değerlendirir
+            StartFailsafePump();
 
             // Hz ayarı değişince poll servisine yansıt (AYARLAR → TELEMETRİ slider'ı)
             AppOptions.Telemetry.PropertyChanged += (_, e) =>
@@ -96,6 +117,20 @@ public partial class App : Application
         {
             System.Diagnostics.Debug.WriteLine($"Service bootstrap failed: {ex.Message}");
         }
+    }
+
+    private void StartFailsafePump()
+    {
+        _failsafePump = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _failsafeTask = Task.Run(async () =>
+        {
+            try
+            {
+                while (await _failsafePump!.WaitForNextTickAsync(_pumpCts!.Token))
+                    Failsafe?.Tick();
+            }
+            catch (OperationCanceledException) { }
+        }, _pumpCts!.Token);
     }
 
     private void StartPacketPump()
@@ -123,11 +158,25 @@ public partial class App : Application
     {
         _pumpCts?.Cancel();
         _packetPump?.Dispose();
+        _failsafePump?.Dispose();
         FlightSimulator?.Dispose();
         Battery?.Dispose();
+        BoundaryProximity?.Dispose();
+        OpponentProximity?.Dispose();
+        HssProximity?.Dispose();
+        CommLatency?.Dispose();
         TelemetryPoll?.Dispose();
         HssPoll?.Dispose();
         (GameServer as IDisposable)?.Dispose();
         base.OnExit(e);
+    }
+
+    // FailsafeMonitor komut sink'ine ihtiyaç duyar; gerçek MAVLink adapter
+    // gelene kadar log-only stub.
+    private sealed class NullFlightCommandSink : IFlightCommandSink
+    {
+        public void Rtl()    => System.Diagnostics.Debug.WriteLine("[FC] RTL");
+        public void Land()   => System.Diagnostics.Debug.WriteLine("[FC] LAND");
+        public void Loiter() => System.Diagnostics.Debug.WriteLine("[FC] LOITER");
     }
 }
