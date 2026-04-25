@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
+using GOKDOGANIHA.Core.Models;
 using GOKDOGANIHA.Core.Models.Alerts;
 using GOKDOGANIHA.Core.Services.Failsafe;
 
@@ -17,10 +18,16 @@ public class FailsafeMonitorTests
     }
     private sealed class FakeCommands : IFlightCommandSink
     {
-        public int RtlCount; public int LandCount; public int LoiterCount;
+        public int ArmCount; public int DisarmCount; public int RtlCount;
+        public int LandCount; public int LoiterCount; public int SetModeCount;
+        public int GotoCount;
+        public void Arm() => ArmCount++;
+        public void Disarm() => DisarmCount++;
+        public void SetMode(FlightMode mode) => SetModeCount++;
         public void Rtl() => RtlCount++;
         public void Land() => LandCount++;
         public void Loiter() => LoiterCount++;
+        public void GotoWaypoint(double lat, double lon, double altMeters) => GotoCount++;
     }
 
     [Fact]

@@ -14,11 +14,14 @@ public partial class TelemetrySettingsViewModel : OptionsBackedViewModel<Telemet
     {
         _hz = options.Hz;
         _autoReconnect = options.AutoReconnect;
+        _useSimulator = options.UseSimulator;
     }
 
     [ObservableProperty] private double _hz = 1.0;
     [ObservableProperty] private bool _autoReconnect = true;
+    [ObservableProperty] private bool _useSimulator;
 
     partial void OnHzChanged(double value) => PushToOptions(o => o.Hz = value);
     partial void OnAutoReconnectChanged(bool value) => PushToOptions(o => o.AutoReconnect = value);
+    partial void OnUseSimulatorChanged(bool value) => PushToOptions(o => o.UseSimulator = value);
 }

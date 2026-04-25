@@ -188,6 +188,15 @@
                               Content="Bağlantı kopunca otomatik yeniden bağlan"
                               Margin="160,10,0,0" />
 
+                    <CheckBox IsChecked="{Binding Telemetry.UseSimulator}"
+                              Content="Simülatör ile sahte İHA verisi üret (gerçek MAVLink yokken)"
+                              Margin="160,10,0,0" />
+                    <TextBlock Text="Açıkken: 100ms tick'te FlightState sahte değerlerle dolar (sin/cos osilasyonlar). Yarışma modunda KAPALI tutun — gerçek pixhawk yokken telemetri sıfır kalır."
+                               FontSize="10" FontStyle="Italic"
+                               TextWrapping="Wrap"
+                               Foreground="{StaticResource TacticalTextSecondary}"
+                               Margin="184,4,0,0" />
+
                     <TextBlock Text="Şartname: 2 Hz üzeri telemetri 400 döner."
                                FontSize="11" FontStyle="Italic"
                                Foreground="{StaticResource TacticalWarn}"

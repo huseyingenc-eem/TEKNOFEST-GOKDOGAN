@@ -7,15 +7,15 @@
         xmlns:vm="clr-namespace:GOKDOGANIHA.UI.ViewModels"
         xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
         xmlns:shell="clr-namespace:GOKDOGANIHA.UI.Controls.Shell"
-        xmlns:telemetry="clr-namespace:GOKDOGANIHA.UI.Controls.Telemetry"
         xmlns:map="clr-namespace:GOKDOGANIHA.UI.Controls.Map"
         xmlns:video="clr-namespace:GOKDOGANIHA.UI.Controls.Video"
-        xmlns:alerts="clr-namespace:GOKDOGANIHA.UI.Controls.Alerts"
+        xmlns:telemetry="clr-namespace:GOKDOGANIHA.UI.Controls.Telemetry"
+        xmlns:sidebar="clr-namespace:GOKDOGANIHA.UI.Controls.Sidebar"
         xmlns:views="clr-namespace:GOKDOGANIHA.UI.Views"
         mc:Ignorable="d"
         Title="GÖKDOĞAN — Yer Kontrol İstasyonu"
-        Height="960" Width="1680"
-        MinHeight="780" MinWidth="1280"
+        Height="1080" Width="1920"
+        MinHeight="900" MinWidth="1600"
         Background="{StaticResource TacticalBgDeep}"
         TextElement.Foreground="{StaticResource TacticalTextPrimary}"
         TextElement.FontFamily="{materialDesign:MaterialDesignFont}"
@@ -26,67 +26,70 @@
         <vm:MainWindowViewModel />
     </Window.DataContext>
 
-    <!-- Single grid: Map is the base; every other panel overlays it. -->
+    <!-- 2-kolon: harita arka plan + sağ accordion sidebar.
+         Fullscreen overlay'ler (Camera, Settings) ColumnSpan=2 ile her iki kolonu kaplar. -->
     <Grid>
-        <!-- BASE: Map fills everything -->
-        <map:MapPanel DataContext="{Binding MapVm}" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="360" />
+        </Grid.ColumnDefinitions>
 
-        <!-- TOP overlay: status bar -->
-        <shell:TopBar VerticalAlignment="Top" />
+        <!-- ============ HARİTA KOLONU + OVERLAY'LER ============ -->
+        <Grid Grid.Column="0">
+            <map:MapPanel DataContext="{Binding MapVm}" />
 
-        <!-- TOP-LEFT overlay: Telemetry HUD -->
-        <telemetry:TelemetryPanel
-            VerticalAlignment="Top" HorizontalAlignment="Left"
-            Width="300"
-            Margin="16,78,0,0" />
+            <!-- Top: status bar (sunucu saati + status pills) -->
+            <shell:TopBar VerticalAlignment="Top" />
 
-        <!-- TOP-RIGHT overlay: Mission video -->
-        <video:VideoPanel
-            VerticalAlignment="Top" HorizontalAlignment="Right"
-            Width="400" Height="280"
-            Margin="0,78,16,0" />
+            <!-- Top-LEFT overlay: HUD-tarzı kompakt telemetri kartı (tıkla → büyüt) -->
+            <telemetry:TelemetryPanel
+                VerticalAlignment="Top" HorizontalAlignment="Left"
+                Width="280"
+                Margin="16,78,0,0"
+                IsExpanded="{Binding IsTelemetryExpanded, Mode=TwoWay}" />
 
-        <!-- BOTTOM-CENTER overlay: System logs -->
-        <alerts:AlertConsole
-            VerticalAlignment="Bottom" HorizontalAlignment="Center"
-            Width="640" Height="170"
-            Margin="0,0,0,24" />
+            <!-- Top-right (harita kolonu içinde): video panel — kilit dörtgeni overlay buradan -->
+            <video:VideoPanel
+                VerticalAlignment="Top" HorizontalAlignment="Right"
+                Width="400" Height="280"
+                Margin="0,78,16,0" />
 
-        <!-- BOTTOM-LEFT overlay: Flight dial (fans up-right) -->
-        <!-- Negative margin pushes the RootGrid so the centered trigger sits near the corner.
-             RootGrid diameter = 2*Radius + ItemSize + 16 = 2*170 + 60 + 16 = 416;
-             trigger center is at 208px from each side, so Margin="-148,0,0,-148"
-             places the trigger 60px from the window's bottom-left corner. -->
-        <core:RadialMenu
-            x:Name="FlightDial"
-            VerticalAlignment="Bottom" HorizontalAlignment="Left"
-            Margin="-148,0,0,-148"
-            Radius="170" ItemSize="60"
-            StartAngle="270" SweepAngle="90"
-            TriggerIconKind="AirplaneTakeoff"
-            TriggerIconWhenOpenKind="Close">
-            <core:RadialMenuItem IconKind="ShieldCheck"     Label="ARM"    Variant="Ok"      IconBrush="{StaticResource TacticalOk}" />
-            <core:RadialMenuItem IconKind="Robot"           Label="OTONOM" Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
-            <core:RadialMenuItem IconKind="HomeMapMarker"   Label="RTL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
-            <core:RadialMenuItem IconKind="AirplaneLanding" Label="İNİŞ"   Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
-        </core:RadialMenu>
+            <!-- Bottom-left: Flight dial (ARM/OTONOM/RTL/İNİŞ) — fans up-right -->
+            <core:RadialMenu
+                x:Name="FlightDial"
+                VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                Margin="-148,0,0,-148"
+                Radius="170" ItemSize="60"
+                StartAngle="270" SweepAngle="90"
+                TriggerIconKind="AirplaneTakeoff"
+                TriggerIconWhenOpenKind="Close">
+                <core:RadialMenuItem IconKind="ShieldCheck"     Label="ARM"    Variant="Ok"      IconBrush="{StaticResource TacticalOk}" />
+                <core:RadialMenuItem IconKind="Robot"           Label="OTONOM" Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
+                <core:RadialMenuItem IconKind="HomeMapMarker"   Label="RTL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
+                <core:RadialMenuItem IconKind="AirplaneLanding" Label="İNİŞ"   Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
+            </core:RadialMenu>
 
-        <!-- BOTTOM-RIGHT overlay: Attack dial (fans up-left) -->
-        <core:RadialMenu
-            x:Name="AttackDial"
-            VerticalAlignment="Bottom" HorizontalAlignment="Right"
-            Margin="0,0,-148,-148"
-            Radius="170" ItemSize="60"
-            StartAngle="180" SweepAngle="90"
-            TriggerIconKind="TargetAccount"
-            TriggerIconWhenOpenKind="Close">
-            <core:RadialMenuItem IconKind="Crosshairs" Label="KİLİTLE"  Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
-            <core:RadialMenuItem IconKind="Bomb"       Label="KAMİKAZE" Variant="Danger"  IconBrush="{StaticResource TacticalCritical}" />
-            <core:RadialMenuItem IconKind="Cancel"     Label="İPTAL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
-        </core:RadialMenu>
+            <!-- Bottom-right (harita kolonunun sağ alt köşesi): Attack dial — fans up-left -->
+            <core:RadialMenu
+                x:Name="AttackDial"
+                VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                Margin="0,0,-148,-148"
+                Radius="170" ItemSize="60"
+                StartAngle="180" SweepAngle="90"
+                TriggerIconKind="TargetAccount"
+                TriggerIconWhenOpenKind="Close">
+                <core:RadialMenuItem IconKind="Crosshairs" Label="KİLİTLE"  Variant="Primary" IconBrush="{StaticResource TacticalAccent}" />
+                <core:RadialMenuItem IconKind="Bomb"       Label="KAMİKAZE" Variant="Danger"  IconBrush="{StaticResource TacticalCritical}" />
+                <core:RadialMenuItem IconKind="Cancel"     Label="İPTAL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
+            </core:RadialMenu>
+        </Grid>
 
-        <!-- OVERLAY: Camera fullscreen — edge-to-edge, header (TopBar) stays visible above -->
-        <core:OverlayHost IsOpen="{Binding IsCameraFullscreen, Mode=TwoWay}"
+        <!-- ============ SAĞ KOLON: Accordion paneller ============ -->
+        <sidebar:RightSidebar Grid.Column="1" />
+
+        <!-- ============ FULLSCREEN OVERLAY'LER (tüm window'u kaplar) ============ -->
+        <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
+                          IsOpen="{Binding IsCameraFullscreen, Mode=TwoWay}"
                           Title="GÖREV KAMERASI"
                           Subtitle="Tam ekran · ESC veya arka plana tıklayarak kapat"
                           HeaderIconKind="Video"
@@ -94,8 +97,8 @@
             <video:CameraFullscreenView />
         </core:OverlayHost>
 
-        <!-- OVERLAY: Settings — edge-to-edge, header stays visible -->
-        <core:OverlayHost IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}"
+        <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
+                          IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}"
                           Title="AYARLAR"
                           Subtitle="GÖKDOĞAN YKİ yapılandırması"
                           HeaderIconKind="Cog"

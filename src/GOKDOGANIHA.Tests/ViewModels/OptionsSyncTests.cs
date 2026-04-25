@@ -63,6 +63,29 @@ public class OptionsSyncTests
     }
 
     [Fact]
+    public void TelemetrySettings_pushes_UseSimulator_to_options()
+    {
+        var opts = new TelemetryOptions();
+        Assert.False(opts.UseSimulator); // default kapalı
+
+        var vm = new TelemetrySettingsViewModel(opts);
+        vm.UseSimulator = true;
+
+        Assert.True(opts.UseSimulator);
+
+        vm.UseSimulator = false;
+        Assert.False(opts.UseSimulator);
+    }
+
+    [Fact]
+    public void TelemetrySettings_seeds_UseSimulator_from_options()
+    {
+        var opts = new TelemetryOptions { UseSimulator = true };
+        var vm = new TelemetrySettingsViewModel(opts);
+        Assert.True(vm.UseSimulator);
+    }
+
+    [Fact]
     public void SubVMs_with_no_options_stay_silent()
     {
         // Parametresiz ctor — Options null, PushToOptions no-op.

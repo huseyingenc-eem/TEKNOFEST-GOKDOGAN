@@ -13,25 +13,25 @@
         <SolidColorBrush x:Key="LevelDanger" Color="#FFFF5252" />
     </UserControl.Resources>
 
-    <core:PanelFrame Header="SİSTEM LOGLARI" IconKind="AlertCircleOutline">
-        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto">
-            <ItemsControl x:Name="AlertItems">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3"
-                                   TextWrapping="Wrap">
-                            <Run Text="{Binding TimeLabel, Mode=OneTime}"
-                                 Foreground="{StaticResource TacticalTextSecondary}" />
-                            <Run Text=" " />
-                            <Run Text="{Binding Tag, Mode=OneTime}"
-                                 Foreground="{Binding LevelBrush, Mode=OneTime}" />
-                            <Run Text=" " />
-                            <Run Text="{Binding Message, Mode=OneTime}"
-                                 Foreground="{StaticResource TacticalTextPrimary}" />
-                        </TextBlock>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-    </core:PanelFrame>
+    <!-- Bu UserControl artık RightSidebar'daki CollapsiblePanelFrame'in içeriğidir.
+         Kendi başlığı yok — sidebar "OLAY GÜNLÜĞÜ" başlığını çiziyor. -->
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto">
+        <ItemsControl x:Name="AlertItems">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3"
+                               TextWrapping="Wrap">
+                        <Run Text="{Binding TimeLabel, Mode=OneTime}"
+                             Foreground="{StaticResource TacticalTextSecondary}" />
+                        <Run Text=" " />
+                        <Run Text="{Binding Tag, Mode=OneTime}"
+                             Foreground="{Binding LevelBrush, Mode=OneTime}" />
+                        <Run Text=" " />
+                        <Run Text="{Binding Message, Mode=OneTime}"
+                             Foreground="{StaticResource TacticalTextPrimary}" />
+                    </TextBlock>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
 </UserControl>

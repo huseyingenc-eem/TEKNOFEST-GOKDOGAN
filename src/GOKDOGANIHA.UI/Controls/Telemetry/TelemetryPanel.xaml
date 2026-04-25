@@ -3,69 +3,216 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             x:Name="Self"
              mc:Ignorable="d"
-             d:DesignWidth="320" d:DesignHeight="520">
+             d:DesignWidth="280" d:DesignHeight="320">
 
-    <core:PanelFrame Header="TELEMETRİ" IconKind="GaugeEmpty">
-        <StackPanel>
-            <!-- Speed + Altitude -->
-            <Grid Margin="0,4,0,12">
+    <UserControl.Resources>
+        <!-- IsExpanded'a göre kompakt / full görünümler arasında geçiş için style.
+             Kompakt görünür iken full collapsed; expand olunca tam tersi. -->
+        <Style x:Key="VisibleWhenCompact" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsExpanded, ElementName=Self}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="VisibleWhenExpanded" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsExpanded, ElementName=Self}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- HUD-tarzı kompakt kart. Tıklanabilir header ile compact ↔ full toggle.
+         Kompakt: HIZ + İRTİFA + BAT (tek satır)
+         Full:    + YÖNELME / DİKİLME / YATIŞ / KONUM (LAT/LON) / V/S
+         IsExpanded DP twoway — dış dünya da set edebilir (Settings persistence için). -->
+    <Border Background="{StaticResource TacticalGlass}"
+            BorderBrush="{StaticResource TacticalOverlayBorder}"
+            BorderThickness="1"
+            CornerRadius="6">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Direction="270"
+                              ShadowDepth="3" BlurRadius="14" Opacity="0.4" />
+        </Border.Effect>
+        <DockPanel>
+            <!-- Tıklanabilir header — chevron + icon + title -->
+            <Border DockPanel.Dock="Top"
+                    Background="Transparent"
+                    Padding="10,6"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="OnHeaderClick">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <materialIcons:MaterialIcon Grid.Column="0"
+                                                Width="12" Height="12"
+                                                VerticalAlignment="Center"
+                                                Foreground="{StaticResource TacticalTextSecondary}">
+                        <materialIcons:MaterialIcon.Style>
+                            <Style TargetType="materialIcons:MaterialIcon">
+                                <Setter Property="Kind" Value="ChevronDown" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpanded, ElementName=Self}" Value="False">
+                                        <Setter Property="Kind" Value="ChevronRight" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </materialIcons:MaterialIcon.Style>
+                    </materialIcons:MaterialIcon>
+                    <materialIcons:MaterialIcon Grid.Column="1"
+                                                Kind="GaugeFull"
+                                                Width="14" Height="14"
+                                                Margin="6,0,6,0"
+                                                Foreground="{StaticResource TacticalAccent}"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="TELEMETRİ"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource TacticalTextPrimary}"
+                               VerticalAlignment="Center" />
+                    <!-- Hz badge — kompakt görünümde de görünür, mod bilgisi -->
+                    <Border Grid.Column="3"
+                            Background="{StaticResource TacticalSurfaceHi}"
+                            BorderBrush="{StaticResource TacticalOverlayBorder}"
+                            BorderThickness="1" CornerRadius="3"
+                            Padding="6,1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding FlightMode}"
+                                   FontFamily="Consolas" FontSize="9" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalAccent}" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ============== KOMPAKT GÖRÜNÜM ============== -->
+            <Grid DockPanel.Dock="Top" Margin="10,4,10,8"
+                  Style="{StaticResource VisibleWhenCompact}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <core:MetricTile Grid.Column="0" Label="HIZ" Unit="(m/s)"
-                                 Value="{Binding Airspeed, StringFormat=F1}" />
-                <core:MetricTile Grid.Column="1" Label="İRTİFA" Unit="(m)"
-                                 Value="{Binding Altitude, StringFormat=F1}" />
-            </Grid>
-
-            <!-- Heading -->
-            <core:MetricTile Label="YÖNELME" Unit="(°)"
-                             Value="{Binding Heading, StringFormat=F0}"
-                             Margin="0,0,0,12" />
-
-            <!-- Pitch + Roll -->
-            <Grid Margin="0,0,0,12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <core:MetricTile Grid.Column="0" Label="DİKİLME" Unit="(°)"
-                                 Value="{Binding Pitch, StringFormat=F1}" />
-                <core:MetricTile Grid.Column="1" Label="YATIŞ" Unit="(°)"
-                                 Value="{Binding Roll, StringFormat=F1}" />
+                <core:MetricTile Grid.Column="0" Label="HIZ" Unit="m/s"
+                                 Value="{Binding GroundSpeed, StringFormat=F0}" />
+                <core:MetricTile Grid.Column="1" Label="ALT" Unit="m"
+                                 Value="{Binding Altitude, StringFormat=F0}" />
+                <core:MetricTile Grid.Column="2" Label="BAT" Unit="%"
+                                 Value="{Binding Battery}" />
             </Grid>
 
-            <Separator Background="{StaticResource TacticalBorder}" Margin="0,6,0,10" />
+            <!-- ============== GENİŞLETİLMİŞ GÖRÜNÜM ============== -->
+            <Border BorderBrush="{StaticResource TacticalOverlayBorder}"
+                    BorderThickness="0,1,0,0"
+                    Padding="10,8"
+                    Style="{StaticResource VisibleWhenExpanded}">
+                <StackPanel>
+                    <!-- Hız: Yer + Hava -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <core:MetricTile Grid.Column="0" Label="YER HIZI" Unit="m/s"
+                                         Value="{Binding GroundSpeed, StringFormat=F1}" />
+                        <core:MetricTile Grid.Column="1" Label="HAVA HIZI" Unit="m/s"
+                                         Value="{Binding Airspeed, StringFormat=F1}" />
+                    </Grid>
 
-            <!-- Coordinates -->
-            <TextBlock Text="KONUM" Style="{StaticResource PanelHeader}" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="LAT"
-                           Style="{StaticResource MetricLabel}" Margin="0,2,8,2" />
-                <TextBlock Grid.Row="0" Grid.Column="1"
-                           Text="{Binding Latitude, StringFormat=F6}"
-                           FontFamily="Consolas" FontSize="12"
-                           Foreground="{StaticResource TacticalTextPrimary}"
-                           Margin="0,2" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="LON"
-                           Style="{StaticResource MetricLabel}" Margin="0,2,8,2" />
-                <TextBlock Grid.Row="1" Grid.Column="1"
-                           Text="{Binding Longitude, StringFormat=F6}"
-                           FontFamily="Consolas" FontSize="12"
-                           Foreground="{StaticResource TacticalTextPrimary}"
-                           Margin="0,2" />
-            </Grid>
-        </StackPanel>
-    </core:PanelFrame>
+                    <!-- İrtifa + Dikey hız -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <core:MetricTile Grid.Column="0" Label="İRTİFA" Unit="m"
+                                         Value="{Binding Altitude, StringFormat=F1}" />
+                        <core:MetricTile Grid.Column="1" Label="DİKEY HIZ" Unit="m/s"
+                                         Value="{Binding VerticalSpeed, StringFormat=+0.0;-0.0;0.0}" />
+                    </Grid>
+
+                    <!-- Yönelim -->
+                    <core:MetricTile Label="YÖNELME" Unit="°"
+                                     Value="{Binding Heading, StringFormat=F0}"
+                                     Margin="0,0,0,8" />
+
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <core:MetricTile Grid.Column="0" Label="DİKİLME" Unit="°"
+                                         Value="{Binding Pitch, StringFormat=F1}" />
+                        <core:MetricTile Grid.Column="1" Label="YATIŞ" Unit="°"
+                                         Value="{Binding Roll, StringFormat=F1}" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource TacticalBorder}" Margin="0,2,0,8" />
+
+                    <!-- Durum satırı: BAT + GPS + ARMED -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="BATARYA"
+                                   Style="{StaticResource MetricLabel}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" FontFamily="Consolas" FontSize="13"
+                                   Foreground="{StaticResource TacticalOk}">
+                            <TextBlock.Text>
+                                <Binding Path="Battery" StringFormat="{}{0}%" />
+                            </TextBlock.Text>
+                        </TextBlock>
+
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="GPS"
+                                   Style="{StaticResource MetricLabel}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="13"
+                                   Text="{Binding GpsFixDisplay}"
+                                   Foreground="{StaticResource TacticalOk}" />
+                    </Grid>
+
+                    <!-- KONUM -->
+                    <TextBlock Text="KONUM" Style="{StaticResource PanelHeader}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="LAT"
+                                   Style="{StaticResource MetricLabel}" Margin="0,2,8,2" />
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding Latitude, StringFormat=F6}"
+                                   FontFamily="Consolas" FontSize="11"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="0,2" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="LON"
+                                   Style="{StaticResource MetricLabel}" Margin="0,2,8,2" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding Longitude, StringFormat=F6}"
+                                   FontFamily="Consolas" FontSize="11"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="0,2" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </DockPanel>
+    </Border>
 </UserControl>

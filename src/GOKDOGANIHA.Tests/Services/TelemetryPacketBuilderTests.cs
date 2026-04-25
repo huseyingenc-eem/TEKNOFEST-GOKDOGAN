@@ -19,7 +19,7 @@ public class TelemetryPacketBuilderTests
             Pitch = 5,
             Heading = 210,
             Roll = -10,
-            Speed = 28,
+            GroundSpeed = 28,
             BatteryPercent = 73,
             IsAutonomous = true,
             IsLocked = true,

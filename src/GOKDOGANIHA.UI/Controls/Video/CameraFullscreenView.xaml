@@ -228,9 +228,9 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Crosshair (center) -->
+                    <!-- Crosshair (center, sabit) -->
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-                          Width="140" Height="140">
+                          Width="140" Height="140" IsHitTestVisible="False">
                         <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1"
                                  Opacity="0.45" Width="36" Height="36" />
                         <Line X1="70" Y1="28" X2="70" Y2="60"
@@ -241,19 +241,57 @@
                               Stroke="{StaticResource TacticalAccent}" StrokeThickness="1.5" />
                         <Line X1="80" Y1="70" X2="112" Y2="70"
                               Stroke="{StaticResource TacticalAccent}" StrokeThickness="1.5" />
-
-                        <!-- Lock brackets (visible when locked) -->
-                        <Grid Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
-                            <Border HorizontalAlignment="Left" VerticalAlignment="Top" Width="18" Height="18"
-                                    BorderBrush="{StaticResource TacticalCritical}" BorderThickness="2,2,0,0" />
-                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="18" Height="18"
-                                    BorderBrush="{StaticResource TacticalCritical}" BorderThickness="0,2,2,0" />
-                            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="18" Height="18"
-                                    BorderBrush="{StaticResource TacticalCritical}" BorderThickness="2,0,0,2" />
-                            <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="18" Height="18"
-                                    BorderBrush="{StaticResource TacticalCritical}" BorderThickness="0,0,2,2" />
-                        </Grid>
                     </Grid>
+
+                    <!-- Hedef kilit dörtgeni — kamera native 640x480 koordinatlarında.
+                         Şartname kırmızı (#FF0000) + video kayıtta görünür olmalı. -->
+                    <Viewbox Stretch="Uniform" IsHitTestVisible="False"
+                             Visibility="{Binding HasTargetBox, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                        <Canvas Width="640" Height="480">
+                            <Rectangle Stroke="#FF0000" StrokeThickness="2"
+                                       Width="{Binding TargetWidth}"
+                                       Height="{Binding TargetHeight}"
+                                       Canvas.Left="{Binding TargetBoxLeft}"
+                                       Canvas.Top="{Binding TargetBoxTop}" />
+                            <TextBlock Canvas.Left="{Binding TargetBoxLeft}"
+                                       Canvas.Top="{Binding TargetLabelTop}"
+                                       FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                                       Foreground="#FF0000"
+                                       Text="{Binding TargetTeamNumber, StringFormat=T-{0:00}}" />
+                        </Canvas>
+                    </Viewbox>
+
+                    <!-- Lock progress chip — şartname 4s sayaç (KİLİTLENME 2.7s / 4.0s) -->
+                    <Border HorizontalAlignment="Center" VerticalAlignment="Top"
+                            Margin="0,12,0,0"
+                            CornerRadius="3" Padding="14,5"
+                            Background="#D9B41E1E" BorderBrush="#FF4444" BorderThickness="1"
+                            Visibility="{Binding IsLockingActive, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="9" Height="9" Fill="#FF4444"
+                                     VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="KİLİTLENME"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="White"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LockProgressText}"
+                                       FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                                       Foreground="#FFD700"
+                                       VerticalAlignment="Center"
+                                       Margin="12,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ŞARTNAME ZORUNLU: Sunucu saati ms hassasiyetinde, sağ üstte,
+                         video kayıtta görünür konumda (yarışma teknik kontrolü). -->
+                    <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="0,12,12,0"
+                            CornerRadius="3" Padding="10,4"
+                            Background="#B3000000" BorderBrush="#666" BorderThickness="1">
+                        <TextBlock Text="{Binding ServerTime}"
+                                   FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                                   Foreground="#F1C40F" />
+                    </Border>
                 </Grid>
             </Border>
         </Grid>

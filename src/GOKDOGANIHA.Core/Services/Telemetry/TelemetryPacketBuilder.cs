@@ -27,7 +27,7 @@ public sealed class TelemetryPacketBuilder
         Dikilme: _state.Pitch,
         Yonelme: _state.Heading,
         Yatis: _state.Roll,
-        Hiz: _state.Speed,
+        Hiz: _state.GroundSpeed,
         Batarya: _state.BatteryPercent,
         Otonom: _state.IsAutonomous ? 1 : 0,
         Kilitlenme: _state.IsLocked ? 1 : 0,

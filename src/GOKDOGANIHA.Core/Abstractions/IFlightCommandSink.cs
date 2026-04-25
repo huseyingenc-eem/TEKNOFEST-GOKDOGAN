@@ -1,3 +1,5 @@
+using GOKDOGANIHA.Core.Models;
+
 namespace GOKDOGANIHA.Core.Abstractions;
 
 /// <summary>
@@ -6,7 +8,11 @@ namespace GOKDOGANIHA.Core.Abstractions;
 /// </summary>
 public interface IFlightCommandSink
 {
+    void Arm();
+    void Disarm();
+    void SetMode(FlightMode mode);
     void Rtl();
     void Land();
     void Loiter();
+    void GotoWaypoint(double latitude, double longitude, double altitudeMeters);
 }
