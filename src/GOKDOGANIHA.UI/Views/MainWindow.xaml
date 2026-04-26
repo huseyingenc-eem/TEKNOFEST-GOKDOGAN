@@ -4,6 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+        xmlns:ui="clr-namespace:GOKDOGANIHA.UI"
         xmlns:vm="clr-namespace:GOKDOGANIHA.UI.ViewModels"
         xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
         xmlns:shell="clr-namespace:GOKDOGANIHA.UI.Controls.Shell"
@@ -11,6 +13,8 @@
         xmlns:video="clr-namespace:GOKDOGANIHA.UI.Controls.Video"
         xmlns:telemetry="clr-namespace:GOKDOGANIHA.UI.Controls.Telemetry"
         xmlns:sidebar="clr-namespace:GOKDOGANIHA.UI.Controls.Sidebar"
+        xmlns:kamikaze="clr-namespace:GOKDOGANIHA.UI.Controls.Kamikaze"
+        xmlns:alerts="clr-namespace:GOKDOGANIHA.UI.Controls.Alerts"
         xmlns:views="clr-namespace:GOKDOGANIHA.UI.Views"
         mc:Ignorable="d"
         Title="GÖKDOĞAN — Yer Kontrol İstasyonu"
@@ -82,10 +86,181 @@
                 <core:RadialMenuItem IconKind="Bomb"       Label="KAMİKAZE" Variant="Danger"  IconBrush="{StaticResource TacticalCritical}" />
                 <core:RadialMenuItem IconKind="Cancel"     Label="İPTAL"    Variant="Warn"    IconBrush="{StaticResource TacticalWarn}" />
             </core:RadialMenu>
+
+            <!-- HARİTA AYAR FAB — RadialMenu'lardan SONRA tanımlandı, Z-order üstte
+                 (aynı parent Grid'de sonradan eklenen daha üstte). RadialMenu trigger
+                 dışındaki transparent alan tıklamaları yutuyordu, bu yüzden burada. -->
+            <ToggleButton x:Name="MapMenuToggle"
+                          HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                          Margin="0,0,16,16"
+                          Width="48" Height="48"
+                          Background="{StaticResource TacticalGlass}"
+                          BorderBrush="{StaticResource TacticalOverlayBorder}"
+                          BorderThickness="1"
+                          Cursor="Hand"
+                          ToolTip="Harita ayarları (çizim · iz · katmanlar)"
+                          Click="OnMapMenuClick">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="24">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" Direction="270"
+                                                  ShadowDepth="3" BlurRadius="12" Opacity="0.5" />
+                            </Border.Effect>
+                            <materialIcons:MaterialIcon Kind="LayersTriple"
+                                                        Width="22" Height="22"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TacticalTextPrimary}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
+                                <Setter TargetName="Bd" Property="Background" Value="#330A1620" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+            </ToggleButton>
+
+            <!-- Popover — code-behind butonun pencere konumuna göre Placement ayarlar
+                 (Top/Bottom). DataContext = MainWindowViewModel (default) → MapVm.X
+                 ile commands; App.AppOptions ise iç StackPanel'da x:Static ile. -->
+            <Popup x:Name="MapMenuPopup"
+                   IsOpen="{Binding IsChecked, ElementName=MapMenuToggle, Mode=TwoWay}"
+                   PlacementTarget="{Binding ElementName=MapMenuToggle}"
+                   Placement="Top"
+                   HorizontalOffset="-240"
+                   VerticalOffset="-6"
+                   AllowsTransparency="True"
+                   PopupAnimation="Fade"
+                   StaysOpen="False">
+                <Border Background="{StaticResource TacticalGlass}"
+                        BorderBrush="{StaticResource TacticalOverlayBorder}"
+                        BorderThickness="1" CornerRadius="6"
+                        Padding="14" Width="280">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" Direction="270"
+                                          ShadowDepth="4" BlurRadius="20" Opacity="0.6" />
+                    </Border.Effect>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialIcons:MaterialIcon Kind="MapMarkerRadius" Width="15" Height="15"
+                                                        Foreground="{StaticResource TacticalAccent}"
+                                                        VerticalAlignment="Center" />
+                            <TextBlock Text="HARİTA AYARLARI"
+                                       FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TacticalTextPrimary}"
+                                       Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- ARAÇLAR — MainWindow DataContext = MainWindowViewModel,
+                             MapVm.X commands kullanılıyor -->
+                        <TextBlock Text="ARAÇLAR" Style="{StaticResource MetricLabel}" Margin="0,0,0,4" />
+                        <UniformGrid Columns="2" Margin="0,0,0,4">
+                            <Button Margin="0,0,2,2"
+                                    Command="{Binding MapVm.ToggleDrawPolygonCommand}"
+                                    ToolTip="Sol tık vertex · Sağ tık tamamla">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MapToolButton}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding MapVm.IsDrawingPolygon}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource TacticalWarn}" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource TacticalWarn}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialIcons:MaterialIcon Kind="VectorPolygon" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="ALAN ÇİZ" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="2,0,0,2" Style="{StaticResource MapToolButton}"
+                                    Command="{Binding MapVm.ClearPolygonCmdCommand}"
+                                    ToolTip="Çizilen alanı sil">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialIcons:MaterialIcon Kind="VectorPolylineRemove" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="ALANI SİL" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="0,2,2,0" Style="{StaticResource MapToolButton}"
+                                    Command="{Binding MapVm.ToggleTrailCommand}"
+                                    ToolTip="İz çizgisini aç/kapat">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialIcons:MaterialIcon Kind="VectorLine" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="İZ" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="2,2,0,0" Style="{StaticResource MapToolButton}"
+                                    Command="{Binding MapVm.ClearTrailCmdCommand}"
+                                    ToolTip="İz çizgisini sil">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialIcons:MaterialIcon Kind="Eraser" Width="13" Height="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="İZİ SİL" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- SAHTE HSS VERISI URETECI BUTONU -->
+                            <Button Margin="0,2,2,0" Style="{StaticResource MapToolButton}"
+                                    Command="{Binding MapVm.GenerateMockHssCmdCommand}"
+                                    ToolTip="HSS Bölgelerindeki kare/daire sorununu test etmek için sahte HSS ekler">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialIcons:MaterialIcon Kind="Radar" Width="13" Height="13" VerticalAlignment="Center" Foreground="{StaticResource TacticalCritical}" />
+                                    <TextBlock Text="HSS TEST" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TacticalCritical}" />
+                                </StackPanel>
+                            </Button>
+                        </UniformGrid>
+
+                        <Separator Background="{StaticResource TacticalBorder}" Margin="0,8,0,8" />
+
+                        <!-- ARKA PLAN + KATMANLAR — App.AppOptions.Map -->
+                        <StackPanel DataContext="{x:Static ui:App.AppOptions}">
+                            <TextBlock Text="ARKA PLAN" Style="{StaticResource MetricLabel}" Margin="0,0,0,4" />
+                            <RadioButton GroupName="TileProvider" Margin="0,3"
+                                         Content="Stadia Dark (taktik)"
+                                         IsChecked="{Binding Map.TileProvider, Converter={StaticResource StringEqualsValueConverter}, ConverterParameter=StadiaAlidadeSmoothDark}" />
+                            <RadioButton GroupName="TileProvider" Margin="0,3"
+                                         Content="Google Map"
+                                         IsChecked="{Binding Map.TileProvider, Converter={StaticResource StringEqualsValueConverter}, ConverterParameter=GoogleMap}" />
+                            <RadioButton GroupName="TileProvider" Margin="0,3"
+                                         Content="Google Uydu"
+                                         IsChecked="{Binding Map.TileProvider, Converter={StaticResource StringEqualsValueConverter}, ConverterParameter=GoogleSatelliteMap}" />
+                            <RadioButton GroupName="TileProvider" Margin="0,3"
+                                         Content="Google Hibrit"
+                                         IsChecked="{Binding Map.TileProvider, Converter={StaticResource StringEqualsValueConverter}, ConverterParameter=GoogleHybridMap}" />
+                            <RadioButton GroupName="TileProvider" Margin="0,3"
+                                         Content="OpenStreetMap"
+                                         IsChecked="{Binding Map.TileProvider, Converter={StaticResource StringEqualsValueConverter}, ConverterParameter=OpenStreetMap}" />
+
+                            <Separator Background="{StaticResource TacticalBorder}" Margin="0,8,0,8" />
+
+                            <TextBlock Text="GÖRÜNÜR KATMANLAR" Style="{StaticResource MetricLabel}" Margin="0,0,0,4" />
+                            <CheckBox IsChecked="{Binding Map.ShowGrid}"      Content="Grid katmanı"          Margin="0,3" />
+                            <CheckBox IsChecked="{Binding Map.ShowBoundary}"  Content="Uçuş sahası sınırı"   Margin="0,3" />
+                            <CheckBox IsChecked="{Binding Map.ShowHssZones}"  Content="HSS bölgeleri"         Margin="0,3" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Popup>
         </Grid>
 
         <!-- ============ SAĞ KOLON: Accordion paneller ============ -->
         <sidebar:RightSidebar Grid.Column="1" />
+
+        <!-- TOAST HOST — sağ üst köşede sidebar'ın üzerinde, TopBar'ın altında.
+             AlertBus subscribe → 4 sn'lik popup uyarılar (Faz 8). -->
+        <alerts:AlertToastHost Grid.Column="0" Grid.ColumnSpan="2"
+                               HorizontalAlignment="Right" VerticalAlignment="Top"
+                               Margin="0,60,380,0"
+                               Width="320" />
+
 
         <!-- ============ FULLSCREEN OVERLAY'LER (tüm window'u kaplar) ============ -->
         <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
@@ -104,6 +279,19 @@
                           HeaderIconKind="Cog"
                           ContentMargin="0,60,0,0">
             <views:SettingsView DataContext="{Binding Settings}" />
+        </core:OverlayHost>
+
+        <!-- KAMİKAZE TERMINAL PHASE — KamikazeFsm.IsActive olunca otomatik açılır.
+             Mockup'taki APPROACH GEOMETRY (sol, dinamik SVG path) + OPTICAL TARGETING (sağ,
+             kamera + QR detection) + büyük ABORT butonu. Tasarım: context-aware UI prensibi —
+             pilot görev anında tek bir ekrana odaklanır. -->
+        <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
+                          IsOpen="{Binding IsKamikazeFullscreen, Mode=TwoWay}"
+                          Title="KAMİKAZE GÖREVİ"
+                          Subtitle="Terminal phase · ABORT butonu ile iptal et"
+                          HeaderIconKind="Bomb"
+                          ContentMargin="0,60,0,0">
+            <kamikaze:KamikazeFullscreenView />
         </core:OverlayHost>
     </Grid>
 </Window>

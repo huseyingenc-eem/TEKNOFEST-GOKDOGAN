@@ -1,0 +1,149 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Sidebar.Panels.LockOnPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="220">
+
+    <!-- DataContext = MainWindowViewModel.
+         LockState: Idle/Tracking/Locking/Locked/Failed
+         LockProgressSeconds: 0-4 sn, görsel progress -->
+    <StackPanel>
+        <!-- Durum LED + metin -->
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Ellipse Grid.Column="0" Width="10" Height="10" VerticalAlignment="Center">
+                <Ellipse.Style>
+                    <Style TargetType="Ellipse">
+                        <!-- Renk semantiği: gri=durağan, mavi=takip, sarı=kilitleniyor (uyarı),
+                             yeşil=başarılı kilit (BAŞARI, kırmızı YANLIŞ olur), kırmızı=hata. -->
+                        <Setter Property="Fill" Value="{StaticResource TacticalTextSecondary}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding LockState}" Value="Tracking">
+                                <Setter Property="Fill" Value="{StaticResource TacticalAccent}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LockState}" Value="Locking">
+                                <Setter Property="Fill" Value="{StaticResource TacticalWarn}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LockState}" Value="Locked">
+                                <Setter Property="Fill" Value="{StaticResource TacticalOk}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LockState}" Value="Failed">
+                                <Setter Property="Fill" Value="{StaticResource TacticalCritical}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Ellipse.Style>
+            </Ellipse>
+            <TextBlock Grid.Column="1" Margin="8,0,0,0"
+                       FontSize="11" FontWeight="SemiBold"
+                       Foreground="{StaticResource TacticalTextPrimary}"
+                       VerticalAlignment="Center"
+                       Text="{Binding LockState, StringFormat=DURUM · {0}}" />
+            <TextBlock Grid.Column="2"
+                       FontFamily="Consolas" FontSize="10"
+                       Foreground="{StaticResource TacticalAccent}"
+                       VerticalAlignment="Center"
+                       Text="{Binding LockTargetId, StringFormat=T-{0:00}, TargetNullValue=—}" />
+        </Grid>
+
+        <!-- 4 saniyelik progress bar — renk LockState'e göre değişir:
+             Locking sarı (devam ediyor), Locked yeşil (başarılı), Failed kırmızı. -->
+        <Border Background="{StaticResource TacticalSurface}"
+                BorderBrush="{StaticResource TacticalOverlayBorder}"
+                BorderThickness="1" CornerRadius="3"
+                Height="20" Margin="0,0,0,4">
+            <Grid>
+                <ProgressBar Minimum="0"
+                             Maximum="{Binding LockRequiredSeconds}"
+                             Value="{Binding LockProgressSeconds, Mode=OneWay}"
+                             Background="Transparent"
+                             BorderThickness="0">
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Foreground" Value="{StaticResource TacticalAccent}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding LockState}" Value="Locking">
+                                    <Setter Property="Foreground" Value="{StaticResource TacticalWarn}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding LockState}" Value="Locked">
+                                    <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding LockState}" Value="Failed">
+                                    <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+                <TextBlock Text="{Binding LockProgressText}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                           Foreground="{StaticResource TacticalTextPrimary}" />
+            </Grid>
+        </Border>
+
+        <!-- Detaylar -->
+        <Grid Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="OTONOM"
+                       Style="{StaticResource MetricLabel}" Margin="0,0,12,3" />
+            <TextBlock Grid.Row="0" Grid.Column="1"
+                       FontFamily="Consolas" FontSize="11"
+                       Foreground="{StaticResource TacticalOk}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text" Value="HAYIR" />
+                        <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAutonomous}" Value="True">
+                                <Setter Property="Text" Value="EVET ✓" />
+                                <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="SON ACK"
+                       Style="{StaticResource MetricLabel}" Margin="0,0,12,3" />
+            <TextBlock Grid.Row="1" Grid.Column="1"
+                       Text="{Binding LastLockAck}"
+                       FontFamily="Consolas" FontSize="11"
+                       Foreground="{StaticResource TacticalTextPrimary}" />
+        </Grid>
+
+        <!-- Manuel paket gönder butonu — backend Faz 6'da, şimdilik UI hazır -->
+        <Button Margin="0,12,0,0"
+                Padding="10,6"
+                Background="#3A2020"
+                BorderBrush="#6A3030"
+                BorderThickness="1"
+                Foreground="{StaticResource TacticalCritical}"
+                FontWeight="Bold" FontSize="10"
+                Cursor="Hand"
+                IsEnabled="{Binding IsConnected}">
+            <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="Send" Width="12" Height="12"
+                                            VerticalAlignment="Center" />
+                <TextBlock Text="KİLİTLENME PAKETİ GÖNDER"
+                           Margin="6,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
+    </StackPanel>
+</UserControl>

@@ -64,5 +64,28 @@ internal static class GeoDistance
         return Math.Sqrt(dx * dx + dy * dy);
     }
 
+    /// <summary>
+    /// Ray-casting (Jordan curve) point-in-polygon testi. Kenar üzerindeki noktalar
+    /// "içeride" sayılır — yarışma sahasında pratik bir tolerance. Coğrafi koordinatlarda
+    /// küçük alanda düz-düzlem yaklaşımı doğru sonuç verir.
+    /// </summary>
+    public static bool IsPointInsidePolygon(
+        double pointLat, double pointLon,
+        System.Collections.Generic.IReadOnlyList<(double Lat, double Lon)> polygon)
+    {
+        if (polygon.Count < 3) return false;
+        bool inside = false;
+        int n = polygon.Count;
+        for (int i = 0, j = n - 1; i < n; j = i++)
+        {
+            var (yi, xi) = (polygon[i].Lat, polygon[i].Lon);
+            var (yj, xj) = (polygon[j].Lat, polygon[j].Lon);
+            bool intersect = ((yi > pointLat) != (yj > pointLat))
+                          && (pointLon < (xj - xi) * (pointLat - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+
     private static double ToRad(double deg) => deg * Math.PI / 180.0;
 }

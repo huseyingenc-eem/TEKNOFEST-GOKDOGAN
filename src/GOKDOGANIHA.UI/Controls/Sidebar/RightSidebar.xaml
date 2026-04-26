@@ -5,92 +5,83 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
              xmlns:alerts="clr-namespace:GOKDOGANIHA.UI.Controls.Alerts"
+             xmlns:panels="clr-namespace:GOKDOGANIHA.UI.Controls.Sidebar.Panels"
              mc:Ignorable="d"
              d:DesignWidth="360" d:DesignHeight="900">
 
-    <!-- Sağ kolon — yarı şeffaf glass üzeri kollapsible accordion paneller.
-         Faz 2: TELEMETRİ + OLAY GÜNLÜĞÜ taşındı. Faz 3'te diğer 6 panel eklenecek
-         (Rakipler / Kilitlenme / Kamikaze / Sunucu / Güvenlik / Komutlar). -->
+    <!-- Sağ kolon — tab tabanlı 3 grup. Tab içinde collapsible paneller dikey yığılır;
+         kullanıcı tab değiştirerek bağlamı değiştirir. Settings'te de aynı IconTabItem
+         pattern'i kullanılıyor (DRY).
+         GÖREV  → Rakipler/Kilitlenme/Kamikaze (muharebe odaklı)
+         SİSTEM → Sunucu/Güvenlik/Komutlar (operasyonel)
+         GÜNLÜK → Olay log (geniş alan) -->
     <Border Background="{StaticResource TacticalBgDeep}"
             BorderBrush="{StaticResource TacticalOverlayBorder}"
             BorderThickness="1,0,0,0"
             Opacity="0.96">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <TabControl Background="Transparent" BorderThickness="0" Padding="0"
+                    SelectedIndex="0">
+            <core:IconTabItem IconKind="Sword" Label="GÖREV">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="8,8,8,8">
+                    <StackPanel>
+                        <core:CollapsiblePanelFrame Header="RAKİP İHA'LAR"
+                                                    IconKind="Airplane"
+                                                    IsExpanded="True">
+                            <panels:OpponentsPanel DataContext="{Binding MapVm}" />
+                        </core:CollapsiblePanelFrame>
 
-            <!-- Üst: Scroll'lu accordion paneller -->
-            <ScrollViewer Grid.Row="0"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          Padding="8,8,8,4">
-                <StackPanel>
-                    <!-- Telemetri sidebar'da DEĞİL — top-left overlay'de HUD-tarzı kart
-                         (TelemetryPanel kompakt/full toggle'lı). Sidebar görev paneli olarak
-                         odaklanır. -->
+                        <core:CollapsiblePanelFrame Header="KİLİTLENME"
+                                                    IconKind="Crosshairs"
+                                                    IsExpanded="True">
+                            <panels:LockOnPanel />
+                        </core:CollapsiblePanelFrame>
 
-                    <!-- Faz 3 placeholder'ları — implementasyon ileride -->
-                    <core:CollapsiblePanelFrame Header="RAKİP İHA'LAR"
-                                                IconKind="Airplane"
-                                                BadgeText="—"
-                                                IsExpanded="False">
-                        <TextBlock Text="(Faz 3 — sunucudan KonumBilgileri)"
-                                   FontSize="10" FontStyle="Italic"
-                                   Foreground="{StaticResource TacticalTextSecondary}" />
-                    </core:CollapsiblePanelFrame>
+                        <core:CollapsiblePanelFrame Header="KAMİKAZE"
+                                                    IconKind="Bomb"
+                                                    IsExpanded="True">
+                            <panels:KamikazePanel />
+                        </core:CollapsiblePanelFrame>
+                    </StackPanel>
+                </ScrollViewer>
+            </core:IconTabItem>
 
-                    <core:CollapsiblePanelFrame Header="KİLİTLENME"
-                                                IconKind="Crosshairs"
-                                                IsExpanded="False">
-                        <TextBlock Text="(Faz 3 — KilitlenmeDenetim state binding)"
-                                   FontSize="10" FontStyle="Italic"
-                                   Foreground="{StaticResource TacticalTextSecondary}" />
-                    </core:CollapsiblePanelFrame>
+            <core:IconTabItem IconKind="Cog" Label="SİSTEM">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="8,8,8,8">
+                    <StackPanel>
+                        <core:CollapsiblePanelFrame Header="SUNUCU HABERLEŞME"
+                                                    IconKind="Web"
+                                                    IsExpanded="True">
+                            <panels:ServerCommPanel />
+                        </core:CollapsiblePanelFrame>
 
-                    <core:CollapsiblePanelFrame Header="KAMİKAZE"
-                                                IconKind="Bomb"
-                                                IsExpanded="False">
-                        <TextBlock Text="(Faz 3 UI — Faz 7 FSM)"
-                                   FontSize="10" FontStyle="Italic"
-                                   Foreground="{StaticResource TacticalTextSecondary}" />
-                    </core:CollapsiblePanelFrame>
+                        <core:CollapsiblePanelFrame Header="GÜVENLİK / UYARILAR"
+                                                    IconKind="ShieldAlert"
+                                                    IsExpanded="True">
+                            <panels:SafetyPanel />
+                        </core:CollapsiblePanelFrame>
 
-                    <core:CollapsiblePanelFrame Header="SUNUCU HABERLEŞME"
-                                                IconKind="Web"
-                                                IsExpanded="False">
-                        <TextBlock Text="(Faz 3 — TelemetryHzMeter)"
-                                   FontSize="10" FontStyle="Italic"
-                                   Foreground="{StaticResource TacticalTextSecondary}" />
-                    </core:CollapsiblePanelFrame>
+                        <core:CollapsiblePanelFrame Header="KOMUTLAR"
+                                                    IconKind="Controller"
+                                                    IsExpanded="True">
+                            <panels:CommandsPanel />
+                        </core:CollapsiblePanelFrame>
+                    </StackPanel>
+                </ScrollViewer>
+            </core:IconTabItem>
 
-                    <core:CollapsiblePanelFrame Header="GÜVENLİK / UYARILAR"
-                                                IconKind="ShieldAlert"
-                                                IsExpanded="False">
-                        <TextBlock Text="(Faz 3 — sayaçlar)"
-                                   FontSize="10" FontStyle="Italic"
-                                   Foreground="{StaticResource TacticalTextSecondary}" />
-                    </core:CollapsiblePanelFrame>
-
-                    <core:CollapsiblePanelFrame Header="KOMUTLAR"
-                                                IconKind="Controller"
-                                                IsExpanded="False">
-                        <TextBlock Text="(Faz 3 UI — Faz 6 backend wire-up)"
-                                   FontSize="10" FontStyle="Italic"
-                                   Foreground="{StaticResource TacticalTextSecondary}" />
-                    </core:CollapsiblePanelFrame>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- Alt: olay günlüğü — sabit, scroll'a girmiyor -->
-            <core:CollapsiblePanelFrame Grid.Row="1"
-                                        Header="OLAY GÜNLÜĞÜ"
-                                        IconKind="FormatListBulleted"
-                                        IsExpanded="True"
-                                        Margin="8,0,8,8">
-                <alerts:AlertConsole MaxHeight="180" />
-            </core:CollapsiblePanelFrame>
-        </Grid>
+            <core:IconTabItem IconKind="FormatListBulleted" Label="GÜNLÜK">
+                <!-- Olay günlüğü tüm tab alanını kaplasın — diğer panellerden büyük. -->
+                <Border Margin="8" Padding="8"
+                        Background="{StaticResource TacticalGlass}"
+                        BorderBrush="{StaticResource TacticalOverlayBorder}"
+                        BorderThickness="1" CornerRadius="6">
+                    <alerts:AlertConsole />
+                </Border>
+            </core:IconTabItem>
+        </TabControl>
     </Border>
 </UserControl>

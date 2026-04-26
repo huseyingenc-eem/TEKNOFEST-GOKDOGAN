@@ -1,0 +1,99 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Sidebar.Panels.OpponentsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="200">
+
+    <!-- DataContext = MapViewModel (RightSidebar tarafından bind edilir).
+         ItemsControl, sunucudan 1 Hz gelen KonumBilgileri'ni tablo halinde gösterir. -->
+    <StackPanel>
+        <!-- Tablo başlığı -->
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="48" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="48" />
+                <ColumnDefinition Width="48" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="TAKIM" Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="1" Text="KONUM"  Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="2" Text="İRT"    Style="{StaticResource MetricLabel}"
+                       HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="3" Text="HIZ"    Style="{StaticResource MetricLabel}"
+                       HorizontalAlignment="Right" />
+        </Grid>
+
+        <!-- Sunucudan gelen liste -->
+        <ItemsControl ItemsSource="{Binding EnemyDrones}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="{StaticResource TacticalBorder}"
+                            BorderThickness="0,0,0,1"
+                            Padding="0,3">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="48" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="48" />
+                                <ColumnDefinition Width="48" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TacticalAccent}">
+                                <TextBlock.Text>
+                                    <Binding Path="TakimNumarasi" StringFormat="T-{0:00}" FallbackValue="—" />
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <TextBlock Grid.Column="1"
+                                       FontFamily="Consolas" FontSize="10"
+                                       Foreground="{StaticResource TacticalTextSecondary}"
+                                       TextTrimming="CharacterEllipsis">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0:F4}, {1:F4}">
+                                        <Binding Path="Enlem" />
+                                        <Binding Path="Boylam" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <TextBlock Grid.Column="2"
+                                       FontFamily="Consolas" FontSize="11"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{StaticResource TacticalTextPrimary}">
+                                <TextBlock.Text>
+                                    <Binding Path="Irtifa" StringFormat="{}{0:F0}m" />
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <TextBlock Grid.Column="3"
+                                       FontFamily="Consolas" FontSize="11"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{StaticResource TacticalTextPrimary}">
+                                <TextBlock.Text>
+                                    <Binding Path="Hiz" StringFormat="{}{0:F0}" />
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Boş durum -->
+        <TextBlock Text="(Sunucudan rakip bilgisi bekleniyor…)"
+                   FontSize="10" FontStyle="Italic"
+                   Foreground="{StaticResource TacticalTextSecondary}"
+                   Margin="0,8,0,0">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding EnemyDrones.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </StackPanel>
+</UserControl>

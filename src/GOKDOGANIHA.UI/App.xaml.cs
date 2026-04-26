@@ -10,7 +10,9 @@ using GOKDOGANIHA.Core.Services.Alerts;
 using GOKDOGANIHA.Core.Services.Alerts.Monitors;
 using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.Core.Services.Autonomy;
+using GOKDOGANIHA.Core.Services.Persistence;
 using GOKDOGANIHA.Core.Services.Polling;
+using GOKDOGANIHA.Core.Services.Safety;
 using GOKDOGANIHA.Core.Services.Session;
 using GOKDOGANIHA.Core.Services.Failsafe;
 using GOKDOGANIHA.Core.Services.Telemetry;
@@ -22,7 +24,9 @@ namespace GOKDOGANIHA.UI;
 public partial class App : Application
 {
     // ===== Composition root =====
-    public static ApplicationOptions AppOptions { get; } = new();
+    // SettingsStore boot'ta diskten yükler — ApplicationOptions snapshot ile başlatılır.
+    private static readonly SettingsStore _settingsStore = new();
+    public static ApplicationOptions AppOptions { get; } = _settingsStore.Load();
     public static GameServerOptions ServerOptions => AppOptions.GameServer;
     public static FlightState FlightState { get; } = new();
     public static IClock Clock { get; } = new SystemClock();
@@ -42,6 +46,9 @@ public partial class App : Application
     public static CommLatencyMonitor? CommLatency { get; private set; }
     public static FailsafeMonitor? Failsafe { get; private set; }
     public static KilitlenmeDenetim? LockEngine { get; private set; }
+    public static KamikazeFsm? Kamikaze { get; private set; }
+    public static TelemetryHzMeter? HzMeter { get; private set; }
+    public static ManualTransitionCounter? ManualTransitions { get; private set; }
     public static IFlightCommandSink? Commands { get; private set; }
     public static ConnectionOrchestrator? Connection { get; private set; }
     public static IDialogService Dialogs { get; } = new DialogService();
@@ -52,6 +59,7 @@ public partial class App : Application
     private Task? _pumpTask;
     private PeriodicTimer? _failsafePump;
     private Task? _failsafeTask;
+    private System.Windows.Threading.DispatcherTimer? _settingsDebounceTimer;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -94,11 +102,15 @@ public partial class App : Application
             CommLatency = new CommLatencyMonitor(AppOptions.Alerts, AlertBus, Clock, TelemetryPoll);
             Commands = new NullFlightCommandSink();
             Failsafe = new FailsafeMonitor(AppOptions.Failsafe, AlertBus, Commands, Clock);
-            Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock);
+            Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock, AppOptions.Telemetry);
             ServerClock = new ServerClock(client, Clock);
             ServerClock.Start();
             LockEngine = new KilitlenmeDenetim(AppOptions.Autonomy, Clock);
             LockEngine.LockSucceeded += OnLockSucceeded;
+            Kamikaze = new KamikazeFsm(AppOptions.Autonomy, Clock);
+            Kamikaze.MissionCompleted += OnKamikazeCompleted;
+            HzMeter = new TelemetryHzMeter(TelemetryPoll, Clock);
+            ManualTransitions = new ManualTransitionCounter(FlightState);
             SettingsFactory = new SettingsViewModelFactory(AppOptions, client, Dialogs, Connection);
 
             // Telemetri her başarılı cevabında failsafe heartbeat'i resetle
@@ -128,11 +140,57 @@ public partial class App : Application
                     if (AppOptions.Telemetry.UseSimulator) FlightSimulator?.Start();
                     else _ = FlightSimulator?.StopAsync();
                 }
+                ScheduleSettingsSave();
             };
+
+            // Diğer INPC'li option grupları (Telemetry hariç — yukarıda ele alındı).
+            AppOptions.Video.PropertyChanged += (_, _) => ScheduleSettingsSave();
+            AppOptions.Map.PropertyChanged   += (_, _) => ScheduleSettingsSave();
+            // GameServer/Alerts/Failsafe INPC değil — Settings kapanırken explicit save yapılır.
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Service bootstrap failed: {ex.Message}");
+        }
+    }
+
+    private static async void OnKamikazeCompleted(object? sender, KamikazeMissionResult e)
+    {
+        if (!e.Success)
+        {
+            AlertBus.Publish(Alert.Create(
+                kind: "kamikaze.failed",
+                level: AlertLevel.Warn,
+                title: "KAMİKAZE BAŞARISIZ",
+                message: e.Reason,
+                timeUtc: e.CompletedAtUtc));
+            return;
+        }
+        if (GameServer is null) return;
+        try
+        {
+            var start = Kamikaze?.MissionStartUtc ?? Clock.UtcNow;
+            var bitis = ServerClock?.IsSynchronized == true ? ServerClock.Now : e.CompletedAtUtc;
+            var bilgi = new KamikazeBilgisi(
+                BaslangicZamani: new ServerTime(start.Day, start.Hour, start.Minute, start.Second, start.Millisecond),
+                BitisZamani:    new ServerTime(bitis.Day, bitis.Hour, bitis.Minute, bitis.Second, bitis.Millisecond),
+                QrMetni:        e.QrText);
+            await GameServer.KamikazeBilgisiGonderAsync(bilgi);
+            AlertBus.Publish(Alert.Create(
+                kind: "kamikaze.success",
+                level: AlertLevel.Info,
+                title: "KAMİKAZE TAMAM",
+                message: $"QR: {e.QrText} · paket gönderildi",
+                timeUtc: e.CompletedAtUtc));
+        }
+        catch (Exception ex)
+        {
+            AlertBus.Publish(Alert.Create(
+                kind: "kamikaze.error",
+                level: AlertLevel.Warn,
+                title: "KAMİKAZE paket hatası",
+                message: ex.Message,
+                timeUtc: Clock.UtcNow));
         }
     }
 
@@ -200,12 +258,18 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Pending settings değişikliği varsa hemen flush — kullanıcı çıkış öncesi
+        // yaptığı değişiklik (örn. takım numarası) kaybolmasın.
+        SafeDispose(() => _settingsStore.Save(AppOptions), "settingsStore.Save");
+
         // Tüm dispose çağrıları izolasyonlu — biri hang ederse diğerlerini bloklamasın.
         // Background async loop'lar için her servisin Dispose'u zaten timeout'lu (500ms).
         SafeDispose(() => _pumpCts?.Cancel(), "pumpCts.Cancel");
         SafeDispose(() => _packetPump?.Dispose(), "packetPump");
         SafeDispose(() => _failsafePump?.Dispose(), "failsafePump");
         SafeDispose(() => ServerClock?.Dispose(), "ServerClock");
+        SafeDispose(() => HzMeter?.Dispose(), "HzMeter");
+        SafeDispose(() => ManualTransitions?.Dispose(), "ManualTransitions");
         SafeDispose(() => FlightSimulator?.Dispose(), "FlightSimulator");
         SafeDispose(() => Battery?.Dispose(), "Battery");
         SafeDispose(() => BoundaryProximity?.Dispose(), "BoundaryProximity");
@@ -228,6 +292,29 @@ public partial class App : Application
     {
         try { action(); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[OnExit] {name} dispose failed: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// 1 sn debounced settings save — slider gibi sürekli değişen ayarlarda her
+    /// hareket için disk I/O yapılmasın diye. Son değişiklikten 1 sn sonra dosyaya yazılır.
+    /// </summary>
+    private void ScheduleSettingsSave()
+    {
+        if (_settingsDebounceTimer is null)
+        {
+            _settingsDebounceTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _settingsDebounceTimer.Tick += (_, _) =>
+            {
+                _settingsDebounceTimer!.Stop();
+                try { _settingsStore.Save(AppOptions); }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Settings] save failed: {ex.Message}"); }
+            };
+        }
+        _settingsDebounceTimer.Stop();
+        _settingsDebounceTimer.Start();
     }
 
     // FailsafeMonitor komut sink'ine ihtiyaç duyar; gerçek MAVLink adapter

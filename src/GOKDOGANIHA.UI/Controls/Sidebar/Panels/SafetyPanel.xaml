@@ -1,0 +1,129 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Sidebar.Panels.SafetyPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="180">
+
+    <UserControl.Resources>
+        <!-- Renk LED satırı stili — diğer panellerle DRY tutarlılık. -->
+        <Style x:Key="StatusRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- DataContext = MainWindowViewModel.
+         Tüm sayaçlar 100ms tick'te güncellenir; renk durum severity'sine göre. -->
+    <StackPanel>
+        <!-- Alan Sınırı -->
+        <Grid Style="{StaticResource StatusRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="ALAN SINIRI"
+                       Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsInsideBoundary}" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+                <TextBlock.Text>
+                    <Binding Path="DistanceToBoundaryEdge" StringFormat="İçeride · {0:F0} m" FallbackValue="— " />
+                </TextBlock.Text>
+            </TextBlock>
+        </Grid>
+
+        <!-- HSS İhlali -->
+        <Grid Style="{StaticResource StatusRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="HSS İHLALİ"
+                       Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HssViolationCount}" Value="0">
+                                <Setter Property="Text" Value="Temiz · 0 s" />
+                                <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} ihlal · {1:F0} s">
+                        <Binding Path="HssViolationCount" />
+                        <Binding Path="HssViolationSeconds" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+        </Grid>
+
+        <!-- Manuel Geçiş -->
+        <Grid Style="{StaticResource StatusRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="MANUEL GEÇİŞ"
+                       Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11"
+                       Foreground="{StaticResource TacticalWarn}">
+                <TextBlock.Text>
+                    <Binding Path="ManualTransitionCount" StringFormat="{}{0} kez" />
+                </TextBlock.Text>
+            </TextBlock>
+        </Grid>
+
+        <!-- Failsafe -->
+        <Grid Style="{StaticResource StatusRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="FAILSAFE"
+                       Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text" Value="Hazır" />
+                        <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsFailsafeActive}" Value="True">
+                                <Setter Property="Text" Value="GCS Kayıp · RTL" />
+                                <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+
+        <!-- Telemetri Kopma -->
+        <Grid Style="{StaticResource StatusRow}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="TELEMETRİ KOPMA"
+                       Style="{StaticResource MetricLabel}" />
+            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11"
+                       Foreground="{StaticResource TacticalTextPrimary}">
+                <TextBlock.Text>
+                    <Binding Path="CommDropoutCount" StringFormat="{}{0} kez" />
+                </TextBlock.Text>
+            </TextBlock>
+        </Grid>
+    </StackPanel>
+</UserControl>

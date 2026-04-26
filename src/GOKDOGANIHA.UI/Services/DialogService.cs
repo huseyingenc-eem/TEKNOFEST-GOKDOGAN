@@ -15,6 +15,18 @@ public sealed class DialogService : IDialogService
     public Task ShowWarnAsync(string title, string message) => Show(title, message, MessageBoxImage.Warning);
     public Task ShowErrorAsync(string title, string message) => Show(title, message, MessageBoxImage.Error);
 
+    public Task<bool> ConfirmAsync(string title, string message, string yesText = "Evet", string noText = "İptal")
+    {
+        // Şartname/UX: kritik aksiyonlar (DISARM, abort) için ikinci dokunuş.
+        // Default focus = No/Cancel — kullanıcı Enter'a basarsa güvenli tarafta kalır.
+        var result = MessageBox.Show(
+            message, title,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        return Task.FromResult(result == MessageBoxResult.Yes);
+    }
+
     private static Task Show(string title, string message, MessageBoxImage icon)
     {
         MessageBox.Show(message, title, MessageBoxButton.OK, icon);

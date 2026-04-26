@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             xmlns:flight="clr-namespace:GOKDOGANIHA.UI.Controls.Flight"
              mc:Ignorable="d"
              d:DesignWidth="1280" d:DesignHeight="720"
              Background="Black">
@@ -97,72 +98,18 @@
 
                     <!-- =========== HUD OVERLAYS =========== -->
 
-                    <!-- Left stack: IAS / ALT / HDG -->
-                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center"
-                                Margin="24,0,0,0">
-                        <Border Background="{StaticResource TacticalOverlay}"
-                                BorderBrush="{StaticResource TacticalOverlayBorder}"
-                                BorderThickness="1" CornerRadius="3"
-                                Padding="10,6" Margin="0,0,0,8" MinWidth="92">
-                            <StackPanel>
-                                <TextBlock Text="IAS" FontSize="10"
-                                           Foreground="{StaticResource TacticalTextSecondary}" />
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock FontFamily="Consolas" FontSize="22" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TacticalAccent}">
-                                        <TextBlock.Text>
-                                            <Binding Path="Airspeed" StringFormat="{}{0:0}" FallbackValue="0" />
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                    <TextBlock Text="m/s" FontSize="10" VerticalAlignment="Bottom"
-                                               Foreground="{StaticResource TacticalTextSecondary}"
-                                               Margin="4,0,0,4" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="{StaticResource TacticalOverlay}"
-                                BorderBrush="{StaticResource TacticalOverlayBorder}"
-                                BorderThickness="1" CornerRadius="3"
-                                Padding="10,6" Margin="0,0,0,8" MinWidth="92">
-                            <StackPanel>
-                                <TextBlock Text="ALT" FontSize="10"
-                                           Foreground="{StaticResource TacticalTextSecondary}" />
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock FontFamily="Consolas" FontSize="22" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TacticalOk}">
-                                        <TextBlock.Text>
-                                            <Binding Path="Altitude" StringFormat="{}{0:0}" FallbackValue="0" />
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                    <TextBlock Text="m" FontSize="10" VerticalAlignment="Bottom"
-                                               Foreground="{StaticResource TacticalTextSecondary}"
-                                               Margin="4,0,0,4" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="{StaticResource TacticalOverlay}"
-                                BorderBrush="{StaticResource TacticalOverlayBorder}"
-                                BorderThickness="1" CornerRadius="3"
-                                Padding="10,6" MinWidth="92">
-                            <StackPanel>
-                                <TextBlock Text="HDG" FontSize="10"
-                                           Foreground="{StaticResource TacticalTextSecondary}" />
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock FontFamily="Consolas" FontSize="22" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TacticalAccent}">
-                                        <TextBlock.Text>
-                                            <Binding Path="Heading" StringFormat="{}{0:000}" FallbackValue="000" />
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                    <TextBlock Text="°" FontSize="12" VerticalAlignment="Bottom"
-                                               Foreground="{StaticResource TacticalTextSecondary}"
-                                               Margin="4,0,0,4" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                    <!-- Sol-alt köşe: Primary Flight Display (yapay ufuk + tape + heading).
+                         Eski 3 dikey card (IAS/ALT/HDG) yerine kompakt PFD — pilot bakışı
+                         için daha okunabilir, jüri tasarım puanı için profesyonel görünüm. -->
+                    <flight:PrimaryFlightDisplay
+                        HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                        Margin="24,0,0,24"
+                        Pitch="{Binding Pitch}"
+                        Roll="{Binding Roll}"
+                        Heading="{Binding Heading}"
+                        Altitude="{Binding Altitude}"
+                        Airspeed="{Binding Airspeed}"
+                        VerticalSpeed="{Binding VerticalSpeed}" />
 
                     <!-- Right stack: target lock info (visible only when locked) -->
                     <Border HorizontalAlignment="Right" VerticalAlignment="Center"

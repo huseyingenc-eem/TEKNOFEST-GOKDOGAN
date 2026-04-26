@@ -249,45 +249,9 @@
             </ScrollViewer>
         </core:IconTabItem>
 
-        <!-- ============== HARİTA ============== -->
-        <core:IconTabItem IconKind="Map" Label="HARİTA">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="Map" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="HARİTA" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Tile sağlayıcı ve görünür katmanlar"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Tile sağlayıcı" Style="{StaticResource FieldLabel}" />
-                        <ComboBox Grid.Column="1"
-                                  SelectedValue="{Binding Map.TileProvider}" SelectedValuePath="Content">
-                            <ComboBoxItem Content="StadiaAlidadeSmoothDark" />
-                            <ComboBoxItem Content="GoogleMap" />
-                            <ComboBoxItem Content="GoogleSatelliteMap" />
-                            <ComboBoxItem Content="GoogleHybridMap" />
-                            <ComboBoxItem Content="OpenStreetMap" />
-                        </ComboBox>
-                    </Grid>
-
-                    <CheckBox IsChecked="{Binding Map.ShowGrid}" Content="Grid katmanı" Margin="160,10,0,0" />
-                    <CheckBox IsChecked="{Binding Map.ShowBoundary}" Content="Uçuş sahası sınırı" Margin="160,8,0,0" />
-                    <CheckBox IsChecked="{Binding Map.ShowHssZones}" Content="HSS bölgeleri" Margin="160,8,0,0" />
-                </StackPanel>
-            </ScrollViewer>
-        </core:IconTabItem>
+        <!-- HARİTA tab kaldırıldı — ana ekranda sağ-alt FAB butonu ile popover olarak
+             açılıyor (Map FAB → ARAÇLAR / ARKA PLAN / KATMANLAR). MapSettingsViewModel ve
+             Settings.Map property'si geriye uyumlu testler için korunuyor; UI'da kullanılmıyor. -->
 
         <!-- ============== UYARILAR ============== -->
         <core:IconTabItem IconKind="BellRing" Label="UYARILAR">

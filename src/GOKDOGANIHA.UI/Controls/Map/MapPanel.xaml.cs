@@ -10,6 +10,7 @@ using GMap.NET;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsPresentation;
 using GOKDOGANIHA.Core.Configuration;
+using GOKDOGANIHA.Core.Models;
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.UI.Controls.Map.Markers;
 using GOKDOGANIHA.UI.Controls.Map.Providers;
@@ -21,10 +22,17 @@ public partial class MapPanel : UserControl
 {
     private readonly Dictionary<int, GMapMarker> _enemyMarkers = new();
     private readonly Dictionary<int, (GMapMarker marker, HssCircleMarker circle, HssKoordinat data)> _hssMarkers = new();
+    private readonly Dictionary<int, (GMapMarker marker, JammingCircleMarker circle, JammingZone data)> _jammingMarkers = new();
+    private readonly List<GMapMarker> _waypointMarkers = new();
+    private GMapMarker? _boundaryCircleMarker;
+    private HssCircleMarker? _boundaryCircleVisual;
     private GMapMarker? _ownMarker;
     private OwnDroneMarker? _ownVisual;
     private GMapMarker? _qrMarker;
     private GMapPolygon? _boundaryPoly;
+    private GMapPolygon? _trailPoly;
+    private GMapPolygon? _routePoly;
+    private GMapPolygon? _userPoly;
 
     private MapViewModel? _vm;
     private MapOptions? _mapOptions;
@@ -54,6 +62,11 @@ public partial class MapPanel : UserControl
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         DataContextChanged += OnDataContextChanged;
+
+        // Çizim modunda sol tık vertex ekler, sağ tık tamamlar.
+        // Map'in drag davranışını çizim sırasında geçici olarak overide ediyoruz.
+        MapCtrl.PreviewMouseLeftButtonDown += OnMapLeftButtonDown;
+        MapCtrl.PreviewMouseRightButtonDown += OnMapRightButtonDown;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -118,18 +131,39 @@ public partial class MapPanel : UserControl
 
     private void DrawBoundary()
     {
-        if (_boundaryPoly is not null) return; // already drawn
-        var points = CompetitionBoundary.Corners
-            .Select(c => new PointLatLng(c.Lat, c.Lng))
-            .ToList();
-        if (points.Count < 3) return;
+        // Yeni tasarım: Uçuş izin sahası dairesel gösterim (sadece border, saydam iç).
+        if (_boundaryCircleMarker is not null) return;
 
-        _boundaryPoly = new GMapPolygon(points) { Tag = "boundary" };
-        MapCtrl.Markers.Add(_boundaryPoly);
+        var stroke = new SolidColorBrush(Color.FromRgb(0x00, 0xD1, 0xC7));
+        var fill = Brushes.Transparent;
+        _boundaryCircleVisual = new HssCircleMarker(-1, stroke, fill);
+        _boundaryCircleVisual.SetRadius(CompetitionBoundary.RadiusMeters, CompetitionBoundary.Center.Lat, (int)MapCtrl.Zoom);
+
+        _boundaryCircleMarker = new GMapMarker(new PointLatLng(CompetitionBoundary.Center.Lat, CompetitionBoundary.Center.Lng))
+        {
+            Shape = _boundaryCircleVisual,
+            ZIndex = 50
+        };
+        _boundaryCircleMarker.Offset = new Point(-_boundaryCircleVisual.Width / 2, -_boundaryCircleVisual.Height / 2);
+        MapCtrl.Markers.Add(_boundaryCircleMarker);
+
+        // Eski polygon boundary varsa kaldır.
+        if (_boundaryPoly is not null)
+        {
+            MapCtrl.Markers.Remove(_boundaryPoly);
+            _boundaryPoly = null;
+        }
     }
 
     private void RemoveBoundary()
     {
+        if (_boundaryCircleMarker is not null)
+        {
+            MapCtrl.Markers.Remove(_boundaryCircleMarker);
+            _boundaryCircleMarker = null;
+            _boundaryCircleVisual = null;
+        }
+
         if (_boundaryPoly is null) return;
         MapCtrl.Markers.Remove(_boundaryPoly);
         _boundaryPoly = null;
@@ -141,6 +175,10 @@ public partial class MapPanel : UserControl
         {
             _vm.EnemyDrones.CollectionChanged -= OnEnemyDronesChanged;
             _vm.HssZones.CollectionChanged -= OnHssZonesChanged;
+            _vm.OwnTrail.CollectionChanged -= OnTrailChanged;
+            _vm.Waypoints.CollectionChanged -= OnWaypointsChanged;
+            _vm.JammingZones.CollectionChanged -= OnJammingChanged;
+            _vm.UserPolygon.CollectionChanged -= OnUserPolygonChanged;
             _vm.PropertyChanged -= OnVmPropertyChanged;
         }
 
@@ -149,12 +187,21 @@ public partial class MapPanel : UserControl
 
         _vm.EnemyDrones.CollectionChanged += OnEnemyDronesChanged;
         _vm.HssZones.CollectionChanged += OnHssZonesChanged;
+        _vm.OwnTrail.CollectionChanged += OnTrailChanged;
+        _vm.Waypoints.CollectionChanged += OnWaypointsChanged;
+        _vm.JammingZones.CollectionChanged += OnJammingChanged;
+        _vm.UserPolygon.CollectionChanged += OnUserPolygonChanged;
         _vm.PropertyChanged += OnVmPropertyChanged;
 
         RebuildEnemies();
         RebuildHss();
+        RebuildJamming();
+        RebuildWaypoints();
+        RebuildTrail();
+        RebuildUserPolygon();
         UpdateOwnMarker();
         UpdateQrMarker();
+        UpdateCursor();
     }
 
     private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -169,11 +216,21 @@ public partial class MapPanel : UserControl
             case nameof(MapViewModel.QrTarget):
                 UpdateQrMarker();
                 break;
+            case nameof(MapViewModel.IsDrawingPolygon):
+                UpdateCursor();
+                break;
+            case nameof(MapViewModel.ShowOwnTrail):
+                RebuildTrail();
+                break;
         }
     }
 
     private void OnEnemyDronesChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildEnemies();
     private void OnHssZonesChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildHss();
+    private void OnJammingChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildJamming();
+    private void OnWaypointsChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildWaypoints();
+    private void OnTrailChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildTrail();
+    private void OnUserPolygonChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildUserPolygon();
 
     private void RebuildEnemies()
     {
@@ -227,9 +284,21 @@ public partial class MapPanel : UserControl
     private void OnMapZoomChanged()
     {
         int z = (int)MapCtrl.Zoom;
+
+        if (_boundaryCircleMarker is not null && _boundaryCircleVisual is not null)
+        {
+            _boundaryCircleVisual.SetRadius(CompetitionBoundary.RadiusMeters, CompetitionBoundary.Center.Lat, z);
+            _boundaryCircleMarker.Offset = new Point(-_boundaryCircleVisual.Width / 2, -_boundaryCircleVisual.Height / 2);
+        }
+
         foreach (var (marker, circle, data) in _hssMarkers.Values)
         {
             circle.SetRadius(data.YaricapMetre, data.Enlem, z);
+            marker.Offset = new Point(-circle.Width / 2, -circle.Height / 2);
+        }
+        foreach (var (marker, circle, data) in _jammingMarkers.Values)
+        {
+            circle.SetRadius(data.RadiusMeters, data.Latitude, z);
             marker.Offset = new Point(-circle.Width / 2, -circle.Height / 2);
         }
     }
@@ -273,5 +342,155 @@ public partial class MapPanel : UserControl
         };
         _qrMarker.Position = new PointLatLng(_vm.QrTarget.Enlem, _vm.QrTarget.Boylam);
         if (!MapCtrl.Markers.Contains(_qrMarker)) MapCtrl.Markers.Add(_qrMarker);
+    }
+
+    // ============================== TRAIL ==============================
+    private void RebuildTrail()
+    {
+        if (_trailPoly is not null)
+        {
+            MapCtrl.Markers.Remove(_trailPoly);
+            _trailPoly = null;
+        }
+        if (_vm is null || !_vm.ShowOwnTrail || _vm.OwnTrail.Count < 2) return;
+
+        // GMapPolygon polyline gibi de çalışır — Fill verilmediği sürece sadece stroke.
+        _trailPoly = new GMapPolygon(_vm.OwnTrail.ToList()) { Tag = "trail" };
+        MapCtrl.Markers.Add(_trailPoly);
+        StyleTrailShape();
+    }
+
+    private void StyleTrailShape()
+    {
+        if (_trailPoly is null) return;
+        var accent = (Brush)FindResource("TacticalAccent");
+        // GMap.NET WPF GMapPolygon.Shape varsayılanda Path döndürür ama farklı
+        // versiyonlarda Polygon olabilir — her iki yola da style uygula (DRY/safe).
+        ApplyShapeStyle(_trailPoly.Shape, accent, thickness: 2.5, opacity: 0.55, fill: null, dashed: false);
+    }
+
+    private static void ApplyShapeStyle(System.Windows.UIElement? shape, Brush stroke, double thickness,
+                                        double opacity, Brush? fill, bool dashed,
+                                        DoubleCollection? dashArray = null)
+    {
+        if (shape is Path p)
+        {
+            p.Stroke = stroke; p.StrokeThickness = thickness;
+            p.Opacity = opacity; p.Fill = fill;
+            p.StrokeDashArray = dashed ? (dashArray ?? new DoubleCollection { 4, 3 }) : null!;
+        }
+        else if (shape is System.Windows.Shapes.Polygon poly)
+        {
+            poly.Stroke = stroke; poly.StrokeThickness = thickness;
+            poly.Opacity = opacity; poly.Fill = fill;
+            poly.StrokeDashArray = dashed ? (dashArray ?? new DoubleCollection { 4, 3 }) : null!;
+        }
+    }
+
+    // ============================== WAYPOINTS ==============================
+    private void RebuildWaypoints()
+    {
+        // Eski marker'ları kaldır
+        foreach (var m in _waypointMarkers) MapCtrl.Markers.Remove(m);
+        _waypointMarkers.Clear();
+        if (_routePoly is not null) { MapCtrl.Markers.Remove(_routePoly); _routePoly = null; }
+
+        if (_vm is null || _vm.Waypoints.Count == 0) return;
+
+        // Pin'ler
+        foreach (var w in _vm.Waypoints)
+        {
+            var pin = new WaypointMarker { WaypointIndex = w.Index };
+            var marker = new GMapMarker(new PointLatLng(w.Latitude, w.Longitude))
+            {
+                Shape = pin,
+                Offset = new Point(-14, -14),
+                ZIndex = 300
+            };
+            MapCtrl.Markers.Add(marker);
+            _waypointMarkers.Add(marker);
+        }
+
+        // Ardışık waypoint'leri birleştiren çizgi
+        if (_vm.Waypoints.Count >= 2)
+        {
+            var points = _vm.Waypoints
+                .OrderBy(w => w.Index)
+                .Select(w => new PointLatLng(w.Latitude, w.Longitude))
+                .ToList();
+            _routePoly = new GMapPolygon(points) { Tag = "route" };
+            MapCtrl.Markers.Add(_routePoly);
+            ApplyShapeStyle(_routePoly.Shape,
+                stroke: new SolidColorBrush(Color.FromArgb(0xCC, 0x00, 0xD1, 0xC7)),
+                thickness: 2, opacity: 1.0, fill: null,
+                dashed: true, dashArray: new DoubleCollection { 6, 3 });
+        }
+    }
+
+    // ============================== JAMMING ZONES ==============================
+    private void RebuildJamming()
+    {
+        foreach (var (m, _, _) in _jammingMarkers.Values) MapCtrl.Markers.Remove(m);
+        _jammingMarkers.Clear();
+
+        if (_vm is null) return;
+
+        foreach (var z in _vm.JammingZones)
+        {
+            var circle = new JammingCircleMarker(z.Id);
+            circle.SetRadius(z.RadiusMeters, z.Latitude, (int)MapCtrl.Zoom);
+            var marker = new GMapMarker(new PointLatLng(z.Latitude, z.Longitude))
+            {
+                Shape = circle
+            };
+            marker.Offset = new Point(-circle.Width / 2, -circle.Height / 2);
+            MapCtrl.Markers.Add(marker);
+            _jammingMarkers[z.Id] = (marker, circle, z);
+        }
+    }
+
+    // ============================== USER POLYGON (DRAW) ==============================
+    private void RebuildUserPolygon()
+    {
+        if (_userPoly is not null)
+        {
+            MapCtrl.Markers.Remove(_userPoly);
+            _userPoly = null;
+        }
+        if (_vm is null || _vm.UserPolygon.Count < 2) return;
+
+        _userPoly = new GMapPolygon(_vm.UserPolygon.ToList()) { Tag = "user-polygon" };
+        MapCtrl.Markers.Add(_userPoly);
+        ApplyShapeStyle(_userPoly.Shape,
+            stroke: new SolidColorBrush(Color.FromRgb(0xF1, 0xC4, 0x0F)),
+            thickness: 2, opacity: 1.0,
+            fill: new SolidColorBrush(Color.FromArgb(0x18, 0xF1, 0xC4, 0x0F)),
+            dashed: true, dashArray: new DoubleCollection { 5, 3 });
+    }
+
+    // ============================== MOUSE HANDLERS ==============================
+    private void OnMapLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm is null || !_vm.IsDrawingPolygon) return;
+
+        // Çizim modunda map drag iptal — vertex ekleme öncelikli.
+        var pos = e.GetPosition(MapCtrl);
+        var latLng = MapCtrl.FromLocalToLatLng((int)pos.X, (int)pos.Y);
+        _vm.AddPolygonVertex(latLng.Lat, latLng.Lng);
+        e.Handled = true;
+    }
+
+    private void OnMapRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_vm is null || !_vm.IsDrawingPolygon) return;
+        _vm.CompletePolygonDraw();
+        e.Handled = true;
+    }
+
+    private void UpdateCursor()
+    {
+        if (_vm is null) return;
+        // Çizim modunda crosshair cursor — kullanıcıya görsel geri bildirim.
+        MapCtrl.Cursor = _vm.IsDrawingPolygon ? Cursors.Cross : Cursors.Arrow;
     }
 }

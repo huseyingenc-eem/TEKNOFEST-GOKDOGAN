@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models.Alerts;
@@ -14,7 +16,7 @@ namespace GOKDOGANIHA.Core.Services.Failsafe;
 ///
 /// Zaman IClock üzerinden; test'te fake-clock ile fast-forward yapılır.
 /// </summary>
-public sealed class FailsafeMonitor
+public sealed class FailsafeMonitor : INotifyPropertyChanged
 {
     private readonly FailsafeOptions _options;
     private readonly IAlertPublisher _publisher;
@@ -23,6 +25,7 @@ public sealed class FailsafeMonitor
 
     private DateTime? _lastHeartbeat;
     private bool _gcsLostAlerted;
+    private bool _isGcsLost;
 
     public FailsafeMonitor(
         FailsafeOptions options,
@@ -41,6 +44,7 @@ public sealed class FailsafeMonitor
     {
         _lastHeartbeat = _clock.UtcNow;
         _gcsLostAlerted = false; // recovered
+        IsGcsLost = false;
     }
 
     /// <summary>Tick — GCS timeout'u kontrol et.</summary>
@@ -59,5 +63,17 @@ public sealed class FailsafeMonitor
 
         _commands.Rtl();
         _gcsLostAlerted = true;
+        IsGcsLost = true;
     }
+
+    /// <summary>UI binding: GCS heartbeat kaybedildi mi (RTL tetiklendiyse true).</summary>
+    public bool IsGcsLost
+    {
+        get => _isGcsLost;
+        private set { if (_isGcsLost != value) { _isGcsLost = value; OnPropertyChanged(); } }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

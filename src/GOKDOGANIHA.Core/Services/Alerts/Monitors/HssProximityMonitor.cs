@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models;
@@ -14,7 +16,7 @@ namespace GOKDOGANIHA.Core.Services.Alerts.Monitors;
 /// merkezine mesafesi (YariCap + <see cref="AlertOptions.HssProximityThreshold"/>)
 /// altına inerse danger alert publish eder. Her HSS id ayrı hysteresis.
 /// </summary>
-public sealed class HssProximityMonitor : IDisposable
+public sealed class HssProximityMonitor : INotifyPropertyChanged, IDisposable
 {
     private readonly FlightState _state;
     private readonly AlertOptions _alertOptions;
@@ -22,6 +24,9 @@ public sealed class HssProximityMonitor : IDisposable
     private readonly IClock _clock;
     private readonly HssPollService _poll;
     private readonly HashSet<int> _alertedIds = new();
+    private DateTime? _firstViolationUtc;
+    private int _activeViolationCount;
+    private TimeSpan _activeViolationDuration;
 
     public HssProximityMonitor(
         FlightState state, AlertOptions alertOptions,
@@ -37,6 +42,20 @@ public sealed class HssProximityMonitor : IDisposable
     }
 
     private void OnHssUpdated(object? sender, HssResponse resp) => Evaluate(resp.Koordinatlar);
+
+    /// <summary>UI binding: şu an eş zamanlı kaç HSS ihlali aktif (0 = temiz).</summary>
+    public int ActiveViolationCount
+    {
+        get => _activeViolationCount;
+        private set { if (_activeViolationCount != value) { _activeViolationCount = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>UI binding: ihlal başladığından beri geçen süre (sıfırsa temiz).</summary>
+    public TimeSpan ActiveViolationDuration
+    {
+        get => _activeViolationDuration;
+        private set { if (_activeViolationDuration != value) { _activeViolationDuration = value; OnPropertyChanged(); } }
+    }
 
     public void Evaluate(IReadOnlyList<HssKoordinat> zones)
     {
@@ -63,7 +82,24 @@ public sealed class HssProximityMonitor : IDisposable
         }
 
         _alertedIds.RemoveWhere(id => !seen.Contains(id));
+
+        // İhlal sayısı + süresi UI için canlı güncelle.
+        ActiveViolationCount = _alertedIds.Count;
+        if (_alertedIds.Count > 0)
+        {
+            _firstViolationUtc ??= _clock.UtcNow;
+            ActiveViolationDuration = _clock.UtcNow - _firstViolationUtc.Value;
+        }
+        else
+        {
+            _firstViolationUtc = null;
+            ActiveViolationDuration = TimeSpan.Zero;
+        }
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     public void Dispose() => _poll.HssUpdated -= OnHssUpdated;
 }

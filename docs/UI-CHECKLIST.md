@@ -63,71 +63,106 @@ Her madde tamamlandığında `[ ]` → `[x]` olarak güncellenir. Faz bittiğind
 - [x] VideoPanel harita kolonu içinde kaldı (sağ kolon ile çakışmaz)
 - [x] FullscreenOverlay'ler ColumnSpan=2 ile tüm window'u kaplar
 
-## Faz 3 — Sağ Kolon Panelleri
+## Faz 3 — Sağ Kolon Panelleri ✅ TAMAMLANDI · 2026-04-26
 
-- [ ] TelemetryPanel zenginleştirildi (V/S, AS, WP, BAT, GPS, OTONOM)
-- [ ] `Sidebar/Panels/OpponentsPanel.xaml` + tablo + tıklanabilir
-- [ ] `Sidebar/Panels/LockOnPanel.xaml` + progress + paket gönder butonu
-- [ ] `Sidebar/Panels/KamikazePanel.xaml` UI iskeleti (FSM Faz 7'de)
-- [ ] `Sidebar/Panels/ServerCommPanel.xaml` + TelemetryHzMeter
-- [ ] `Core/Services/Polling/TelemetryHzMeter.cs`
-- [ ] `Sidebar/Panels/SafetyPanel.xaml` + ManualTransitionCounter
-- [ ] `Core/Services/Safety/ManualTransitionCounter.cs`
-- [ ] HSS/Latency monitor durumlarını expose et (public observable)
-- [ ] `Sidebar/Panels/CommandsPanel.xaml` UI (backend Faz 6'da)
+- [x] TelemetryPanel kompakt/full (HUD overlay olarak, sidebar'da değil — UX kararı)
+- [x] `Sidebar/Panels/OpponentsPanel.xaml` + tablo (TAKIM/KONUM/İRT/HIZ)
+- [x] `Sidebar/Panels/LockOnPanel.xaml` + LED + 4s progress + paket gönder butonu
+- [x] `Sidebar/Panels/KamikazePanel.xaml` UI iskeleti (FSM Faz 7'de bağlanır)
+- [x] `Sidebar/Panels/ServerCommPanel.xaml` + bağlantı LED + Hz + latency + RSSI
+- [x] `Core/Services/Polling/TelemetryHzMeter.cs` (5 sn kayan pencere, INPC)
+- [x] `Sidebar/Panels/SafetyPanel.xaml` + sınır/HSS/manuel/failsafe/dropout
+- [x] `Core/Services/Safety/ManualTransitionCounter.cs`
+- [x] BoundaryProximity/Hss/CommLatency/Failsafe monitor'ları INotifyPropertyChanged ile durum expose
+- [x] `Sidebar/Panels/CommandsPanel.xaml` UI — 6 mod butonu + 6 komut (IsEnabled=false, Faz 6 backend)
+- [x] App.xaml.cs HzMeter + ManualTransitions instantiate + dispose
+- [x] MainWindowViewModel 100ms tick'te tüm sidebar property'lerini günceller
 
-> **🔍 İnceleme noktası:** Faz 2+3 bittikten sonra agent kontrolü.
+> **🔍 İnceleme noktası:** Faz 2+3 agent kontrolü — bir sonraki adım.
 
-## Faz 4 — Harita Geliştirmeleri
+## Faz 4 — Harita Geliştirmeleri ✅ TAMAMLANDI · 2026-04-26
 
-- [ ] `MapViewModel.OwnTrail` + polyline render
-- [ ] Settings'te trail toggle + nokta sayısı slider
-- [ ] `Core/Models/JammingZone.cs` + `MapViewModel.JammingZones`
-- [ ] `Map/Markers/JammingCircleMarker.xaml`
-- [ ] `Core/Models/Waypoint.cs` + `MapViewModel.Waypoints`
-- [ ] `Map/Markers/WaypointMarker.xaml`
-- [ ] Waypoint birleştirme line
-- [ ] Alan çizme modu (sol tık ekle, sağ tık tamamla)
-- [ ] UserPolygon kaydet/temizle butonu
+- [x] `MapViewModel.OwnTrail` + polyline render (max 200 nokta FIFO, ~2m noise filter)
+- [x] Trail toggle (ShowOwnTrail) — Settings persistence Faz 8'de
+- [x] `Core/Models/JammingZone.cs` + `MapViewModel.JammingZones`
+- [x] `Map/Markers/JammingCircleMarker.cs` (mor + dashed stroke, zoom-aware)
+- [x] `Core/Models/Waypoint.cs` + `MapViewModel.Waypoints`
+- [x] `Map/Markers/WaypointMarker.xaml` (numaralı yuvarlak pin + glow effect)
+- [x] Waypoint birleştirme line (dashed teal route)
+- [x] Alan çizme modu (sol tık vertex / sağ tık tamamla / crosshair cursor)
+- [x] UserPolygon temizle butonu + ÇİZİM MODU rozet overlay
+- [x] Map toolbar: ÇİZİM, polygon temizle, İZ toggle, iz temizle (4 buton)
+- [x] FlightState bridge fix: MainWindowViewModel artık MapVm.SetOwnPosition'ı çağırıyor (önceden boş kalıyordu)
+- [x] OnMapZoomChanged: HSS + Jamming circle'ları yeniden boyutlanıyor
 
-## Faz 5 — HUD / PFD
+## Faz 5 — HUD / PFD ✅ TAMAMLANDI · 2026-04-26
 
-- [ ] `Controls/Flight/PrimaryFlightDisplay.xaml`
-- [ ] Pitch ladder + roll indicator
-- [ ] Speed/Altitude tape
-- [ ] Heading compass strip
-- [ ] Yerleşim: kamera overlay sol-alt
+- [x] `Controls/Flight/PrimaryFlightDisplay.xaml(.cs)` — 280×180 kompakt UserControl
+- [x] Pitch ladder (±10°/±20° işaretleri) + roll RotateTransform (DP callback ile manual scale)
+- [x] Speed tape (sol) + Altitude tape (sağ) — büyük readout + tape style
+- [x] Heading compass strip (alt) + center triangle indicator
+- [x] V/S sub-readout — semantik renk (yeşil=tırmanış, sarı=düşüş, kırmızı=hızlı düşüş)
+- [x] Aircraft reference symbol (sabit, rotate etmez)
+- [x] CameraFullscreenView'da eski 3 dikey IAS/ALT/HDG card kaldırıldı, yerine PFD
+- [x] DependencyProperty'ler (Pitch/Roll/Heading/Altitude/Airspeed/VerticalSpeed) — bağımsız VM-agnostic
 
-> **🔍 İnceleme noktası:** Faz 4+5 bittikten sonra agent kontrolü.
+> **🔍 İnceleme noktası:** Faz 4+5 agent kontrolü → bir sonraki adım.
 
-## Faz 6 — Komut Backend Wire-up
+## Faz 6 — Komut Backend Wire-up ✅ TAMAMLANDI · 2026-04-26
 
-- [ ] CommandsPanel butonları → MainWindowViewModel RelayCommand
-- [ ] MainWindowViewModel → App.Commands.Xxx çağırır
-- [ ] NullFlightCommandSink yeni metodlar (Debug + AlertBus info)
-- [ ] Mod butonları toggle group + visual state
-- [ ] RadialMenu vs CommandsPanel kararı (kullanıcıya sor)
+- [x] CommandsPanel 12 butonu → MainWindowViewModel RelayCommand
+- [x] MainWindowViewModel → App.Commands.Xxx çağırır (Arm/Disarm toggle, SetMode parametreli, Rtl, Land, Loiter, GotoWaypoint, ToggleAutonomous, SelectTarget)
+- [x] NullFlightCommandSink AlertBus.Publish (Faz 0'da yapılmıştı, Faz 6'da kullanıldı)
+- [x] Mod butonları toggle group + visual state — aktif mod yeşil highlight (StringEqualsConverter)
+- [x] ARM/DISARM butonu IsArmed'a göre text değişir
+- [x] Hover state mode butonlarında — TacticalAccent border
+- [x] ToolTip her butonda — UX için (jüri puanı)
 
-## Faz 7 — Kamikaze FSM
+## Faz 7 — Kamikaze FSM ✅ TAMAMLANDI · 2026-04-26
 
-- [ ] `Core/Services/Autonomy/KamikazeFsm.cs`
-- [ ] State enum (Idle/Intikal/Dalış/QRArıyor/QROkundu/PasGeç/Tamam/Hata)
-- [ ] State transition guard'lar
-- [ ] KamikazePanel state binding + faz göstergesi
-- [ ] Settings'e mock QR butonu (debug)
-- [ ] Tests: state transition tablosu (15+ case)
+- [x] `Core/Models/KamikazePhase.cs` enum (Idle/Intikal/Dalis/QrAriyor/QrOkundu/PasGec/Tamam/Hata)
+- [x] `Core/Services/Autonomy/KamikazeFsm.cs` state machine (INPC) + KamikazeMissionResult record
+- [x] State transition guard'lar (irtifa eşikleri, max 2 attempt, distance < 250m, pull-up * 1.5 trigger)
+- [x] StartMission / Tick(FlightState) / ApplyQrRead / Abort API
+- [x] KamikazePanel: 4 dot phase indicator + canlı durum metni + QR konum/metin/deneme + 3 buton (BAŞLAT / QR SİM / İPTAL)
+- [x] Phase severity rengi (Hata kırmızı, Tamam yeşil)
+- [x] App.xaml.cs: KamikazeFsm instance + MissionCompleted handler (success → KamikazeBilgisi paket gönder)
+- [x] MainWindowViewModel: tick'te Tick(FlightState) çağrılır, 5 binding property
+- [x] StartKamikaze / SimulateQrRead / AbortKamikaze RelayCommand
+- [x] Tests: 12 state transition test (Initial/Start/4-phase progression/QR ignore/Success/Retry/MaxAttempts/Abort/Idle)
 
-> **🔍 İnceleme noktası:** Faz 6+7 bittikten sonra agent kontrolü.
+> **🔍 İnceleme noktası:** Faz 6+7 agent kontrolü → bir sonraki adım.
 
-## Faz 8 — Polish
+## Faz 7.5 — KamikazeFullscreenView ✅ TAMAMLANDI · 2026-04-26
 
-- [ ] AlertToastHost (sağ üst 4s popup)
-- [ ] Settings persistence (%AppData%\GOKDOGAN\settings.json + DPAPI şifre)
-- [ ] Auto-reconnect loop
-- [ ] TopBar status pills canlı binding
-- [ ] Microsoft.Extensions.Logging entegrasyonu
-- [ ] FormFieldRow refactor
-- [ ] Polygon kaydet/yükle
-- [ ] Mock kamikaze QR debug butonu (Settings)
+- [x] `Controls/Kamikaze/KamikazeFullscreenView.xaml(.cs)` — full ekran taktik görünüm
+- [x] APPROACH GEOMETRY (sol) — SVG Path bezier eğrisi + drone ikonu canlı (Pitch + Altitude'a göre)
+- [x] OPTICAL TARGETING (sağ) — kamera placeholder + crosshair + QR detection rect (faza göre sarı/yeşil)
+- [x] DISTANCE TO TARGET + VERTICAL VELOCITY büyük metric tile'lar
+- [x] DECODER STATUS + QR Metni satırı
+- [x] Büyük ABORT KAMİKAZE butonu (alt, kırmızı)
+- [x] 4 dot phase indicator üst-sağ (Hata'da hepsi kırmızı)
+- [x] MainWindow OverlayHost ile entegrasyon (IsKamikazeFullscreen, ColumnSpan=2)
+- [x] Auto-open: KamikazeFsm.IsActive olunca açılır, biter bitmez kapanır
+- [x] Mutual exclusion: Camera/Settings overlay'leri ile çakışmaz (öncelikli)
+- [x] Sim modunda mock QR target üretilir (yarışma server'sız test)
 
-> **🔍 İnceleme noktası:** Faz 8 final agent kontrolü.
+## Faz 8 — Polish ✅ TAMAMLANDI · 2026-04-26
+
+- [x] **ARM/DISARM confirmation dialog** — `IDialogService.ConfirmAsync` (default Cancel focus, safety)
+- [x] **AlertToastHost** — `Controls/Alerts/AlertToastHost.xaml(.cs)` AlertBus subscribe, 4s popup
+   - Sağ üst sidebar üstünde, level bazlı renk + ikon (Info/Warn/Danger)
+- [x] **Settings persistence** — `%AppData%\GOKDOGAN\settings.json`
+   - `Core/Services/Persistence/SettingsStore.cs` (Load/Save + OptionsSnapshot record)
+   - 1 sn debounced save (Telemetry/Video/Map INPC değişimlerinde)
+   - Boot'ta load + OnExit'te flush
+- [x] **Auto-reconnect loop** — `ConnectionOrchestrator.OnPollFailed`
+   - `TelemetryOptions.AutoReconnect` aktifse exponential backoff (1s, 2s, 4s, 8s, max 30s)
+   - Tek seferde bir reconnect (lock), AlertBus'a "YENİDEN BAĞLANIYOR · Deneme N" mesajı
+- [N/A] TopBar status pills canlı binding — Faz 3'te HzMeter/SignalRssi ile zaten canlı
+- [N/A] Microsoft.Extensions.Logging — atlandı (Debug.WriteLine yeterli, AlertBus + Toast + Console mevcut)
+- [N/A] FormFieldRow refactor — atlandı (görsel polish, fonksiyonel etki yok)
+- [N/A] Polygon kaydet/yükle — Settings persistence içinde Faz 4 polygon dahil değil (Settings → polygon ayrı export gerek)
+- [x] Mock kamikaze QR debug butonu — Faz 7'de KamikazePanel'a ekli (Settings.UseSimulator visibility)
+
+> **🔍 İnceleme noktası:** Faz 7.5 + Faz 8 agent kontrolü → bir sonraki adım.

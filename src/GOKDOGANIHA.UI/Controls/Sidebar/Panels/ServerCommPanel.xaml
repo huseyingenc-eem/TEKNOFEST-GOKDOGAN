@@ -1,0 +1,96 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Sidebar.Panels.ServerCommPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="180">
+
+    <!-- DataContext = MainWindowViewModel -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="BAĞLANTI"
+                   Style="{StaticResource MetricLabel}" Margin="0,0,12,4" />
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+            <Ellipse Width="8" Height="8" VerticalAlignment="Center">
+                <Ellipse.Style>
+                    <Style TargetType="Ellipse">
+                        <Setter Property="Fill" Value="{StaticResource TacticalCritical}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                <Setter Property="Fill" Value="{StaticResource TacticalOk}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Ellipse.Style>
+            </Ellipse>
+            <TextBlock Margin="6,0,0,0" FontFamily="Consolas" FontSize="11">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text" Value="Bağlı değil" />
+                        <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                <Setter Property="Text" Value="Bağlı" />
+                                <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="GECİKME"
+                   Style="{StaticResource MetricLabel}" Margin="0,4,12,4" />
+        <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="11"
+                   Foreground="{StaticResource TacticalTextPrimary}" Margin="0,4,0,4">
+            <TextBlock.Text>
+                <Binding Path="ServerLatencyLiveMs" StringFormat="{}{0:F0} ms" FallbackValue="— ms" />
+            </TextBlock.Text>
+        </TextBlock>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="TELEMETRİ Hz"
+                   Style="{StaticResource MetricLabel}" Margin="0,0,12,4" />
+        <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="11"
+                   Foreground="{StaticResource TacticalAccent}">
+            <TextBlock.Text>
+                <Binding Path="TelemetryHzMeasured" StringFormat="{}{0:F1} Hz" FallbackValue="— Hz" />
+            </TextBlock.Text>
+        </TextBlock>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="SUNUCU SAATİ"
+                   Style="{StaticResource MetricLabel}" Margin="0,4,12,4" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ServerTime}"
+                   FontFamily="Consolas" FontSize="11"
+                   Foreground="#F1C40F" Margin="0,4,0,4" />
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="SON DURUM"
+                   Style="{StaticResource MetricLabel}" Margin="0,0,12,4" />
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TelemetryStatus}"
+                   FontFamily="Consolas" FontSize="11"
+                   Foreground="{StaticResource TacticalOk}"
+                   TextTrimming="CharacterEllipsis" />
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="LINK RSSI"
+                   Style="{StaticResource MetricLabel}" Margin="0,4,12,0" />
+        <TextBlock Grid.Row="5" Grid.Column="1" Margin="0,4,0,0"
+                   FontFamily="Consolas" FontSize="11"
+                   Foreground="{StaticResource TacticalTextPrimary}">
+            <TextBlock.Text>
+                <Binding Path="LinkRssi" StringFormat="{}{0} dBm" FallbackValue="— dBm" />
+            </TextBlock.Text>
+        </TextBlock>
+    </Grid>
+</UserControl>

@@ -4,8 +4,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:gmap="clr-namespace:GMap.NET.WindowsPresentation;assembly=GMap.NET.WindowsPresentation"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             xmlns:ui="clr-namespace:GOKDOGANIHA.UI"
              mc:Ignorable="d"
              d:DesignWidth="1600" d:DesignHeight="900">
+
+    <!-- MapToolButton style global — App.xaml → Resources/MapToolButton.xaml.
+         MainWindow Map FAB popover'ı + buradaki kullanım aynı style'ı paylaşır (DRY). -->
 
     <Grid>
         <!-- Real tile map (default: Stadia Alidade Smooth Dark) -->
@@ -14,6 +19,47 @@
         <!-- Very light tint — Stadia's dark basemap is already muted,
              a heavy tint would wash it out. -->
         <Rectangle Fill="#20061018" IsHitTestVisible="False" />
+
+        <!-- Harita ayarları butonu (yuvarlak Layers FAB) + popover MainWindow.xaml'a
+             taşındı — RadialMenu'lardan SONRA Z-order'da, tıklamalar yutulmuyor.
+             Dinamik placement orada hesaplanır. -->
+
+        <!-- ============== ÇİZİM MODU AKTİF ROZETİ (sol-orta üstü) ============== -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Top"
+                Margin="0,82,0,0"
+                Background="#D9D68910"
+                BorderBrush="{StaticResource TacticalWarn}"
+                BorderThickness="1"
+                CornerRadius="3"
+                Padding="10,4"
+                IsHitTestVisible="False"
+                Visibility="Collapsed">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsDrawingPolygon}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="CursorDefaultClickOutline"
+                                            Width="13" Height="13"
+                                            Foreground="White"
+                                            VerticalAlignment="Center" />
+                <TextBlock Text="ÇİZİM MODU"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="White"
+                           Margin="6,0,8,0"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="sol tık vertex · sağ tık tamamla"
+                           FontSize="10"
+                           Foreground="White" Opacity="0.85"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
 
         <!-- Attribution (required by Stadia + OSM ODbL) -->
         <TextBlock Text="© Stadia Maps  © OpenStreetMap contributors"

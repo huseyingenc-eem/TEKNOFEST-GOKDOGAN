@@ -58,8 +58,8 @@ public sealed class SimulatedFlightSource : IFlightStateSource
             {
                 var t = (DateTime.UtcNow - start).TotalSeconds;
 
-                _state.Latitude = 41.02 + Math.Sin(t * 0.08) * 0.015;
-                _state.Longitude = 29.01 + Math.Cos(t * 0.08) * 0.018;
+                _state.Latitude = 39.9208 + Math.Sin(t * 0.08) * 0.015;
+                _state.Longitude = 32.8541 + Math.Cos(t * 0.08) * 0.018;
                 _state.Altitude = 185 + Math.Sin(t * 0.3) * 8;
                 _state.GroundSpeed = 24 + Math.Sin(t * 0.4) * 2;
                 _state.Airspeed = _state.GroundSpeed + Math.Sin(t * 0.7) * 1.5; // ~rüzgar etkisi

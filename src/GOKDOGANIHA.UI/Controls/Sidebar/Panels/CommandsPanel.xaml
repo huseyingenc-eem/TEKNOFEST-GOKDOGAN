@@ -1,0 +1,179 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Controls.Sidebar.Panels.CommandsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="220">
+
+    <UserControl.Resources>
+        <!-- Mod toggle butonu — DRY: tek style 6 mod için tekrar kullanılır.
+             Tag = bu butonun temsil ettiği mod adı (string).
+             FlightMode binding ile aktif eşleşince yeşil (TacticalOk) highlight.
+             Faz 6: aktif (Null sink AlertBus'a Info publish, Faz 9 MAVLink). -->
+        <Style x:Key="ModeButton" TargetType="Button">
+            <Setter Property="Padding" Value="4,4" />
+            <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource TacticalOverlayBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Hover -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
+                                <Setter Property="Foreground" Value="{StaticResource TacticalAccent}" />
+                            </Trigger>
+                            <!-- Aktif mod (Tag = FlightMode) → yeşil border + dolgu — hover'ı OVERRIDE eder -->
+                            <DataTrigger Value="True">
+                                <DataTrigger.Binding>
+                                    <MultiBinding Converter="{StaticResource StringEqualsConverter}">
+                                        <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
+                                        <Binding Path="FlightMode" />
+                                    </MultiBinding>
+                                </DataTrigger.Binding>
+                                <Setter TargetName="Root" Property="Background" Value="#1A2A1A" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource TacticalOk}" />
+                                <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Komut aksiyon butonu — renk vurgulu (RTL/Land/...) — DRY: ModeButton'dan miras -->
+        <Style x:Key="ActionButton" TargetType="Button" BasedOn="{StaticResource ModeButton}">
+            <Setter Property="Padding" Value="6,6" />
+            <Setter Property="FontSize" Value="10" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- DataContext = MainWindowViewModel -->
+    <StackPanel>
+        <!-- Aktif mod indicator -->
+        <TextBlock Margin="0,0,0,6"
+                   FontSize="10" FontStyle="Italic"
+                   Foreground="{StaticResource TacticalTextSecondary}">
+            <TextBlock.Text>
+                <Binding Path="FlightMode" StringFormat="Aktif mod: {0} · komutlar simülasyonda Olay Günlüğü'ne yazılır" />
+            </TextBlock.Text>
+        </TextBlock>
+
+        <!-- MOD seçimi — Tag = mod adı; SetModeCommand parametre alır -->
+        <TextBlock Text="UÇUŞ MODU" Style="{StaticResource MetricLabel}" />
+        <UniformGrid Columns="3" Rows="2" Margin="0,4,0,8">
+            <!-- Tag = aktif mod highlight için. VM.FlightMode = enum.ToString().ToUpperInvariant()
+                 olduğu için Tag bu hedefle eşleşmeli (örn. FlyByWireA → FLYBYWIREA). -->
+            <Button Style="{StaticResource ModeButton}" Margin="0,0,2,2" Content="MANUAL" Tag="MANUAL"
+                    Command="{Binding SetModeCommand}" CommandParameter="MANUAL"
+                    ToolTip="Tam manuel kontrol" />
+            <Button Style="{StaticResource ModeButton}" Margin="2,0,2,2" Content="FBWA" Tag="FLYBYWIREA"
+                    Command="{Binding SetModeCommand}" CommandParameter="FlyByWireA"
+                    ToolTip="Fly-by-wire A — yatış ve dikilme limitli manuel" />
+            <Button Style="{StaticResource ModeButton}" Margin="2,0,0,2" Content="AUTO" Tag="AUTO"
+                    Command="{Binding SetModeCommand}" CommandParameter="Auto"
+                    ToolTip="Otonom waypoint takibi" />
+            <Button Style="{StaticResource ModeButton}" Margin="0,2,2,0" Content="GUIDED" Tag="GUIDED"
+                    Command="{Binding SetModeCommand}" CommandParameter="Guided"
+                    ToolTip="GCS yönlendirmeli — tek seferlik hedef" />
+            <Button Style="{StaticResource ModeButton}" Margin="2,2,2,0" Content="LOITER" Tag="LOITER"
+                    Command="{Binding SetModeCommand}" CommandParameter="Loiter"
+                    ToolTip="Loiter modu — mevcut konumda dön" />
+            <Button Style="{StaticResource ModeButton}" Margin="2,2,0,0" Content="RTL" Tag="RTL"
+                    Command="{Binding SetModeCommand}" CommandParameter="Rtl"
+                    ToolTip="RTL modu — kalkış noktasına dön" />
+        </UniformGrid>
+
+        <!-- Eylemler -->
+        <TextBlock Text="KOMUTLAR" Style="{StaticResource MetricLabel}" Margin="0,4,0,0" />
+        <UniformGrid Columns="2" Margin="0,4,0,0">
+            <Button Style="{StaticResource ActionButton}" Margin="0,0,2,2"
+                    Foreground="{StaticResource TacticalOk}"
+                    Command="{Binding ArmCommand}"
+                    ToolTip="Motor aç/kapat (toggle)">
+                <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="ShieldCheck" Width="11" Height="11"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Margin="4,0,0,0" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="ARM" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsArmed}" Value="True">
+                                        <Setter Property="Text" Value="DISARM" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource ActionButton}" Margin="2,0,0,2"
+                    Foreground="{StaticResource TacticalAccent}"
+                    Command="{Binding ToggleAutonomousCommand}"
+                    ToolTip="Otonom takip modu (AUTO ↔ MANUAL toggle)">
+                <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="Robot" Width="11" Height="11"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Text="OTONOM" Margin="4,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource ActionButton}" Margin="0,2,2,2"
+                    Foreground="{StaticResource TacticalAccent}"
+                    Command="{Binding SelectTargetCommand}"
+                    ToolTip="Tespit edilen hedefler arasından seç (Faz 7)">
+                <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="Crosshairs" Width="11" Height="11"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Text="HEDEF SEÇ" Margin="4,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource ActionButton}" Margin="2,2,0,2"
+                    Foreground="{StaticResource TacticalWarn}"
+                    Command="{Binding GotoWaypointCommand}"
+                    ToolTip="İlk waypoint'e git (haritadan ekle)">
+                <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="MapMarkerPath" Width="11" Height="11"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Text="WAYPOINT GİT" Margin="4,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource ActionButton}" Margin="0,2,2,0"
+                    Foreground="{StaticResource TacticalWarn}"
+                    Command="{Binding RtlCommand}"
+                    ToolTip="Return to Launch — kalkış noktasına dön">
+                <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="HomeMapMarker" Width="11" Height="11"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Text="RTL" Margin="4,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource ActionButton}" Margin="2,2,0,0"
+                    Foreground="{StaticResource TacticalCritical}"
+                    Command="{Binding LandCommand}"
+                    ToolTip="İniş komutu — DİKKAT, dönüşü yok">
+                <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="AirplaneLanding" Width="11" Height="11"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Text="İNİŞ" Margin="4,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </UniformGrid>
+    </StackPanel>
+</UserControl>

@@ -21,19 +21,26 @@ public sealed class ConnectionOrchestrator
     private readonly HssPollService _hssPoll;
     private readonly IAlertPublisher _publisher;
     private readonly IClock _clock;
+    private readonly TelemetryOptions _telemetryOptions;
+    private readonly object _reconnectGate = new();
+    private bool _isReconnecting;
+    private bool _everConnected;
 
     public ConnectionOrchestrator(
         IGameServerClient client,
         TelemetryPollService telemetryPoll,
         HssPollService hssPoll,
         IAlertPublisher publisher,
-        IClock clock)
+        IClock clock,
+        TelemetryOptions telemetryOptions)
     {
         _client = client;
         _telemetryPoll = telemetryPoll;
         _hssPoll = hssPoll;
         _publisher = publisher;
         _clock = clock;
+        _telemetryOptions = telemetryOptions;
+        _telemetryPoll.PollFailed += OnPollFailed;
     }
 
     /// <summary>
@@ -46,6 +53,7 @@ public sealed class ConnectionOrchestrator
             var login = await _client.GirisAsync();
             _telemetryPoll.Start();
             _hssPoll.Start();
+            _everConnected = true;
 
             _publisher.Publish(Alert.Create(
                 kind: "session",
@@ -71,5 +79,53 @@ public sealed class ConnectionOrchestrator
     {
         await _telemetryPoll.StopAsync();
         await _hssPoll.StopAsync();
+    }
+
+    /// <summary>
+    /// Telemetri PollFailed → AutoReconnect aktifse exponential backoff ile yeniden bağlan.
+    /// Tek seferde bir reconnect denemesi (lock); sürekli fail durumunda 1s, 2s, 4s, 8s, max 30s.
+    /// </summary>
+    private async void OnPollFailed(object? sender, Exception ex)
+    {
+        if (!_telemetryOptions.AutoReconnect || !_everConnected) return;
+        lock (_reconnectGate) { if (_isReconnecting) return; _isReconnecting = true; }
+
+        try
+        {
+            int attempt = 0;
+            while (_telemetryOptions.AutoReconnect)
+            {
+                attempt++;
+                var delay = TimeSpan.FromSeconds(Math.Min(30, Math.Pow(2, attempt - 1)));
+                _publisher.Publish(Alert.Create(
+                    kind: "session.reconnect",
+                    level: AlertLevel.Warn,
+                    title: "YENİDEN BAĞLANIYOR",
+                    message: $"Deneme {attempt} · {delay.TotalSeconds:F0} sn sonra",
+                    timeUtc: _clock.UtcNow));
+
+                await Task.Delay(delay).ConfigureAwait(false);
+
+                try
+                {
+                    await _client.GirisAsync().ConfigureAwait(false);
+                    _publisher.Publish(Alert.Create(
+                        kind: "session.reconnect",
+                        level: AlertLevel.Info,
+                        title: "YENİDEN BAĞLANDI",
+                        message: $"{attempt}. denemede başarılı",
+                        timeUtc: _clock.UtcNow));
+                    return;
+                }
+                catch
+                {
+                    // bir sonraki backoff'a düş
+                }
+            }
+        }
+        finally
+        {
+            lock (_reconnectGate) _isReconnecting = false;
+        }
     }
 }
