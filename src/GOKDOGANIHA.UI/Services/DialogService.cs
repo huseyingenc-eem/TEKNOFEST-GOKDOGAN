@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using GOKDOGANIHA.Core.Abstractions;
+using GOKDOGANIHA.UI.Views;
 
 namespace GOKDOGANIHA.UI.Services;
 
@@ -17,14 +18,11 @@ public sealed class DialogService : IDialogService
 
     public Task<bool> ConfirmAsync(string title, string message, string yesText = "Evet", string noText = "İptal")
     {
-        // Şartname/UX: kritik aksiyonlar (DISARM, abort) için ikinci dokunuş.
-        // Default focus = No/Cancel — kullanıcı Enter'a basarsa güvenli tarafta kalır.
-        var result = MessageBox.Show(
-            message, title,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning,
-            MessageBoxResult.No);
-        return Task.FromResult(result == MessageBoxResult.Yes);
+        var dialog = new SafetyConfirmDialog(title, message, yesText, noText)
+        {
+            Owner = Application.Current?.MainWindow
+        };
+        return Task.FromResult(dialog.ShowDialog() == true);
     }
 
     private static Task Show(string title, string message, MessageBoxImage icon)

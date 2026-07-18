@@ -210,10 +210,11 @@
                             <!-- SAHTE HSS VERISI URETECI BUTONU -->
                             <Button Margin="0,2,2,0" Style="{StaticResource MapToolButton}"
                                     Command="{Binding MapVm.GenerateMockHssCmdCommand}"
+                                    Visibility="{Binding IsSimulationMode, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}"
                                     ToolTip="HSS Bölgelerindeki kare/daire sorununu test etmek için sahte HSS ekler">
                                 <StackPanel Orientation="Horizontal">
                                     <materialIcons:MaterialIcon Kind="Radar" Width="13" Height="13" VerticalAlignment="Center" Foreground="{StaticResource TacticalCritical}" />
-                                    <TextBlock Text="HSS TEST" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TacticalCritical}" />
+                                    <TextBlock Text="SİM SENARYO" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TacticalCritical}" />
                                 </StackPanel>
                             </Button>
                         </UniformGrid>

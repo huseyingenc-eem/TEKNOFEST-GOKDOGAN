@@ -6,38 +6,57 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
+             xmlns:video="clr-namespace:GOKDOGANIHA.UI.Controls.Video"
              mc:Ignorable="d"
              d:DesignWidth="440" d:DesignHeight="520">
 
     <core:PanelFrame Header="GÖREV VİDEOSU" IconKind="Video">
-        <!-- Solid video surface fills the entire panel. Nothing on this surface
-             is clickable except the explicit expand button in the top-right. -->
-        <Grid Background="{StaticResource TacticalBgDeep}">
+        <video:RtspVideoView x:Name="LiveVideo"
+                             StreamUrl="{Binding Settings.Video.RtspUrl}"
+                             NetworkCachingMs="150"
+                             UseTcp="True">
+            <!-- LibVLC WPF airspace kuralı gereği HUD içeriği VideoView içinde
+                 tutulur; böylece canlı görüntünün üzerinde görünmeye devam eder. -->
+            <Grid Background="#02000000">
 
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="— CANLI VİDEO AKIŞI —"
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsStreamConnected, ElementName=LiveVideo}"
+                                             Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="— CANLI VİDEO AKIŞI —"
+                               HorizontalAlignment="Center"
+                               Foreground="{StaticResource TacticalTextSecondary}"
+                               FontFamily="Consolas" FontSize="12" />
+                    <TextBlock Text="{Binding StatusText, ElementName=LiveVideo}"
                            HorizontalAlignment="Center"
                            Foreground="{StaticResource TacticalTextSecondary}"
-                           FontFamily="Consolas" FontSize="12" />
-                <!-- Geçici: LibVLCSharp entegrasyonu gelene kadar şu anki RTSP
-                     URL'i göster — ayarların canlı etki ettiğini kanıtlar. -->
-                <TextBlock x:Name="StreamLabel"
+                           FontFamily="Consolas" FontSize="10"
+                           Margin="0,6,0,0" />
+                    <TextBlock Text="{Binding Settings.Video.RtspUrl}"
                            HorizontalAlignment="Center"
                            Foreground="{StaticResource TacticalTextSecondary}"
                            FontFamily="Consolas" FontSize="10"
                            Margin="0,6,0,0"
                            Opacity="0.45" />
-            </StackPanel>
+                </StackPanel>
 
-            <!-- Crosshair reticle -->
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-                  Width="60" Height="60" Opacity="0.35">
-                <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                <Line X1="30" Y1="10" X2="30" Y2="50"
-                      Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-                <Line X1="10" Y1="30" X2="50" Y2="30"
-                      Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
-            </Grid>
+                <!-- Crosshair reticle -->
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Width="60" Height="60" Opacity="0.35">
+                    <Ellipse Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                    <Line X1="30" Y1="10" X2="30" Y2="50"
+                          Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                    <Line X1="10" Y1="30" X2="50" Y2="30"
+                          Stroke="{StaticResource TacticalAccent}" StrokeThickness="1" />
+                </Grid>
 
             <!-- Hedef kilit dörtgeni — kamera native 640x480 space'te çizilir,
                  Viewbox panel'e uniform stretch eder. Şartname kırmızı (#FF0000) ister. -->
@@ -125,7 +144,8 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-            </StackPanel>
-        </Grid>
+                </StackPanel>
+            </Grid>
+        </video:RtspVideoView>
     </core:PanelFrame>
 </UserControl>

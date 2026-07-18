@@ -26,5 +26,6 @@ public class ApplicationOptionsTests
         var b = new ApplicationOptions();
         Assert.NotSame(a.GameServer, b.GameServer);
         Assert.NotSame(a.Telemetry, b.Telemetry);
+        Assert.NotSame(a.Mavlink, b.Mavlink);
     }
 }

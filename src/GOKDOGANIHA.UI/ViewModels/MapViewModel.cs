@@ -17,7 +17,6 @@ public sealed partial class MapViewModel : ObservableObject
 
     private readonly TelemetryPollService? _telemetryPoll;
     private readonly HssPollService? _hssPoll;
-    private bool _mockHssPinned;
 
     public ObservableCollection<KonumBilgisi> EnemyDrones { get; } = new();
     public ObservableCollection<HssKoordinat> HssZones { get; } = new();
@@ -39,6 +38,14 @@ public sealed partial class MapViewModel : ObservableObject
     [ObservableProperty] private double ownLatitude;
     [ObservableProperty] private double ownLongitude;
     [ObservableProperty] private double ownHeading;
+    [ObservableProperty] private bool hasOwnPosition;
+    [ObservableProperty] private string dataSourceLabel = "NONE";
+    [ObservableProperty] private string vehicleLinkStatus = "Veri kaynağı bekleniyor";
+    [ObservableProperty] private bool isSimulationMode;
+    [ObservableProperty] private DateTime? lastVehicleUpdateUtc;
+    [ObservableProperty] private double cursorLatitude;
+    [ObservableProperty] private double cursorLongitude;
+    [ObservableProperty] private bool followOwnship;
 
     /// <summary>Çizim modunda mı? True iken harita sol-tık vertex ekler, sağ-tık tamamlar.</summary>
     [ObservableProperty] private bool isDrawingPolygon;
@@ -57,14 +64,49 @@ public sealed partial class MapViewModel : ObservableObject
         _hssPoll.HssUpdated += OnHssUpdated;
     }
 
-    public void SetOwnPosition(double lat, double lng, double headingDeg)
+    public void SetOwnPosition(double lat, double lng, double headingDeg, bool isValid = true)
     {
+        HasOwnPosition = isValid
+            && lat is >= -90 and <= 90
+            && lng is >= -180 and <= 180
+            && (Math.Abs(lat) > 0.000001 || Math.Abs(lng) > 0.000001);
+        if (!HasOwnPosition) return;
+
         OwnLatitude = lat;
         OwnLongitude = lng;
         OwnHeading = headingDeg;
 
         // İz çizgisi: yeni nokta yeterince uzaktıysa append (gürültüye karşı min mesafe).
         if (ShowOwnTrail) AppendTrailPoint(lat, lng);
+    }
+
+    public void SetVehicleStatus(
+        bool isValid,
+        string source,
+        string status,
+        bool simulation,
+        DateTime? lastUpdateUtc)
+    {
+        var leavingSimulation = IsSimulationMode && !simulation;
+        DataSourceLabel = source;
+        VehicleLinkStatus = status;
+        IsSimulationMode = simulation;
+        LastVehicleUpdateUtc = lastUpdateUtc;
+        if (!isValid) HasOwnPosition = false;
+        if (leavingSimulation)
+        {
+            // Simülasyondan canlıya geçildiğinde sahte HSS/rakip/iz verileri canlı
+            // harita üzerinde kalmamalı. Gerçek poll cevapları koleksiyonları yeniden doldurur.
+            HssZones.Clear();
+            EnemyDrones.Clear();
+            OwnTrail.Clear();
+        }
+    }
+
+    public void SetCursorPosition(double lat, double lng)
+    {
+        CursorLatitude = lat;
+        CursorLongitude = lng;
     }
 
     /// <summary>İz çizgisine yeni nokta ekler. Çok yakın noktaları ele eler.</summary>
@@ -136,7 +178,6 @@ public sealed partial class MapViewModel : ObservableObject
     {
         Marshal(() =>
         {
-            _mockHssPinned = true;
             if (App.AppOptions is not null)
                 App.AppOptions.Map.ShowHssZones = true;
 
@@ -171,14 +212,6 @@ public sealed partial class MapViewModel : ObservableObject
                 Yonelme: 45,
                 Yatis: 0,
                 Hiz: 15,
-                Batarya: 80,
-                Otonom: 1,
-                Kilitlenme: 0,
-                HedefMerkezX: 0,
-                HedefMerkezY: 0,
-                HedefGenislik: 0,
-                HedefYukseklik: 0,
-                GpsSaati: new GOKDOGANIHA.Core.Models.Server.ServerTime(26, 14, 30, 0, 0),
                 ZamanFarkiMs: 120
             ));
         });
@@ -189,7 +222,14 @@ public sealed partial class MapViewModel : ObservableObject
         Marshal(() =>
         {
             EnemyDrones.Clear();
-            foreach (var k in resp.KonumBilgileri) EnemyDrones.Add(k);
+            foreach (var k in resp.KonumBilgileri
+                         .Where(IsUsableOpponentPosition)
+                         .GroupBy(x => x.TakimNumarasi)
+                         .Select(group => group.OrderBy(x => x.ZamanFarkiMs).First())
+                         .OrderBy(x => x.TakimNumarasi))
+            {
+                EnemyDrones.Add(k);
+            }
         });
     }
 
@@ -197,18 +237,28 @@ public sealed partial class MapViewModel : ObservableObject
     {
         Marshal(() =>
         {
-            // Mock HSS aktifken sunucudan boş liste gelirse mock bölgeleri silme.
-            // Sunucudan gerçek veri gelirse mock modu otomatik bırak.
-            if (_mockHssPinned && resp.Koordinatlar.Count == 0)
-                return;
-
-            if (resp.Koordinatlar.Count > 0)
-                _mockHssPinned = false;
-
             HssZones.Clear();
-            foreach (var h in resp.Koordinatlar) HssZones.Add(h);
+            foreach (var h in resp.Koordinatlar.Where(IsUsableHssZone))
+                HssZones.Add(h);
         });
     }
+
+    private static bool IsUsableOpponentPosition(KonumBilgisi position)
+        => position.TakimNumarasi > 0
+           && double.IsFinite(position.Enlem)
+           && double.IsFinite(position.Boylam)
+           && position.Enlem is >= -90 and <= 90
+           && position.Boylam is >= -180 and <= 180
+           && position.ZamanFarkiMs is >= 0 and <= 5_000;
+
+    private static bool IsUsableHssZone(HssKoordinat zone)
+        => zone.Id >= 0
+           && double.IsFinite(zone.Enlem)
+           && double.IsFinite(zone.Boylam)
+           && double.IsFinite(zone.YaricapMetre)
+           && zone.Enlem is >= -90 and <= 90
+           && zone.Boylam is >= -180 and <= 180
+           && zone.YaricapMetre > 0;
 
     private static void Marshal(System.Action action)
     {
@@ -217,4 +267,3 @@ public sealed partial class MapViewModel : ObservableObject
         else disp.Invoke(action);
     }
 }
-

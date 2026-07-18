@@ -15,6 +15,10 @@ public class DialogServiceTests
         public Task ShowInfoAsync(string t, string m)  { InfoCount++;  LastTitle = t; LastMessage = m; return Task.CompletedTask; }
         public Task ShowWarnAsync(string t, string m)  { WarnCount++;  LastTitle = t; LastMessage = m; return Task.CompletedTask; }
         public Task ShowErrorAsync(string t, string m) { ErrorCount++; LastTitle = t; LastMessage = m; return Task.CompletedTask; }
+        public Task<bool> ConfirmAsync(string t, string m, string yesText = "Evet", string noText = "İptal")
+        {
+            LastTitle = t; LastMessage = m; return Task.FromResult(false);
+        }
     }
 
     [Fact]

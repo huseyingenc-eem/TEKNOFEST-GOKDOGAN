@@ -15,6 +15,7 @@ using GOKDOGANIHA.Core.Services.Polling;
 using GOKDOGANIHA.Core.Services.Safety;
 using GOKDOGANIHA.Core.Services.Session;
 using GOKDOGANIHA.Core.Services.Failsafe;
+using GOKDOGANIHA.Core.Services.Mavlink;
 using GOKDOGANIHA.Core.Services.Telemetry;
 using GOKDOGANIHA.Core.Services.Time;
 using GOKDOGANIHA.UI.Services;
@@ -38,6 +39,8 @@ public partial class App : Application
     public static HssPollService? HssPoll { get; private set; }
     public static TelemetryPacketBuilder? PacketBuilder { get; private set; }
     public static SimulatedFlightSource? FlightSimulator { get; private set; }
+    public static MavlinkFlightStateSource? MavlinkSource { get; private set; }
+    public static FlightBackendCoordinator? FlightBackend { get; private set; }
     public static ServerClock? ServerClock { get; private set; }
     public static BatteryMonitor? Battery { get; private set; }
     public static BoundaryProximityMonitor? BoundaryProximity { get; private set; }
@@ -90,19 +93,45 @@ public partial class App : Application
             GameServer = client;
             TelemetryPoll = new TelemetryPollService(
                 client,
-                TimeSpan.FromSeconds(1.0 / Math.Max(0.1, AppOptions.Telemetry.Hz)));
+                TimeSpan.FromSeconds(1.0 / Math.Clamp(AppOptions.Telemetry.Hz, 1.0, 2.0)));
             HssPoll = new HssPollService(client);
 
             PacketBuilder = new TelemetryPacketBuilder(FlightState, AppOptions.GameServer);
             FlightSimulator = new SimulatedFlightSource(FlightState);
+            MavlinkSource = new MavlinkFlightStateSource(FlightState, AppOptions.Mavlink);
             Battery = new BatteryMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock);
             BoundaryProximity = new BoundaryProximityMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock);
             OpponentProximity = new OpponentProximityMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock, TelemetryPoll);
             HssProximity = new HssProximityMonitor(FlightState, AppOptions.Alerts, AlertBus, Clock, HssPoll);
             CommLatency = new CommLatencyMonitor(AppOptions.Alerts, AlertBus, Clock, TelemetryPoll);
-            Commands = new NullFlightCommandSink();
+            var transitionBlocked = new BlockedFlightCommandSink(
+                "uçuş veri kaynağı geçiş halinde",
+                message => PublishCommandFeedback(message, AlertLevel.Warn));
+            var commandProxy = new SwitchableFlightCommandSink(transitionBlocked);
+            var liveCommands = new BlockedFlightCommandSink(
+                "canlı MAVLink komut adaptörü henüz etkin değil; yalnızca telemetri okunuyor",
+                message => PublishCommandFeedback(message, AlertLevel.Warn));
+            var simulationCommands = new SimulatedFlightCommandSink(
+                FlightState,
+                message => PublishCommandFeedback($"SIM · {message}", AlertLevel.Info));
+            Commands = commandProxy;
+            FlightBackend = new FlightBackendCoordinator(
+                FlightState,
+                MavlinkSource,
+                FlightSimulator,
+                liveCommands,
+                simulationCommands,
+                commandProxy,
+                transitionBlocked);
             Failsafe = new FailsafeMonitor(AppOptions.Failsafe, AlertBus, Commands, Clock);
             Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock, AppOptions.Telemetry);
+            TelemetryPoll.PacketRejected += (_, validation) =>
+                AlertBus.Publish(Alert.Create(
+                    kind: "telemetry.validation",
+                    level: AlertLevel.Danger,
+                    title: "TELEMETRİ PAKETİ ENGELLENDİ",
+                    message: validation.Message,
+                    timeUtc: Clock.UtcNow));
             ServerClock = new ServerClock(client, Clock);
             ServerClock.Start();
             LockEngine = new KilitlenmeDenetim(AppOptions.Autonomy, Clock);
@@ -111,15 +140,19 @@ public partial class App : Application
             Kamikaze.MissionCompleted += OnKamikazeCompleted;
             HzMeter = new TelemetryHzMeter(TelemetryPoll, Clock);
             ManualTransitions = new ManualTransitionCounter(FlightState);
-            SettingsFactory = new SettingsViewModelFactory(AppOptions, client, Dialogs, Connection);
+            SettingsFactory = new SettingsViewModelFactory(AppOptions, client, Dialogs, Connection, FlightBackend);
 
-            // Telemetri her başarılı cevabında failsafe heartbeat'i resetle
-            TelemetryPoll.TelemetryReceived += (_, _) => Failsafe?.RecordHeartbeat();
+            // Araç kaynağından her geçerli frame geldiğinde araç-link heartbeat'i yenilenir.
+            FlightState.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(FlightState.LastUpdatedUtc)
+                    && FlightState.IsDataValid)
+                    Failsafe?.RecordHeartbeat();
+            };
 
-            // Simülatör SADECE Settings'ten açıkça istenirse çalışır.
-            // Varsayılan: kapalı → telemetri sıfır kalır, gerçek MAVLink adapter
-            // beslemediği sürece UI'da uydurma veri yoktur.
-            if (AppOptions.Telemetry.UseSimulator) FlightSimulator.Start();
+            // Aktif mod session state'tir: kayıtlı eski simülasyon tercihi okunmaz.
+            // Uygulama her açılışta salt-okunur canlı MAVLink dinleyicisiyle başlar.
+            _ = StartDefaultLiveBackendAsync();
 
             // Packet pump — FlightState'ten paket kurup TelemetryPoll'a besler
             StartPacketPump();
@@ -127,18 +160,13 @@ public partial class App : Application
             // Failsafe tick — 1 Hz, GCS timeout'u değerlendirir
             StartFailsafePump();
 
-            // Hz + UseSimulator ayar değişikliklerini canlı uygula.
+            // Gönderim Hz ayar değişikliğini canlı uygula.
             AppOptions.Telemetry.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(AppOptions.Telemetry.Hz))
                 {
-                    var hz = Math.Max(0.1, AppOptions.Telemetry.Hz);
+                    var hz = Math.Clamp(AppOptions.Telemetry.Hz, 1.0, 2.0);
                     TelemetryPoll?.SetInterval(TimeSpan.FromSeconds(1.0 / hz));
-                }
-                else if (e.PropertyName == nameof(AppOptions.Telemetry.UseSimulator))
-                {
-                    if (AppOptions.Telemetry.UseSimulator) FlightSimulator?.Start();
-                    else _ = FlightSimulator?.StopAsync();
                 }
                 ScheduleSettingsSave();
             };
@@ -146,6 +174,7 @@ public partial class App : Application
             // Diğer INPC'li option grupları (Telemetry hariç — yukarıda ele alındı).
             AppOptions.Video.PropertyChanged += (_, _) => ScheduleSettingsSave();
             AppOptions.Map.PropertyChanged   += (_, _) => ScheduleSettingsSave();
+            AppOptions.Mavlink.PropertyChanged += (_, _) => ScheduleSettingsSave();
             // GameServer/Alerts/Failsafe INPC değil — Settings kapanırken explicit save yapılır.
         }
         catch (Exception ex)
@@ -166,14 +195,18 @@ public partial class App : Application
                 timeUtc: e.CompletedAtUtc));
             return;
         }
-        if (GameServer is null) return;
+        if (GameServer is null || !CanTransmitCompetitionData())
+        {
+            PublishCompetitionGuardAlert("Kamikaze sonucu gönderilmedi");
+            return;
+        }
         try
         {
             var start = Kamikaze?.MissionStartUtc ?? Clock.UtcNow;
             var bitis = ServerClock?.IsSynchronized == true ? ServerClock.Now : e.CompletedAtUtc;
             var bilgi = new KamikazeBilgisi(
-                BaslangicZamani: new ServerTime(start.Day, start.Hour, start.Minute, start.Second, start.Millisecond),
-                BitisZamani:    new ServerTime(bitis.Day, bitis.Hour, bitis.Minute, bitis.Second, bitis.Millisecond),
+                BaslangicZamani: CompetitionTime.FromUtc(start),
+                BitisZamani:    CompetitionTime.FromUtc(bitis),
                 QrMetni:        e.QrText);
             await GameServer.KamikazeBilgisiGonderAsync(bilgi);
             AlertBus.Publish(Alert.Create(
@@ -196,11 +229,15 @@ public partial class App : Application
 
     private static async void OnLockSucceeded(object? sender, LockSuccessEventArgs e)
     {
-        if (GameServer is null) return;
+        if (GameServer is null || !CanTransmitCompetitionData())
+        {
+            PublishCompetitionGuardAlert("Kilitlenme sonucu gönderilmedi");
+            return;
+        }
         try
         {
             var now = ServerClock?.IsSynchronized == true ? ServerClock.Now : Clock.UtcNow;
-            var bitis = new ServerTime(now.Day, now.Hour, now.Minute, now.Second, now.Millisecond);
+            var bitis = CompetitionTime.FromUtc(now);
             await GameServer.KilitlenmeBilgisiGonderAsync(
                 new KilitlenmeBilgisi(bitis, OtonomKilitlenme: FlightState.IsAutonomous ? 1 : 0));
             AlertBus.Publish(Alert.Create(
@@ -235,6 +272,21 @@ public partial class App : Application
         }, _pumpCts!.Token);
     }
 
+    private static async Task StartDefaultLiveBackendAsync()
+    {
+        if (FlightBackend is null) return;
+        var result = await FlightBackend.SwitchAsync(FlightDataMode.Live);
+        if (!result.Success)
+        {
+            AlertBus.Publish(Alert.Create(
+                kind: "backend.start",
+                level: AlertLevel.Danger,
+                title: "CANLI VERİ KAYNAĞI BAŞLATILAMADI",
+                message: result.Message,
+                timeUtc: Clock.UtcNow));
+        }
+    }
+
     private void StartPacketPump()
     {
         _pumpCts = new CancellationTokenSource();
@@ -246,7 +298,12 @@ public partial class App : Application
                 while (await _packetPump!.WaitForNextTickAsync(_pumpCts!.Token))
                 {
                     if (PacketBuilder is null || TelemetryPoll is null) continue;
-                    // gps_saati: ServerClock sync olduysa onu, değilse lokal sistem saatini kullan.
+                    var transmissionAllowed = CanTransmitCompetitionData();
+                    TelemetryPoll.SetTransmissionEnabled(transmissionAllowed);
+                    if (!transmissionAllowed) continue;
+
+                    // Test/sim akışında fallback saat; resmî canlı akışta builder bunu
+                    // doğrudan araçtan gelen GPS UTC zamanı ile değiştirir.
                     var now = ServerClock?.IsSynchronized == true ? ServerClock.Now : Clock.UtcNow;
                     var gps = new ServerTime(now.Day, now.Hour, now.Minute, now.Second, now.Millisecond);
                     TelemetryPoll.UpdateOwnTelemetry(PacketBuilder.Build(gps));
@@ -270,7 +327,7 @@ public partial class App : Application
         SafeDispose(() => ServerClock?.Dispose(), "ServerClock");
         SafeDispose(() => HzMeter?.Dispose(), "HzMeter");
         SafeDispose(() => ManualTransitions?.Dispose(), "ManualTransitions");
-        SafeDispose(() => FlightSimulator?.Dispose(), "FlightSimulator");
+        SafeDispose(() => FlightBackend?.Dispose(), "FlightBackend");
         SafeDispose(() => Battery?.Dispose(), "Battery");
         SafeDispose(() => BoundaryProximity?.Dispose(), "BoundaryProximity");
         SafeDispose(() => OpponentProximity?.Dispose(), "OpponentProximity");
@@ -292,6 +349,50 @@ public partial class App : Application
     {
         try { action(); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[OnExit] {name} dispose failed: {ex.Message}"); }
+    }
+
+    private static bool CanTransmitCompetitionData()
+    {
+        if (FlightBackend is null || !FlightState.IsFresh(Clock.UtcNow, TimeSpan.FromSeconds(5)))
+            return false;
+
+        if (AppOptions.GameServer.Environment == CompetitionServerEnvironment.Test)
+            return IsLocalMockEndpoint(AppOptions.GameServer.BaseUrl)
+                && (FlightBackend.Status is FlightBackendStatus.Live or FlightBackendStatus.Simulation);
+
+        var hasVehiclePosition = FlightState.GpsFix is GpsFix.Fix3D or GpsFix.Dgps or GpsFix.Rtk
+            && (Math.Abs(FlightState.Latitude) > 0.000001 || Math.Abs(FlightState.Longitude) > 0.000001);
+        return FlightBackend.IsLiveReady
+            && FlightState.GpsTimeUtc.HasValue
+            && hasVehiclePosition
+            && AppOptions.GameServer.TakimNumarasi > 0;
+    }
+
+    private static bool IsLocalMockEndpoint(string baseUrl)
+        => Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
+           && uri.Port == 5000
+           && (string.Equals(uri.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(uri.Host, "::1", StringComparison.OrdinalIgnoreCase));
+
+    private static void PublishCompetitionGuardAlert(string action)
+    {
+        AlertBus.Publish(Alert.Create(
+            kind: "competition.guard",
+            level: AlertLevel.Warn,
+            title: "GÖNDERİM ENGELLENDİ",
+            message: $"{action}: resmi sunucuda yalnızca geçerli canlı MAVLink + araç GPS zamanı kabul edilir.",
+            timeUtc: Clock.UtcNow));
+    }
+
+    private static void PublishCommandFeedback(string message, AlertLevel level)
+    {
+        AlertBus.Publish(Alert.Create(
+            kind: "command.backend",
+            level: level,
+            title: "UÇUŞ BACKEND",
+            message: message,
+            timeUtc: Clock.UtcNow));
     }
 
     /// <summary>
@@ -317,29 +418,4 @@ public partial class App : Application
         _settingsDebounceTimer.Start();
     }
 
-    // FailsafeMonitor komut sink'ine ihtiyaç duyar; gerçek MAVLink adapter
-    // gelene kadar log-only stub. Komutları AlertBus'a Info olarak yayar — UI'da
-    // CommandsPanel butonları için görsel feedback bu sayede çalışır.
-    private sealed class NullFlightCommandSink : IFlightCommandSink
-    {
-        public void Arm()                                                 => Emit("ARM",     "Motor armed (stub)");
-        public void Disarm()                                              => Emit("DISARM",  "Motor disarmed (stub)");
-        public void SetMode(FlightMode mode)                              => Emit("MODE",    $"Mod değiştirildi → {mode} (stub)");
-        public void Rtl()                                                 => Emit("RTL",     "Eve dön (stub)");
-        public void Land()                                                => Emit("LAND",    "İniş komutu (stub)");
-        public void Loiter()                                              => Emit("LOITER",  "Loiter komutu (stub)");
-        public void GotoWaypoint(double lat, double lon, double altMeters)
-            => Emit("GOTO", $"Waypoint git ({lat:F5}, {lon:F5}, {altMeters:F0}m) (stub)");
-
-        private static void Emit(string kind, string message)
-        {
-            System.Diagnostics.Debug.WriteLine($"[FC] {kind}: {message}");
-            AlertBus.Publish(Alert.Create(
-                kind: $"command.{kind.ToLowerInvariant()}",
-                level: AlertLevel.Info,
-                title: $"FC · {kind}",
-                message: message,
-                timeUtc: Clock.UtcNow));
-        }
-    }
 }

@@ -66,21 +66,18 @@ public sealed class TelemetryHzMeter : INotifyPropertyChanged, IDisposable
     private void OnReceived(object? sender, TelemetryResponse resp)
     {
         var now = _clock.UtcNow;
-        double hz, latency;
-        DateTime? prev;
+        double hz;
         lock (_gate)
         {
-            prev = _lastReceivedUtc;
             _stamps.Enqueue(now);
             while (_stamps.Count > 0 && now - _stamps.Peek() > _window) _stamps.Dequeue();
             hz = _stamps.Count >= 2
                 ? (_stamps.Count - 1) / Math.Max(0.001, (now - _stamps.Peek()).TotalSeconds)
                 : 0;
-            latency = prev.HasValue ? (now - prev.Value).TotalMilliseconds : 0;
         }
         CurrentHz = Math.Round(hz, 1);
         LastReceivedUtc = now;
-        LastLatencyMs = latency;
+        LastLatencyMs = _poll.LastRoundTripMs;
         LastStatus = "200 OK";
     }
 

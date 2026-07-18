@@ -19,4 +19,4 @@ public sealed record TelemetryPacket(
     [property: JsonPropertyName("hedef_merkez_Y")] int HedefMerkezY,
     [property: JsonPropertyName("hedef_genislik")] int HedefGenislik,
     [property: JsonPropertyName("hedef_yukseklik")] int HedefYukseklik,
-    [property: JsonPropertyName("gps_saati")] ServerTime GpsSaati);
+    [property: JsonPropertyName("gps_saati")] CompetitionTime GpsSaati);

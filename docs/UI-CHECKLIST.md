@@ -163,6 +163,6 @@ Her madde tamamlandığında `[ ]` → `[x]` olarak güncellenir. Faz bittiğind
 - [N/A] Microsoft.Extensions.Logging — atlandı (Debug.WriteLine yeterli, AlertBus + Toast + Console mevcut)
 - [N/A] FormFieldRow refactor — atlandı (görsel polish, fonksiyonel etki yok)
 - [N/A] Polygon kaydet/yükle — Settings persistence içinde Faz 4 polygon dahil değil (Settings → polygon ayrı export gerek)
-- [x] Mock kamikaze QR debug butonu — Faz 7'de KamikazePanel'a ekli (Settings.UseSimulator visibility)
+- [x] Mock kamikaze QR debug butonu — yalnızca aktif simülasyon backend'inde görünür
 
 > **🔍 İnceleme noktası:** Faz 7.5 + Faz 8 agent kontrolü → bir sonraki adım.

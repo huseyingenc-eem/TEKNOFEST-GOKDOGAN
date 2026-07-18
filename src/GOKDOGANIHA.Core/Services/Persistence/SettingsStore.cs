@@ -92,7 +92,12 @@ public sealed class SettingsStore
         double? HssProximityThreshold,
         double? BoundaryProximityThreshold,
         int? CommLatencyThreshold,
-        int? GcsTimeoutSeconds)
+        int? GcsTimeoutSeconds,
+        CompetitionServerEnvironment? ServerEnvironment,
+        string? MavlinkListenAddress,
+        int? MavlinkPort,
+        int? MavlinkExpectedSystemId,
+        double? MavlinkStaleAfterSeconds)
     {
         public void ApplyTo(ApplicationOptions o)
         {
@@ -102,7 +107,8 @@ public sealed class SettingsStore
             if (TakimNumarasi.HasValue)           o.GameServer.TakimNumarasi = TakimNumarasi.Value;
             if (TelemetryHz.HasValue)             o.Telemetry.Hz = TelemetryHz.Value;
             if (AutoReconnect.HasValue)           o.Telemetry.AutoReconnect = AutoReconnect.Value;
-            if (UseSimulator.HasValue)            o.Telemetry.UseSimulator = UseSimulator.Value;
+            // Legacy UseSimulator alanı bilinçli olarak uygulanmaz. Aktif uçuş modu
+            // session state'tir ve uygulama açılışında her zaman canlı moddan başlar.
             if (VideoRtspUrl is not null)         o.Video.RtspUrl = VideoRtspUrl;
             if (MapTileProvider is not null)      o.Map.TileProvider = MapTileProvider;
             if (MapShowBoundary.HasValue)         o.Map.ShowBoundary = MapShowBoundary.Value;
@@ -113,6 +119,11 @@ public sealed class SettingsStore
             if (BoundaryProximityThreshold.HasValue) o.Alerts.BoundaryProximityThreshold = BoundaryProximityThreshold.Value;
             if (CommLatencyThreshold.HasValue)    o.Alerts.CommLatencyThreshold = CommLatencyThreshold.Value;
             if (GcsTimeoutSeconds.HasValue)       o.Failsafe.GcsTimeoutSeconds = GcsTimeoutSeconds.Value;
+            if (ServerEnvironment.HasValue)       o.GameServer.Environment = ServerEnvironment.Value;
+            if (MavlinkListenAddress is not null) o.Mavlink.ListenAddress = MavlinkListenAddress;
+            if (MavlinkPort.HasValue)             o.Mavlink.Port = MavlinkPort.Value;
+            if (MavlinkExpectedSystemId.HasValue) o.Mavlink.ExpectedSystemId = MavlinkExpectedSystemId.Value;
+            if (MavlinkStaleAfterSeconds.HasValue)o.Mavlink.StaleAfterSeconds = MavlinkStaleAfterSeconds.Value;
         }
 
         public static OptionsSnapshot From(ApplicationOptions o) => new(
@@ -122,7 +133,7 @@ public sealed class SettingsStore
             TakimNumarasi: o.GameServer.TakimNumarasi,
             TelemetryHz: o.Telemetry.Hz,
             AutoReconnect: o.Telemetry.AutoReconnect,
-            UseSimulator: o.Telemetry.UseSimulator,
+            UseSimulator: null,
             VideoRtspUrl: o.Video.RtspUrl,
             MapTileProvider: o.Map.TileProvider,
             MapShowBoundary: o.Map.ShowBoundary,
@@ -132,6 +143,11 @@ public sealed class SettingsStore
             HssProximityThreshold: o.Alerts.HssProximityThreshold,
             BoundaryProximityThreshold: o.Alerts.BoundaryProximityThreshold,
             CommLatencyThreshold: o.Alerts.CommLatencyThreshold,
-            GcsTimeoutSeconds: o.Failsafe.GcsTimeoutSeconds);
+            GcsTimeoutSeconds: o.Failsafe.GcsTimeoutSeconds,
+            ServerEnvironment: o.GameServer.Environment,
+            MavlinkListenAddress: o.Mavlink.ListenAddress,
+            MavlinkPort: o.Mavlink.Port,
+            MavlinkExpectedSystemId: o.Mavlink.ExpectedSystemId,
+            MavlinkStaleAfterSeconds: o.Mavlink.StaleAfterSeconds);
     }
 }

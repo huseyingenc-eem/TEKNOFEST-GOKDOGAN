@@ -6,4 +6,5 @@ public sealed class GameServerOptions
     public string KullaniciAdi { get; set; } = "";
     public string Sifre { get; set; } = "";
     public int TakimNumarasi { get; set; }
+    public CompetitionServerEnvironment Environment { get; set; } = CompetitionServerEnvironment.Official;
 }

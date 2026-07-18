@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models.Alerts;
+using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.Core.Services.Polling;
 
@@ -25,6 +26,8 @@ public sealed class ConnectionOrchestrator
     private readonly object _reconnectGate = new();
     private bool _isReconnecting;
     private bool _everConnected;
+
+    public event EventHandler<QrKoordinat>? QrCoordinateReceived;
 
     public ConnectionOrchestrator(
         IGameServerClient client,
@@ -54,6 +57,7 @@ public sealed class ConnectionOrchestrator
             _telemetryPoll.Start();
             _hssPoll.Start();
             _everConnected = true;
+            await TryPublishQrCoordinateAsync().ConfigureAwait(false);
 
             _publisher.Publish(Alert.Create(
                 kind: "session",
@@ -109,6 +113,7 @@ public sealed class ConnectionOrchestrator
                 try
                 {
                     await _client.GirisAsync().ConfigureAwait(false);
+                    await TryPublishQrCoordinateAsync().ConfigureAwait(false);
                     _publisher.Publish(Alert.Create(
                         kind: "session.reconnect",
                         level: AlertLevel.Info,
@@ -126,6 +131,24 @@ public sealed class ConnectionOrchestrator
         finally
         {
             lock (_reconnectGate) _isReconnecting = false;
+        }
+    }
+
+    private async Task TryPublishQrCoordinateAsync()
+    {
+        try
+        {
+            var qr = await _client.QrKoordinatiAsync().ConfigureAwait(false);
+            QrCoordinateReceived?.Invoke(this, qr);
+        }
+        catch (Exception ex)
+        {
+            _publisher.Publish(Alert.Create(
+                kind: "session.qr",
+                level: AlertLevel.Warn,
+                title: "QR KOORDİNATI ALINAMADI",
+                message: ex.Message,
+                timeUtc: _clock.UtcNow));
         }
     }
 }

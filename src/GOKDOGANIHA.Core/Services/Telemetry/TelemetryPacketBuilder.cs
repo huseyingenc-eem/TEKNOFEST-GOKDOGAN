@@ -19,7 +19,17 @@ public sealed class TelemetryPacketBuilder
         _serverOptions = serverOptions;
     }
 
-    public TelemetryPacket Build(ServerTime gpsSaati) => new(
+    public TelemetryPacket Build(ServerTime gpsSaati)
+    {
+        var effectiveGpsTime = _state.GpsTimeUtc is { } vehicleGps
+            ? CompetitionTime.FromUtc(vehicleGps)
+            : new CompetitionTime(
+                gpsSaati.Saat,
+                gpsSaati.Dakika,
+                gpsSaati.Saniye,
+                gpsSaati.Milisaniye);
+
+        return new(
         TakimNumarasi: _serverOptions.TakimNumarasi,
         Enlem: _state.Latitude,
         Boylam: _state.Longitude,
@@ -35,5 +45,6 @@ public sealed class TelemetryPacketBuilder
         HedefMerkezY: _state.TargetCenterY,
         HedefGenislik: _state.TargetWidth,
         HedefYukseklik: _state.TargetHeight,
-        GpsSaati: gpsSaati);
+        GpsSaati: effectiveGpsTime);
+    }
 }

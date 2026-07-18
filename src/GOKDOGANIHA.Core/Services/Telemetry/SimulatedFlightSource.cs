@@ -11,7 +11,7 @@ namespace GOKDOGANIHA.Core.Services.Telemetry;
 /// geçici besleyici. Merkez (41.02, 29.01) etrafında dairesel uçuş, batarya yavaş iner.
 /// MAVLink adapter eklendiğinde aynı <see cref="IFlightStateSource"/> ile takılır (OCP).
 /// </summary>
-public sealed class SimulatedFlightSource : IFlightStateSource
+public sealed class SimulatedFlightSource : IManagedFlightStateSource
 {
     private readonly FlightState _state;
     private CancellationTokenSource? _cts;
@@ -19,10 +19,19 @@ public sealed class SimulatedFlightSource : IFlightStateSource
 
     public SimulatedFlightSource(FlightState state) { _state = state; }
 
-    public void Start()
+    public string Name => "Dahili Simülasyon";
+    public bool IsRunning => _loop is not null;
+    public bool IsReady => IsRunning;
+    public event EventHandler<FlightSourceStatusChangedEventArgs>? StatusChanged;
+
+    public void Start() => StartAsync().GetAwaiter().GetResult();
+
+    public Task StartAsync(CancellationToken ct = default)
     {
-        if (_loop is not null) return;
-        _cts = new CancellationTokenSource();
+        if (_loop is not null) return Task.CompletedTask;
+        StatusChanged?.Invoke(this, new FlightSourceStatusChangedEventArgs(
+            FlightSourceStatus.Starting, "Simülasyon başlatılıyor"));
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         // Sabit ve "sahte ama makul" başlangıç değerleri — UI ilk frame'de bile dolu görünsün.
         _state.IsArmed = true;
@@ -32,8 +41,12 @@ public sealed class SimulatedFlightSource : IFlightStateSource
         _state.SignalRssi = -62;
         _state.WpDistance = 145;
         _state.TargetTeamNumber = null;
+        _state.Touch("SIMULATION", DateTime.UtcNow);
 
         _loop = Task.Run(() => RunLoop(_cts.Token));
+        StatusChanged?.Invoke(this, new FlightSourceStatusChangedEventArgs(
+            FlightSourceStatus.Ready, "Simülasyon telemetrisi aktif"));
+        return Task.CompletedTask;
     }
 
     public async Task StopAsync()
@@ -45,6 +58,8 @@ public sealed class SimulatedFlightSource : IFlightStateSource
         _cts.Dispose();
         _cts = null;
         _loop = null;
+        StatusChanged?.Invoke(this, new FlightSourceStatusChangedEventArgs(
+            FlightSourceStatus.Stopped, "Simülasyon durduruldu"));
     }
 
     private async Task RunLoop(CancellationToken ct)
@@ -71,6 +86,7 @@ public sealed class SimulatedFlightSource : IFlightStateSource
                 _state.BatteryVoltage = Math.Max(18, (int)(25 - t * 0.015));
                 _state.WpDistance = Math.Max(20, 200 - (t * 0.5) % 180);
                 _state.SignalRssi = -62 + Math.Sin(t * 0.5) * 6;                // -68 ... -56 dBm
+                _state.Touch("SIMULATION", DateTime.UtcNow);
                 // Hedef bbox + IsLocked + TargetTeamNumber bu simülatörden BESLENMEZ —
                 // kilitlenme ve hedef takibi ileride gerçek kameradan/YOLO'dan veya
                 // sunucu mock'undan gelir. UI'da bu alanlar 0 / false / null kalır.
@@ -90,5 +106,7 @@ public sealed class SimulatedFlightSource : IFlightStateSource
         try { _cts.Dispose(); } catch { }
         _cts = null;
         _loop = null;
+        StatusChanged?.Invoke(this, new FlightSourceStatusChangedEventArgs(
+            FlightSourceStatus.Stopped, "Simülasyon kapatıldı"));
     }
 }

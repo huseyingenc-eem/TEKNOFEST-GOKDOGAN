@@ -61,8 +61,8 @@ public class ProximityMonitorTests
 
         var others = new[]
         {
-            new KonumBilgisi(2, 41.001, 29.0, 100, 0, 0, 0, 20, 80, 0, 0, 0, 0, 0, 0, new ServerTime(1, 0, 0, 0, 0), 100),
-            new KonumBilgisi(3, 41.5,   36.0, 100, 0, 0, 0, 20, 80, 0, 0, 0, 0, 0, 0, new ServerTime(1, 0, 0, 0, 0), 100)
+            new KonumBilgisi(2, 41.001, 29.0, 100, 0, 0, 0, 20, 100),
+            new KonumBilgisi(3, 41.5,   36.0, 100, 0, 0, 0, 20, 100)
         };
 
         m.Evaluate(others);

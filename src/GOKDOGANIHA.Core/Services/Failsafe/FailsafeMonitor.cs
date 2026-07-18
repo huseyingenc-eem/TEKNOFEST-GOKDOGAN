@@ -8,7 +8,7 @@ using GOKDOGANIHA.Core.Models.Alerts;
 namespace GOKDOGANIHA.Core.Services.Failsafe;
 
 /// <summary>
-/// GCS haberleşme kaybı + batarya failsafe izleme.
+/// Aktif araç telemetrisi heartbeat kaybını izler.
 /// - Son telemetri alma zamanını <see cref="RecordHeartbeat"/> ile güncelle.
 /// - <see cref="Tick"/> sık aralıklarla çağrılmalı (örn. 1 Hz). Eğer
 ///   now - lastHeartbeat > GcsTimeoutSeconds ise bir kez alert publish edilir
@@ -39,7 +39,7 @@ public sealed class FailsafeMonitor : INotifyPropertyChanged
         _clock = clock;
     }
 
-    /// <summary>ConnectionOrchestrator / TelemetryPoll her cevap aldığında çağırır.</summary>
+    /// <summary>Aktif uçuş kaynağından geçerli bir frame geldiğinde çağırılır.</summary>
     public void RecordHeartbeat()
     {
         _lastHeartbeat = _clock.UtcNow;
@@ -57,8 +57,8 @@ public sealed class FailsafeMonitor : INotifyPropertyChanged
         _publisher.Publish(Alert.Create(
             kind: "failsafe-gcs",
             level: AlertLevel.Danger,
-            title: "HABERLEŞME KAYBI",
-            message: $"Sunucu ile {elapsed:F0} sn temas yok — RTL",
+            title: "ARAÇ TELEMETRİ KAYBI",
+            message: $"Aktif uçuş kaynağından {elapsed:F0} sn veri yok — RTL politikası değerlendirildi",
             timeUtc: _clock.UtcNow));
 
         _commands.Rtl();

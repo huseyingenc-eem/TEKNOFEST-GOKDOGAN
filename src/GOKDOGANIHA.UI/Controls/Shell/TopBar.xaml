@@ -167,10 +167,15 @@
                 </Border>
 
                 <!-- Telemetry / status pills -->
+                <core:StatusPill IconKind="DatabaseSync"
+                                 IconBrush="{StaticResource TacticalWarn}"
+                                 Label="KAYNAK"
+                                 Value="{Binding FlightDataModeText}" />
                 <core:StatusPill IconKind="Cog"
                                  IconBrush="{StaticResource TacticalAccent}"
                                  Label="MOD"
-                                 Value="{Binding FlightMode}" />
+                                 Value="{Binding FlightMode}"
+                                 Margin="8,0,0,0" />
                 <core:StatusPill IconKind="AccessPoint"
                                  IconBrush="{StaticResource TacticalOk}"
                                  Label="LINK"
