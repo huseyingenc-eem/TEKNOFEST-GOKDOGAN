@@ -11,15 +11,7 @@ public sealed record KonumBilgisi(
     [property: JsonPropertyName("iha_dikilme")] double Dikilme,
     [property: JsonPropertyName("iha_yonelme")] double Yonelme,
     [property: JsonPropertyName("iha_yatis")] double Yatis,
-    [property: JsonPropertyName("iha_hiz")] double Hiz,
-    [property: JsonPropertyName("iha_batarya")] int Batarya,
-    [property: JsonPropertyName("iha_otonom")] int Otonom,
-    [property: JsonPropertyName("iha_kilitlenme")] int Kilitlenme,
-    [property: JsonPropertyName("hedef_merkez_X")] int HedefMerkezX,
-    [property: JsonPropertyName("hedef_merkez_Y")] int HedefMerkezY,
-    [property: JsonPropertyName("hedef_genislik")] int HedefGenislik,
-    [property: JsonPropertyName("hedef_yukseklik")] int HedefYukseklik,
-    [property: JsonPropertyName("gps_saati")] ServerTime GpsSaati,
+    [property: JsonPropertyName("iha_hizi")] double Hiz,
     [property: JsonPropertyName("zaman_farki")] int ZamanFarkiMs);
 
 public sealed record TelemetryResponse(

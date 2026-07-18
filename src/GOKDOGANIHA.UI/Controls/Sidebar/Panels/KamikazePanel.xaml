@@ -283,7 +283,7 @@
                 Cursor="Hand"
                 HorizontalAlignment="Stretch"
                 Command="{Binding SimulateQrReadCommand}"
-                Visibility="{Binding Settings.Telemetry.UseSimulator,
+                Visibility="{Binding Settings.Telemetry.IsSimulationActive,
                              Converter={x:Static md:BooleanToVisibilityConverter.CollapsedInstance}}"
                 ToolTip="DEBUG: gerçek kamera/YOLO yokken FSM'i ileri it">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

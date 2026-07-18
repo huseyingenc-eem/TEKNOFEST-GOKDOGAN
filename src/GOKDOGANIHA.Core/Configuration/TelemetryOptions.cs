@@ -11,18 +11,13 @@ public sealed class TelemetryOptions : INotifyPropertyChanged
 {
     private double _hz = 1.0;
     private bool _autoReconnect = true;
-    private bool _useSimulator;
-
-    public double Hz { get => _hz; set => Set(ref _hz, value); }
-    public bool AutoReconnect { get => _autoReconnect; set => Set(ref _autoReconnect, value); }
 
     /// <summary>
-    /// Gerçek MAVLink kaynağı yoksa, <see cref="Services.Telemetry.SimulatedFlightSource"/>
-    /// "İHA'dan paket geliyormuş" gibi FlightState'i besler. Default: kapalı — yarışma /
-    /// üretim modunda telemetri sıfır kalır, gerçek MAVLink adapter beslemediği sürece
-    /// hiçbir uydurma değer ekrana çıkmaz. Settings UI'dan açılabilir.
+    /// Resmî haberleşme dokümanı telemetrinin 1-2 Hz aralığında gönderilmesini ister.
+    /// Ayar dosyası veya UI bu aralığın dışında değer verse bile ağ katmanına taşınmaz.
     /// </summary>
-    public bool UseSimulator { get => _useSimulator; set => Set(ref _useSimulator, value); }
+    public double Hz { get => _hz; set => Set(ref _hz, Math.Clamp(value, 1.0, 2.0)); }
+    public bool AutoReconnect { get => _autoReconnect; set => Set(ref _autoReconnect, value); }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

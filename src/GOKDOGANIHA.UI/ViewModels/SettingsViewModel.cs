@@ -3,6 +3,7 @@ using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.Core.Services.Session;
+using GOKDOGANIHA.Core.Services.Telemetry;
 using GOKDOGANIHA.UI.ViewModels.Settings;
 
 namespace GOKDOGANIHA.UI.ViewModels;
@@ -33,11 +34,12 @@ public partial class SettingsViewModel : ObservableObject
         ApplicationOptions app,
         IGameServerClient? gameServer = null,
         IDialogService? dialog = null,
-        ConnectionOrchestrator? orchestrator = null)
+        ConnectionOrchestrator? orchestrator = null,
+        FlightBackendCoordinator? flightBackend = null)
     {
         Server = new ServerSettingsViewModel(app.GameServer, gameServer, dialog, orchestrator);
         Team = new TeamSettingsViewModel(app.GameServer);
-        Telemetry = new TelemetrySettingsViewModel(app.Telemetry);
+        Telemetry = new TelemetrySettingsViewModel(app.Telemetry, app.Mavlink, flightBackend, dialog);
         Video = new VideoSettingsViewModel(app.Video);
         Map = new MapSettingsViewModel(app.Map);
         Alerts = new AlertSettingsViewModel(app.Alerts);

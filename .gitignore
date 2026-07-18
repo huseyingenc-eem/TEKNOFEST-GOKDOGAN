@@ -19,6 +19,7 @@ obj/
 *.exe
 *.pdb
 *.cache
+*.log
 *.userprefs
 *.svclog
 *.binlog
@@ -34,13 +35,18 @@ TestResults/
 .vscode/
 *.suo
 *.user
+*.rsuser
 *.userosscache
 *.sln.docstates
+*.sln.DotSettings.user
 *.ntvs*
 *.njsproj
 *.sln.iml
 *.vsidx
+*.opendb
+*.VC.db
 *.lock.json
+.ionide/
 
 # =====================================================================
 # NuGet
@@ -52,6 +58,9 @@ TestResults/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+publish/
+*.publishsettings
+*.pubxml.user
 
 # =====================================================================
 # MSBuild / Roslyn intermediates
@@ -65,10 +74,23 @@ artifacts/
 *.VisualState.xml
 *.swp
 *.res
+GeneratedFiles/
+MigrationBackup/
+StyleCopReport.xml
 _TeamCity*
 _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
+
+# =====================================================================
+# Windows app packaging outputs
+# =====================================================================
+*.appx
+*.appxbundle
+*.appxupload
+*.msix
+*.msixbundle
+*.msixupload
 
 # =====================================================================
 # App runtime artifacts

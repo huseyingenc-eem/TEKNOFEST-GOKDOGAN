@@ -10,9 +10,6 @@ public static class CompetitionBoundary
     // Placeholder: Ankara ~Etimesgut civarı, ileride TYF koordinatlarıyla değişecek
     public static readonly LatLng Center = new(39.9208, 32.8541);
 
-    // Uçuş izin sahası yarıçapı (metre). Kullanıcı isteğiyle biraz büyütüldü.
-    public const double RadiusMeters = 1600;
-
     public static readonly IReadOnlyList<LatLng> Corners = new[]
     {
         new LatLng(39.9250, 32.8470),

@@ -32,6 +32,11 @@ public sealed class FlightState : INotifyPropertyChanged
     private int? _targetTeamNumber;     // şu an kilitlenmeye çalışılan rakip ID
     private double _signalRssi;         // telemetri link gücü (dBm; negatif normaldir)
     private int _targetCenterX, _targetCenterY, _targetWidth, _targetHeight;
+    private bool _isDataValid;
+    private string _dataSource = "NONE";
+    private DateTime? _lastUpdatedUtc;
+    private DateTime? _gpsTimeUtc;
+    private long _sequence;
 
     public double Latitude       { get => _latitude;        set => Set(ref _latitude, value); }
     public double Longitude      { get => _longitude;       set => Set(ref _longitude, value); }
@@ -57,6 +62,31 @@ public sealed class FlightState : INotifyPropertyChanged
     public int    TargetCenterY  { get => _targetCenterY;   set => Set(ref _targetCenterY, value); }
     public int    TargetWidth    { get => _targetWidth;     set => Set(ref _targetWidth, value); }
     public int    TargetHeight   { get => _targetHeight;    set => Set(ref _targetHeight, value); }
+    public bool   IsDataValid    { get => _isDataValid;     private set => Set(ref _isDataValid, value); }
+    public string DataSource     { get => _dataSource;      private set => Set(ref _dataSource, value); }
+    public DateTime? LastUpdatedUtc { get => _lastUpdatedUtc; private set => Set(ref _lastUpdatedUtc, value); }
+    public DateTime? GpsTimeUtc  { get => _gpsTimeUtc;      private set => Set(ref _gpsTimeUtc, value); }
+    public long Sequence         { get => _sequence;        private set => Set(ref _sequence, value); }
+
+    public void Touch(string source, DateTime? gpsTimeUtc = null)
+    {
+        DataSource = source;
+        GpsTimeUtc = gpsTimeUtc;
+        LastUpdatedUtc = DateTime.UtcNow;
+        Sequence++;
+        IsDataValid = true;
+    }
+
+    public void MarkUnavailable(string source)
+    {
+        DataSource = source;
+        IsDataValid = false;
+        LastUpdatedUtc = null;
+        GpsTimeUtc = null;
+    }
+
+    public bool IsFresh(DateTime nowUtc, TimeSpan maxAge)
+        => IsDataValid && LastUpdatedUtc is { } last && nowUtc - last <= maxAge;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

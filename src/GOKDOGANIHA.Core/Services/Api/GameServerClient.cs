@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Net;
 using System.Text.Json;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models.Server;
@@ -27,9 +28,8 @@ public sealed class GameServerClient : IGameServerClient, IDisposable
     public async Task<LoginResponse> GirisAsync(CancellationToken ct = default)
     {
         var req = new LoginRequest(_options.KullaniciAdi, _options.Sifre);
-        var resp = await _http.PostAsJsonAsync(Url("/api/giris"), req, _json, ct);
-        resp.EnsureSuccessStatusCode();
-        var login = (await resp.Content.ReadFromJsonAsync<LoginResponse>(_json, ct))!;
+        using var resp = await _http.PostAsJsonAsync(Url("/api/giris"), req, _json, ct);
+        var login = await ReadRequiredJsonAsync<LoginResponse>(resp, "/api/giris", ct);
         // Authoritative team number — server decides, we mirror into options so
         // every subsequent telemetry packet carries the correct takim_numarasi.
         _options.TakimNumarasi = login.TakimNumarasi;
@@ -37,32 +37,69 @@ public sealed class GameServerClient : IGameServerClient, IDisposable
     }
 
     public async Task<ServerTime> SunucuSaatiAsync(CancellationToken ct = default)
-        => (await _http.GetFromJsonAsync<ServerTime>(Url("/api/sunucusaati"), _json, ct))!;
+    {
+        using var resp = await _http.GetAsync(Url("/api/sunucusaati"), ct);
+        return await ReadRequiredJsonAsync<ServerTime>(resp, "/api/sunucusaati", ct);
+    }
 
     public async Task<TelemetryResponse> TelemetriGonderAsync(TelemetryPacket packet, CancellationToken ct = default)
     {
-        var resp = await _http.PostAsJsonAsync(Url("/api/telemetri_gonder"), packet, _json, ct);
-        resp.EnsureSuccessStatusCode();
-        return (await resp.Content.ReadFromJsonAsync<TelemetryResponse>(_json, ct))!;
+        using var resp = await _http.PostAsJsonAsync(Url("/api/telemetri_gonder"), packet, _json, ct);
+        return await ReadRequiredJsonAsync<TelemetryResponse>(resp, "/api/telemetri_gonder", ct);
     }
 
     public async Task KilitlenmeBilgisiGonderAsync(KilitlenmeBilgisi bilgi, CancellationToken ct = default)
     {
-        var resp = await _http.PostAsJsonAsync(Url("/api/kilitlenme_bilgisi"), bilgi, _json, ct);
-        resp.EnsureSuccessStatusCode();
+        using var resp = await _http.PostAsJsonAsync(Url("/api/kilitlenme_bilgisi"), bilgi, _json, ct);
+        await EnsureOkAsync(resp, "/api/kilitlenme_bilgisi", ct);
     }
 
     public async Task KamikazeBilgisiGonderAsync(KamikazeBilgisi bilgi, CancellationToken ct = default)
     {
-        var resp = await _http.PostAsJsonAsync(Url("/api/kamikaze_bilgisi"), bilgi, _json, ct);
-        resp.EnsureSuccessStatusCode();
+        using var resp = await _http.PostAsJsonAsync(Url("/api/kamikaze_bilgisi"), bilgi, _json, ct);
+        await EnsureOkAsync(resp, "/api/kamikaze_bilgisi", ct);
     }
 
     public async Task<QrKoordinat> QrKoordinatiAsync(CancellationToken ct = default)
-        => (await _http.GetFromJsonAsync<QrKoordinat>(Url("/api/qr_koordinati"), _json, ct))!;
+    {
+        using var resp = await _http.GetAsync(Url("/api/qr_koordinati"), ct);
+        return await ReadRequiredJsonAsync<QrKoordinat>(resp, "/api/qr_koordinati", ct);
+    }
 
     public async Task<HssResponse> HssKoordinatlariAsync(CancellationToken ct = default)
-        => (await _http.GetFromJsonAsync<HssResponse>(Url("/api/hss_koordinatlari"), _json, ct))!;
+    {
+        using var resp = await _http.GetAsync(Url("/api/hss_koordinatlari"), ct);
+        return await ReadRequiredJsonAsync<HssResponse>(resp, "/api/hss_koordinatlari", ct);
+    }
+
+    private async Task<T> ReadRequiredJsonAsync<T>(
+        HttpResponseMessage response,
+        string endpoint,
+        CancellationToken ct)
+    {
+        await EnsureOkAsync(response, endpoint, ct);
+        var body = await response.Content.ReadAsStringAsync(ct);
+        try
+        {
+            return JsonSerializer.Deserialize<T>(body, _json)
+                ?? throw new JsonException("Yanıt gövdesi boş.");
+        }
+        catch (JsonException ex)
+        {
+            throw new GameServerProtocolException(response.StatusCode, endpoint,
+                $"Geçersiz JSON: {ex.Message}. Gövde: {body}");
+        }
+    }
+
+    private static async Task EnsureOkAsync(
+        HttpResponseMessage response,
+        string endpoint,
+        CancellationToken ct)
+    {
+        if (response.StatusCode == HttpStatusCode.OK) return;
+        var body = await response.Content.ReadAsStringAsync(ct);
+        throw new GameServerProtocolException(response.StatusCode, endpoint, body);
+    }
 
     public void Dispose()
     {

@@ -27,6 +27,7 @@ public sealed class KilitlenmeDenetim
 
     private int? _currentTargetId;
     private int? _lastSuccessfullyLockedTargetId;
+    private DateTime? _attemptStartedUtc;
     private LockState _state = LockState.Idle;
 
     public KilitlenmeDenetim(AutonomyOptions options, IClock clock)
@@ -65,6 +66,7 @@ public sealed class KilitlenmeDenetim
         {
             _window.Clear();
             _currentTargetId = targetId;
+            _attemptStartedUtc = now;
             _state = LockState.Tracking;
         }
 
@@ -97,8 +99,8 @@ public sealed class KilitlenmeDenetim
         // 4. Pencerede toplam valid süre — ardışık sample'ların timestamp farkı ile integral.
         double accum = ComputeAccumValidSeconds(now);
 
-        bool windowFull = _window.Count > 0
-            && (now - _window.Peek().Timestamp).TotalSeconds >= _options.LockWindowSeconds - 1e-3;
+        bool windowFull = _attemptStartedUtc is { } attemptStart
+            && (now - attemptStart).TotalSeconds >= _options.LockWindowSeconds - 1e-3;
 
         if (accum >= _options.LockRequiredSeconds && _state != LockState.Locked && notRepeat)
         {
@@ -106,16 +108,17 @@ public sealed class KilitlenmeDenetim
             _lastSuccessfullyLockedTargetId = targetId;
             LockSucceeded?.Invoke(this, new LockSuccessEventArgs(targetId, now));
         }
+        else if (windowFull && accum < _options.LockRequiredSeconds && _state != LockState.Locked)
+        {
+            _state = LockState.Failed;
+        }
         else if (valid && _state != LockState.Locked)
         {
             _state = LockState.Locking;
         }
-        else if (!valid && _state == LockState.Locking)
+        else if (!valid && _state != LockState.Locked)
         {
-            // Pencere doldu ama 4 sn valid biriktiremedi → Failed; aksi halde Tracking'e dön.
-            _state = windowFull && accum < _options.LockRequiredSeconds
-                ? LockState.Failed
-                : LockState.Tracking;
+            _state = LockState.Tracking;
         }
 
         return new LockFrameResult(
@@ -134,6 +137,7 @@ public sealed class KilitlenmeDenetim
     {
         _window.Clear();
         _currentTargetId = null;
+        _attemptStartedUtc = null;
         _state = LockState.Idle;
     }
 

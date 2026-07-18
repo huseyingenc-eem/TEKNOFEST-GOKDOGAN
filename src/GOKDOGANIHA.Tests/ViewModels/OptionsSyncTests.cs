@@ -32,6 +32,18 @@ public class OptionsSyncTests
     }
 
     [Fact]
+    public void Test_profile_switches_default_url_to_local_mock()
+    {
+        var opts = new GameServerOptions();
+        var vm = new ServerSettingsViewModel(opts);
+
+        vm.UseTestEnvironment = true;
+
+        Assert.Equal(CompetitionServerEnvironment.Test, opts.Environment);
+        Assert.Equal("http://127.0.0.1:5000", opts.BaseUrl);
+    }
+
+    [Fact]
     public void TeamSettings_pushes_TeamNumber_to_GameServerOptions()
     {
         var opts = new GameServerOptions();
@@ -63,26 +75,29 @@ public class OptionsSyncTests
     }
 
     [Fact]
-    public void TelemetrySettings_pushes_UseSimulator_to_options()
+    public void TelemetrySettings_pushes_Mavlink_fields_to_options()
     {
         var opts = new TelemetryOptions();
-        Assert.False(opts.UseSimulator); // default kapalı
+        var mavlink = new MavlinkOptions();
 
-        var vm = new TelemetrySettingsViewModel(opts);
-        vm.UseSimulator = true;
+        var vm = new TelemetrySettingsViewModel(opts, mavlink);
+        vm.MavlinkListenAddress = "127.0.0.1";
+        vm.MavlinkPort = 14551;
+        vm.MavlinkExpectedSystemId = 7;
 
-        Assert.True(opts.UseSimulator);
-
-        vm.UseSimulator = false;
-        Assert.False(opts.UseSimulator);
+        Assert.Equal("127.0.0.1", mavlink.ListenAddress);
+        Assert.Equal(14551, mavlink.Port);
+        Assert.Equal(7, mavlink.ExpectedSystemId);
     }
 
     [Fact]
-    public void TelemetrySettings_seeds_UseSimulator_from_options()
+    public void TelemetrySettings_seeds_Mavlink_fields_from_options()
     {
-        var opts = new TelemetryOptions { UseSimulator = true };
-        var vm = new TelemetrySettingsViewModel(opts);
-        Assert.True(vm.UseSimulator);
+        var opts = new TelemetryOptions();
+        var mavlink = new MavlinkOptions { ListenAddress = "127.0.0.2", Port = 16000 };
+        var vm = new TelemetrySettingsViewModel(opts, mavlink);
+        Assert.Equal("127.0.0.2", vm.MavlinkListenAddress);
+        Assert.Equal(16000, vm.MavlinkPort);
     }
 
     [Fact]
@@ -103,13 +118,13 @@ public class OptionsSyncTests
 
         settings.Server.ServerBaseUrl = "http://new";
         settings.Team.TeamNumber = 7;
-        settings.Telemetry.Hz = 0.5;
+        settings.Telemetry.Hz = 1.5;
         settings.Map.ShowGrid = false;
         settings.Alerts.LowBatteryThreshold = 19;
 
         Assert.Equal("http://new", app.GameServer.BaseUrl);
         Assert.Equal(7, app.GameServer.TakimNumarasi);
-        Assert.Equal(0.5, app.Telemetry.Hz);
+        Assert.Equal(1.5, app.Telemetry.Hz);
         Assert.False(app.Map.ShowGrid);
         Assert.Equal(19, app.Alerts.LowBatteryThreshold);
     }

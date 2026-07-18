@@ -24,4 +24,10 @@
     <ProjectReference Include="..\GOKDOGANIHA.UI\GOKDOGANIHA.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Platformdan bağımsız testler GOKDOGANIHA.Core.Tests içinde linklenir. -->
+    <Compile Remove="Configuration\**\*.cs" />
+    <Compile Remove="Services\**\*.cs" />
+  </ItemGroup>
+
 </Project>

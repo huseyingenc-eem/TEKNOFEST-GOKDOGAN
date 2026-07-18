@@ -50,27 +50,36 @@ public partial class MainWindowViewModel : ObservableObject
             _clockTimer.Start();
             OnClockTick(this, EventArgs.Empty);
 
-            // Simülatör açıkken yarışma sahasının yakınında mock QR target üret —
-            // sunucuya bağlanmadan kamikaze görevi test edilebilsin. Sim toggle'ı
-            // değişince QrTarget set/null olur (gerçek modda sunucudan gelecek).
-            App.AppOptions.Telemetry.PropertyChanged += OnTelemetryOptionsChanged;
+            // Simülasyon backend'i aktifken mock QR üret; canlı modda fallback yoktur.
+            if (App.FlightBackend is not null)
+                App.FlightBackend.PropertyChanged += OnFlightBackendChanged;
+            if (App.Connection is not null)
+                App.Connection.QrCoordinateReceived += OnQrCoordinateReceived;
             ApplyMockQrTargetIfSim();
         }
     }
 
-    private void OnTelemetryOptionsChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnFlightBackendChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Tam qualified — `Core.Configuration` ifadesi GOKDOGANIHA.UI.Core namespace
-        // içinde aranıp bulunamıyordu (UI.Core mevcut). nameof string döner, runtime
-        // etkisi yok ama compile-time symbol resolution gerek.
-        if (e.PropertyName == nameof(GOKDOGANIHA.Core.Configuration.TelemetryOptions.UseSimulator))
-            ApplyMockQrTargetIfSim();
+        if (e.PropertyName is nameof(GOKDOGANIHA.Core.Services.Telemetry.FlightBackendCoordinator.ActiveMode)
+            or nameof(GOKDOGANIHA.Core.Services.Telemetry.FlightBackendCoordinator.Status)
+            or nameof(GOKDOGANIHA.Core.Services.Telemetry.FlightBackendCoordinator.StatusMessage))
+        {
+            void Apply()
+            {
+                ApplyMockQrTargetIfSim();
+                SyncFlightBackendPresentation();
+            }
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher is null || dispatcher.CheckAccess()) Apply();
+            else dispatcher.BeginInvoke((Action)Apply);
+        }
     }
 
     private void ApplyMockQrTargetIfSim()
     {
         if (MapVm is null) return;
-        if (App.AppOptions.Telemetry.UseSimulator)
+        if (App.FlightBackend?.IsSimulationActive == true)
         {
             // Sim merkezi (Ankara) yakın — yarışma sahasında plausible bir hedef.
             MapVm.QrTarget = new QrKoordinat(39.9230, 32.8560);
@@ -82,8 +91,17 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    private void OnQrCoordinateReceived(object? sender, QrKoordinat coordinate)
+    {
+        if (App.FlightBackend?.IsSimulationActive == true) return;
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess()) MapVm.QrTarget = coordinate;
+        else dispatcher.BeginInvoke(new Action(() => MapVm.QrTarget = coordinate));
+    }
+
     private void OnClockTick(object? sender, EventArgs e)
     {
+        SyncFlightBackendPresentation();
         var sc = App.ServerClock;
         var now = sc?.Now ?? DateTime.UtcNow;
         // Şartname formatı: gün-saat:dakika:saniye.ms
@@ -128,6 +146,22 @@ public partial class MainWindowViewModel : ObservableObject
             IsFailsafeActive = fs.IsGcsLost;
         if (App.ManualTransitions is { } mt)
             ManualTransitionCount = mt.Count;
+
+        if (_flightState is not null)
+        {
+            var valid = _flightState.IsFresh(DateTime.UtcNow,
+                TimeSpan.FromSeconds(App.AppOptions.Mavlink.StaleAfterSeconds));
+            IsVehicleDataValid = valid;
+            VehicleDataAgeSeconds = _flightState.LastUpdatedUtc is { } last
+                ? Math.Max(0, (DateTime.UtcNow - last).TotalSeconds)
+                : 0;
+            MapVm.SetVehicleStatus(
+                valid,
+                _flightState.DataSource,
+                FlightBackendStatusText,
+                IsSimulationMode,
+                _flightState.LastUpdatedUtc);
+        }
 
         // Kamikaze FSM tick — telemetri akışını state machine'e besle.
         if (App.Kamikaze is { } kam)
@@ -178,6 +212,11 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private bool _isAutonomous;
     [ObservableProperty] private bool _isLocked;
     [ObservableProperty] private bool _isArmed;
+    [ObservableProperty] private string _flightBackendStatusText = "Veri kaynağı başlatılıyor";
+    [ObservableProperty] private string _flightDataModeText = "CANLI";
+    [ObservableProperty] private bool _isSimulationMode;
+    [ObservableProperty] private bool _isVehicleDataValid;
+    [ObservableProperty] private double _vehicleDataAgeSeconds;
 
     [ObservableProperty] private double _airspeed;
     [ObservableProperty] private double _groundSpeed;
@@ -367,11 +406,18 @@ public partial class MainWindowViewModel : ObservableObject
     ///    + Olay Günlüğü'ne uyarı yazılır ki kullanıcı mock kullanıldığını bilsin.
     /// </summary>
     [RelayCommand]
-    private void StartKamikaze()
+    private async Task StartKamikaze()
     {
         var target = MapVm?.QrTarget;
         if (target is null)
         {
+            if (App.FlightBackend?.IsSimulationActive != true)
+            {
+                await App.Dialogs.ShowErrorAsync(
+                    "KAMİKAZE BAŞLATILAMADI",
+                    "Canlı modda QR koordinatı alınmadan görev başlatılamaz.\n\nÖnce yarışma sunucusundan geçerli QR koordinatını alın.");
+                return;
+            }
             target = new QrKoordinat(39.9230, 32.8560);
             if (MapVm is not null) MapVm.QrTarget = target;
             App.AlertBus.Publish(Alert.Create(
@@ -451,7 +497,7 @@ public partial class MainWindowViewModel : ObservableObject
                 Latitude  = _flightState.Latitude;
                 Longitude = _flightState.Longitude;
                 Heading   = _flightState.Heading;
-                MapVm?.SetOwnPosition(_flightState.Latitude, _flightState.Longitude, _flightState.Heading);
+                MapVm?.SetOwnPosition(_flightState.Latitude, _flightState.Longitude, _flightState.Heading, _flightState.IsDataValid);
                 break;
             case nameof(FlightState.Altitude):       Altitude        = _flightState.Altitude; break;
             case nameof(FlightState.Pitch):          Pitch           = _flightState.Pitch; break;
@@ -479,6 +525,17 @@ public partial class MainWindowViewModel : ObservableObject
             case nameof(FlightState.TargetCenterY): TargetCenterY = _flightState.TargetCenterY; break;
             case nameof(FlightState.TargetWidth):   TargetWidth   = _flightState.TargetWidth; break;
             case nameof(FlightState.TargetHeight):  TargetHeight  = _flightState.TargetHeight; break;
+            case nameof(FlightState.IsDataValid):
+            case nameof(FlightState.DataSource):
+            case nameof(FlightState.LastUpdatedUtc):
+                MapVm?.SetVehicleStatus(
+                    _flightState.IsDataValid,
+                    _flightState.DataSource,
+                    FlightBackendStatusText,
+                    IsSimulationMode,
+                    _flightState.LastUpdatedUtc);
+                if (!_flightState.IsDataValid) MapVm?.SetOwnPosition(0, 0, 0, false);
+                break;
             case null: SyncFromFlightState(); break;
         }
     }
@@ -492,7 +549,7 @@ public partial class MainWindowViewModel : ObservableObject
         Pitch          = _flightState.Pitch;
         Heading        = _flightState.Heading;
         Roll           = _flightState.Roll;
-        MapVm?.SetOwnPosition(_flightState.Latitude, _flightState.Longitude, _flightState.Heading);
+        MapVm?.SetOwnPosition(_flightState.Latitude, _flightState.Longitude, _flightState.Heading, _flightState.IsDataValid);
         GroundSpeed    = _flightState.GroundSpeed;
         Airspeed       = _flightState.Airspeed;
         VerticalSpeed  = _flightState.VerticalSpeed;
@@ -511,6 +568,29 @@ public partial class MainWindowViewModel : ObservableObject
         TargetCenterY  = _flightState.TargetCenterY;
         TargetWidth    = _flightState.TargetWidth;
         TargetHeight   = _flightState.TargetHeight;
+    }
+
+    private void SyncFlightBackendPresentation()
+    {
+        var backend = App.FlightBackend;
+        if (backend is null) return;
+
+        void Apply()
+        {
+            IsSimulationMode = backend.IsSimulationActive;
+            FlightDataModeText = backend.ActiveMode == FlightDataMode.Simulation ? "SİMÜLASYON" : "CANLI";
+            FlightBackendStatusText = backend.StatusMessage;
+            MapVm?.SetVehicleStatus(
+                _flightState?.IsDataValid == true,
+                _flightState?.DataSource ?? "NONE",
+                FlightBackendStatusText,
+                IsSimulationMode,
+                _flightState?.LastUpdatedUtc);
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess()) Apply();
+        else dispatcher.BeginInvoke((Action)Apply);
     }
 
     private static string FormatGpsFix(GpsFix fix) => fix switch

@@ -9,6 +9,7 @@ public sealed class ApplicationOptions
 {
     public GameServerOptions GameServer { get; } = new();
     public TelemetryOptions Telemetry { get; } = new();
+    public MavlinkOptions Mavlink { get; } = new();
     public VideoOptions Video { get; } = new();
     public MapOptions Map { get; } = new();
     public AlertOptions Alerts { get; } = new();

@@ -35,11 +35,13 @@ public partial class ServerSettingsViewModel : OptionsBackedViewModel<GameServer
         _serverBaseUrl = string.IsNullOrWhiteSpace(options.BaseUrl) ? _serverBaseUrl : options.BaseUrl;
         _teamUsername = string.IsNullOrWhiteSpace(options.KullaniciAdi) ? _teamUsername : options.KullaniciAdi;
         _teamPassword = options.Sifre;
+        _useTestEnvironment = options.Environment == CompetitionServerEnvironment.Test;
     }
 
     [ObservableProperty] private string _serverBaseUrl = "http://127.0.0.25:5000";
     [ObservableProperty] private string _teamUsername = "gokdogan";
     [ObservableProperty] private string _teamPassword = string.Empty;
+    [ObservableProperty] private bool _useTestEnvironment;
 
     /// <summary>
     /// Aktif bir bağlantı var mı (ConnectAsync başarılı olmuş). UI butonları
@@ -50,6 +52,18 @@ public partial class ServerSettingsViewModel : OptionsBackedViewModel<GameServer
     partial void OnServerBaseUrlChanged(string value) => PushToOptions(o => o.BaseUrl = value);
     partial void OnTeamUsernameChanged(string value) => PushToOptions(o => o.KullaniciAdi = value);
     partial void OnTeamPasswordChanged(string value) => PushToOptions(o => o.Sifre = value);
+    partial void OnUseTestEnvironmentChanged(bool value)
+    {
+        PushToOptions(o => o.Environment = value
+            ? CompetitionServerEnvironment.Test
+            : CompetitionServerEnvironment.Official);
+
+        // Yerel mock profili yanlışlıkla resmî URL ile kullanılmasın.
+        if (value && ServerBaseUrl == "http://127.0.0.25:5000")
+            ServerBaseUrl = "http://127.0.0.1:5000";
+        else if (!value && ServerBaseUrl == "http://127.0.0.1:5000")
+            ServerBaseUrl = "http://127.0.0.25:5000";
+    }
 
     /// <summary>Sadece login atar — poll başlatmaz (hızlı kimlik doğrulama).</summary>
     [RelayCommand]

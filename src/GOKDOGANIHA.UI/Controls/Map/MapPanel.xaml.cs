@@ -24,8 +24,6 @@ public partial class MapPanel : UserControl
     private readonly Dictionary<int, (GMapMarker marker, HssCircleMarker circle, HssKoordinat data)> _hssMarkers = new();
     private readonly Dictionary<int, (GMapMarker marker, JammingCircleMarker circle, JammingZone data)> _jammingMarkers = new();
     private readonly List<GMapMarker> _waypointMarkers = new();
-    private GMapMarker? _boundaryCircleMarker;
-    private HssCircleMarker? _boundaryCircleVisual;
     private GMapMarker? _ownMarker;
     private OwnDroneMarker? _ownVisual;
     private GMapMarker? _qrMarker;
@@ -67,6 +65,7 @@ public partial class MapPanel : UserControl
         // Map'in drag davranışını çizim sırasında geçici olarak overide ediyoruz.
         MapCtrl.PreviewMouseLeftButtonDown += OnMapLeftButtonDown;
         MapCtrl.PreviewMouseRightButtonDown += OnMapRightButtonDown;
+        MapCtrl.PreviewMouseMove += OnMapMouseMove;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -97,7 +96,7 @@ public partial class MapPanel : UserControl
             case nameof(MapOptions.TileProvider): ApplyTileProvider(); break;
             case nameof(MapOptions.ShowBoundary): ApplyBoundary(); break;
             case nameof(MapOptions.ShowHssZones): RebuildHss(); break;
-            case nameof(MapOptions.ShowGrid): /* reserved */ break;
+            case nameof(MapOptions.ShowGrid): ApplyGrid(); break;
         }
     }
 
@@ -106,6 +105,7 @@ public partial class MapPanel : UserControl
         ApplyTileProvider();
         ApplyBoundary();
         RebuildHss();
+        ApplyGrid();
     }
 
     private void ApplyTileProvider()
@@ -129,41 +129,33 @@ public partial class MapPanel : UserControl
         else RemoveBoundary();
     }
 
+    private void ApplyGrid()
+        => GridOverlay.Visibility = _mapOptions?.ShowGrid != false
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
     private void DrawBoundary()
     {
-        // Yeni tasarım: Uçuş izin sahası dairesel gösterim (sadece border, saydam iç).
-        if (_boundaryCircleMarker is not null) return;
-
-        var stroke = new SolidColorBrush(Color.FromRgb(0x00, 0xD1, 0xC7));
-        var fill = Brushes.Transparent;
-        _boundaryCircleVisual = new HssCircleMarker(-1, stroke, fill);
-        _boundaryCircleVisual.SetRadius(CompetitionBoundary.RadiusMeters, CompetitionBoundary.Center.Lat, (int)MapCtrl.Zoom);
-
-        _boundaryCircleMarker = new GMapMarker(new PointLatLng(CompetitionBoundary.Center.Lat, CompetitionBoundary.Center.Lng))
-        {
-            Shape = _boundaryCircleVisual,
-            ZIndex = 50
-        };
-        _boundaryCircleMarker.Offset = new Point(-_boundaryCircleVisual.Width / 2, -_boundaryCircleVisual.Height / 2);
-        MapCtrl.Markers.Add(_boundaryCircleMarker);
-
-        // Eski polygon boundary varsa kaldır.
-        if (_boundaryPoly is not null)
-        {
-            MapCtrl.Markers.Remove(_boundaryPoly);
-            _boundaryPoly = null;
-        }
+        // Güvenlik monitorü CompetitionBoundary.Corners poligonunu kullandığı için
+        // harita da aynı geometriyi gösterir; görsel ve failsafe sınırı artık ayrışmaz.
+        if (_boundaryPoly is not null) return;
+        var points = CompetitionBoundary.Corners
+            .Select(c => new PointLatLng(c.Lat, c.Lng))
+            .ToList();
+        _boundaryPoly = new GMapPolygon(points) { Tag = "competition-boundary", ZIndex = 50 };
+        MapCtrl.Markers.Add(_boundaryPoly);
+        ApplyShapeStyle(
+            _boundaryPoly.Shape,
+            new SolidColorBrush(Color.FromRgb(0x00, 0xD1, 0xC7)),
+            thickness: 2.5,
+            opacity: 0.9,
+            fill: new SolidColorBrush(Color.FromArgb(0x12, 0x00, 0xD1, 0xC7)),
+            dashed: true,
+            dashArray: new DoubleCollection { 8, 4 });
     }
 
     private void RemoveBoundary()
     {
-        if (_boundaryCircleMarker is not null)
-        {
-            MapCtrl.Markers.Remove(_boundaryCircleMarker);
-            _boundaryCircleMarker = null;
-            _boundaryCircleVisual = null;
-        }
-
         if (_boundaryPoly is null) return;
         MapCtrl.Markers.Remove(_boundaryPoly);
         _boundaryPoly = null;
@@ -211,6 +203,8 @@ public partial class MapPanel : UserControl
             case nameof(MapViewModel.OwnLatitude):
             case nameof(MapViewModel.OwnLongitude):
             case nameof(MapViewModel.OwnHeading):
+            case nameof(MapViewModel.HasOwnPosition):
+            case nameof(MapViewModel.FollowOwnship):
                 UpdateOwnMarker();
                 break;
             case nameof(MapViewModel.QrTarget):
@@ -285,12 +279,6 @@ public partial class MapPanel : UserControl
     {
         int z = (int)MapCtrl.Zoom;
 
-        if (_boundaryCircleMarker is not null && _boundaryCircleVisual is not null)
-        {
-            _boundaryCircleVisual.SetRadius(CompetitionBoundary.RadiusMeters, CompetitionBoundary.Center.Lat, z);
-            _boundaryCircleMarker.Offset = new Point(-_boundaryCircleVisual.Width / 2, -_boundaryCircleVisual.Height / 2);
-        }
-
         foreach (var (marker, circle, data) in _hssMarkers.Values)
         {
             circle.SetRadius(data.YaricapMetre, data.Enlem, z);
@@ -306,6 +294,16 @@ public partial class MapPanel : UserControl
     private void UpdateOwnMarker()
     {
         if (_vm is null) return;
+        if (!_vm.HasOwnPosition)
+        {
+            if (_ownMarker is not null)
+            {
+                MapCtrl.Markers.Remove(_ownMarker);
+                _ownMarker = null;
+                _ownVisual = null;
+            }
+            return;
+        }
         if (_ownMarker is null)
         {
             _ownVisual = new OwnDroneMarker();
@@ -319,6 +317,7 @@ public partial class MapPanel : UserControl
         }
         _ownMarker.Position = new PointLatLng(_vm.OwnLatitude, _vm.OwnLongitude);
         if (_ownVisual is not null) _ownVisual.HeadingAngle = _vm.OwnHeading;
+        if (_vm.FollowOwnship) MapCtrl.Position = _ownMarker.Position;
     }
 
     private void UpdateQrMarker()
@@ -485,6 +484,32 @@ public partial class MapPanel : UserControl
         if (_vm is null || !_vm.IsDrawingPolygon) return;
         _vm.CompletePolygonDraw();
         e.Handled = true;
+    }
+
+    private void OnMapMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_vm is null) return;
+        var pos = e.GetPosition(MapCtrl);
+        var latLng = MapCtrl.FromLocalToLatLng((int)pos.X, (int)pos.Y);
+        _vm.SetCursorPosition(latLng.Lat, latLng.Lng);
+    }
+
+    private void OnZoomInClick(object sender, RoutedEventArgs e)
+        => MapCtrl.Zoom = Math.Min(MapCtrl.MaxZoom, MapCtrl.Zoom + 1);
+
+    private void OnZoomOutClick(object sender, RoutedEventArgs e)
+        => MapCtrl.Zoom = Math.Max(MapCtrl.MinZoom, MapCtrl.Zoom - 1);
+
+    private void OnCenterOwnClick(object sender, RoutedEventArgs e)
+    {
+        if (_vm?.HasOwnPosition == true)
+            MapCtrl.Position = new PointLatLng(_vm.OwnLatitude, _vm.OwnLongitude);
+    }
+
+    private void OnFitBoundaryClick(object sender, RoutedEventArgs e)
+    {
+        MapCtrl.Position = new PointLatLng(CompetitionBoundary.Center.Lat, CompetitionBoundary.Center.Lng);
+        MapCtrl.Zoom = 14;
     }
 
     private void UpdateCursor()

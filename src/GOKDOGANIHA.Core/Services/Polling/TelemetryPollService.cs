@@ -1,5 +1,6 @@
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.Core.Services.Api;
+using GOKDOGANIHA.Core.Services.Telemetry;
 
 namespace GOKDOGANIHA.Core.Services.Polling;
 
@@ -16,19 +17,51 @@ public sealed class TelemetryPollService : IDisposable
     private Task? _loop;
     private TelemetryPacket? _latest;
     private readonly object _packetLock = new();
+    private bool _transmissionEnabled = true;
+    private double _lastRoundTripMs;
+    private string? _lastRejectionMessage;
 
     public event EventHandler<TelemetryResponse>? TelemetryReceived;
     public event EventHandler<Exception>? PollFailed;
+    public event EventHandler<TelemetryValidationResult>? PacketRejected;
+    public double LastRoundTripMs => Volatile.Read(ref _lastRoundTripMs);
 
     public TelemetryPollService(IGameServerClient client, TimeSpan? interval = null)
     {
         _client = client;
-        _interval = interval ?? TimeSpan.FromMilliseconds(667);
+        var requested = interval ?? TimeSpan.FromMilliseconds(667);
+        _interval = TimeSpan.FromMilliseconds(
+            Math.Clamp(requested.TotalMilliseconds, 500, 1000));
     }
 
-    public void UpdateOwnTelemetry(TelemetryPacket packet)
+    public bool UpdateOwnTelemetry(TelemetryPacket packet)
     {
-        lock (_packetLock) _latest = packet;
+        var validation = CompetitionTelemetryValidator.Validate(packet);
+        lock (_packetLock) _latest = validation.IsValid ? packet : null;
+        if (validation.IsValid)
+        {
+            _lastRejectionMessage = null;
+        }
+        else if (!string.Equals(_lastRejectionMessage, validation.Message, StringComparison.Ordinal))
+        {
+            _lastRejectionMessage = validation.Message;
+            PacketRejected?.Invoke(this, validation);
+        }
+        return validation.IsValid;
+    }
+
+    public void SetTransmissionEnabled(bool enabled)
+    {
+        lock (_packetLock)
+        {
+            _transmissionEnabled = enabled;
+            if (!enabled) _latest = null;
+        }
+    }
+
+    public void ClearOwnTelemetry()
+    {
+        lock (_packetLock) _latest = null;
     }
 
     /// <summary>
@@ -36,10 +69,12 @@ public sealed class TelemetryPollService : IDisposable
     /// </summary>
     public void SetInterval(TimeSpan interval)
     {
-        _interval = interval;
+        // Doküman: en az 1 Hz, en fazla 2 Hz.
+        _interval = TimeSpan.FromMilliseconds(
+            Math.Clamp(interval.TotalMilliseconds, 500, 1000));
         // PeriodicTimer.Period .NET 8+ ile settable; timer aktifse geri yansır.
         var timer = _timer;
-        if (timer is not null) timer.Period = interval;
+        if (timer is not null) timer.Period = _interval;
     }
 
     public void Start()
@@ -70,12 +105,21 @@ public sealed class TelemetryPollService : IDisposable
             while (await timer.WaitForNextTickAsync(ct))
             {
                 TelemetryPacket? packet;
-                lock (_packetLock) packet = _latest;
+                bool enabled;
+                lock (_packetLock)
+                {
+                    enabled = _transmissionEnabled;
+                    packet = _latest;
+                }
+                if (!enabled) continue;
                 if (packet is null) continue;
 
                 try
                 {
+                    var started = System.Diagnostics.Stopwatch.GetTimestamp();
                     var resp = await _client.TelemetriGonderAsync(packet, ct);
+                    var elapsed = System.Diagnostics.Stopwatch.GetElapsedTime(started);
+                    Volatile.Write(ref _lastRoundTripMs, elapsed.TotalMilliseconds);
                     TelemetryReceived?.Invoke(this, resp);
                 }
                 catch (OperationCanceledException) { throw; }
