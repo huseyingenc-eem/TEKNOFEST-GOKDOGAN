@@ -3,76 +3,138 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              mc:Ignorable="d"
              d:DesignWidth="320" d:DesignHeight="200">
 
-    <!-- DataContext = MapViewModel (RightSidebar tarafından bind edilir).
-         ItemsControl, sunucudan 1 Hz gelen KonumBilgileri'ni tablo halinde gösterir. -->
-    <StackPanel>
-        <!-- Tablo başlığı -->
-        <Grid Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="48" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="48" />
-                <ColumnDefinition Width="48" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="TAKIM" Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="1" Text="KONUM"  Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="2" Text="İRT"    Style="{StaticResource MetricLabel}"
-                       HorizontalAlignment="Right" />
-            <TextBlock Grid.Column="3" Text="HIZ"    Style="{StaticResource MetricLabel}"
-                       HorizontalAlignment="Right" />
-        </Grid>
+    <UserControl.Resources>
+        <!-- Rakip = düşman vurgusu: sol kenarda 3px kırmızı stripe + Border kırmızı.
+             Hover'da accent rengine dönüşür (haritada o konuma odakla affordance'ı). -->
+        <Style x:Key="OpponentCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource TacticalGlass}" />
+            <Setter Property="BorderBrush" Value="#552D2D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
 
-        <!-- Sunucudan gelen liste -->
+    <!-- DataContext = MapViewModel (RightSidebar tarafından bind edilir).
+         ItemsControl, sunucudan 1 Hz gelen KonumBilgileri'ni kart halinde gösterir. -->
+    <StackPanel>
+        <!-- Sunucudan gelen liste — her rakip ayrı kart -->
         <ItemsControl ItemsSource="{Binding EnemyDrones}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border BorderBrush="{StaticResource TacticalBorder}"
-                            BorderThickness="0,0,0,1"
-                            Padding="0,3">
+                    <Border Style="{StaticResource OpponentCardStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="48" />
+                                <ColumnDefinition Width="3" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="48" />
-                                <ColumnDefinition Width="48" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"
-                                       Foreground="{StaticResource TacticalAccent}">
-                                <TextBlock.Text>
-                                    <Binding Path="TakimNumarasi" StringFormat="T-{0:00}" FallbackValue="—" />
-                                </TextBlock.Text>
-                            </TextBlock>
-                            <TextBlock Grid.Column="1"
-                                       FontFamily="Consolas" FontSize="10"
-                                       Foreground="{StaticResource TacticalTextSecondary}"
-                                       TextTrimming="CharacterEllipsis">
-                                <TextBlock.Text>
-                                    <MultiBinding StringFormat="{}{0:F4}, {1:F4}">
-                                        <Binding Path="Enlem" />
-                                        <Binding Path="Boylam" />
-                                    </MultiBinding>
-                                </TextBlock.Text>
-                            </TextBlock>
-                            <TextBlock Grid.Column="2"
-                                       FontFamily="Consolas" FontSize="11"
-                                       HorizontalAlignment="Right"
-                                       Foreground="{StaticResource TacticalTextPrimary}">
-                                <TextBlock.Text>
-                                    <Binding Path="Irtifa" StringFormat="{}{0:F0}m" />
-                                </TextBlock.Text>
-                            </TextBlock>
-                            <TextBlock Grid.Column="3"
-                                       FontFamily="Consolas" FontSize="11"
-                                       HorizontalAlignment="Right"
-                                       Foreground="{StaticResource TacticalTextPrimary}">
-                                <TextBlock.Text>
-                                    <Binding Path="Hiz" StringFormat="{}{0:F0}" />
-                                </TextBlock.Text>
-                            </TextBlock>
+
+                            <!-- Sol accent stripe — düşman göstergesi -->
+                            <Rectangle Grid.Column="0"
+                                       Fill="{StaticResource TacticalCritical}"
+                                       RadiusX="2" RadiusY="2" />
+
+                            <!-- Asıl içerik -->
+                            <Grid Grid.Column="1" Margin="10,8,10,8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Takım numarası — badge tarzı, sol başta (kırmızı = düşman) -->
+                                <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                        Background="{StaticResource TacticalCritical}"
+                                        CornerRadius="3" Padding="8,4"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,10,0">
+                                    <TextBlock FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                               Foreground="White">
+                                        <TextBlock.Text>
+                                            <Binding Path="TakimNumarasi" StringFormat="T-{0:00}" FallbackValue="—" />
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Border>
+
+                            <!-- Konum — üst satır, geniş alan -->
+                            <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                                        Orientation="Horizontal" VerticalAlignment="Center">
+                                <materialIcons:MaterialIcon Kind="MapMarker"
+                                                            Width="11" Height="11"
+                                                            Foreground="{StaticResource TacticalTextSecondary}"
+                                                            VerticalAlignment="Center" />
+                                <TextBlock FontFamily="Consolas" FontSize="11"
+                                           Foreground="{StaticResource TacticalTextSecondary}"
+                                           Margin="4,0,0,0"
+                                           TextTrimming="CharacterEllipsis">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0:F5}, {1:F5}">
+                                            <Binding Path="Enlem" />
+                                            <Binding Path="Boylam" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- İrtifa — alt satır, ikon + değer -->
+                            <StackPanel Grid.Row="1" Grid.Column="1"
+                                        Orientation="Horizontal" VerticalAlignment="Center"
+                                        Margin="0,4,0,0">
+                                <materialIcons:MaterialIcon Kind="ArrowUpBold"
+                                                            Width="12" Height="12"
+                                                            Foreground="{StaticResource TacticalAccent}"
+                                                            VerticalAlignment="Center" />
+                                <TextBlock FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TacticalTextPrimary}"
+                                           Margin="4,0,0,0">
+                                    <TextBlock.Text>
+                                        <Binding Path="Irtifa" StringFormat="{}{0:F0} m" />
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Hız — alt satır, ikon + değer -->
+                            <StackPanel Grid.Row="1" Grid.Column="2"
+                                        Orientation="Horizontal" VerticalAlignment="Center"
+                                        Margin="14,4,0,0">
+                                <materialIcons:MaterialIcon Kind="Speedometer"
+                                                            Width="12" Height="12"
+                                                            Foreground="{StaticResource TacticalAccent}"
+                                                            VerticalAlignment="Center" />
+                                <TextBlock FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TacticalTextPrimary}"
+                                           Margin="4,0,0,0">
+                                    <TextBlock.Text>
+                                        <Binding Path="Hiz" StringFormat="{}{0:F0} m/s" />
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Tıklanabilir affordance — chevron sağda, hover'da accent -->
+                            <materialIcons:MaterialIcon Grid.Row="0" Grid.Column="3" Grid.RowSpan="2"
+                                                        Kind="ChevronRight"
+                                                        Width="18" Height="18"
+                                                        Foreground="{StaticResource TacticalTextSecondary}"
+                                                        VerticalAlignment="Center"
+                                                        Margin="6,0,0,0" />
+                            </Grid>
                         </Grid>
                     </Border>
                 </DataTemplate>
@@ -81,9 +143,10 @@
 
         <!-- Boş durum -->
         <TextBlock Text="(Sunucudan rakip bilgisi bekleniyor…)"
-                   FontSize="10" FontStyle="Italic"
+                   FontSize="11" FontStyle="Italic"
                    Foreground="{StaticResource TacticalTextSecondary}"
-                   Margin="0,8,0,0">
+                   HorizontalAlignment="Center"
+                   Margin="0,12,0,4">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
                     <Setter Property="Visibility" Value="Collapsed" />

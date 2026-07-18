@@ -138,6 +138,18 @@ public partial class MainWindowViewModel : ObservableObject
             KamikazeQrText = kam.QrText;
             KamikazeAttempt = kam.AttemptCount;
 
+            // Geçen süre — şartname m. 6.2 kamikazeBaslangicZamani / kamikazeBitisZamani
+            // farkı sunucuya gönderiliyor; UI'da pilota canlı gösterim.
+            if (kam.MissionStartUtc is { } start && kam.IsActive)
+            {
+                var span = DateTime.UtcNow - start;
+                KamikazeElapsed = $"{(int)span.TotalMinutes:D2}:{span.Seconds:D2}.{span.Milliseconds:D3}";
+            }
+            else if (!kam.IsActive && kam.Phase is KamikazePhase.Idle)
+            {
+                KamikazeElapsed = "—";
+            }
+
             // Aktif olma durumu değişince fullscreen overlay'i otomatik aç/kapa.
             // Görev başlayınca pilotun dikkati buraya çekilir; biter bitmez normal moda dönülür.
             var nowActive = kam.IsActive;
@@ -195,6 +207,7 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private string _kamikazeQrText = "";
     [ObservableProperty] private int _kamikazeAttempt;
     [ObservableProperty] private bool _isKamikazeActive;
+    [ObservableProperty] private string _kamikazeElapsed = "—";
 
     // Lock state — KilitlenmeDenetim'den beslenir
     [ObservableProperty]

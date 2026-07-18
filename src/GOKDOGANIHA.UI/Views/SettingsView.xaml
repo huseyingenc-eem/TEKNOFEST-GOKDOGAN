@@ -7,200 +7,207 @@
              xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
              mc:Ignorable="d"
-             d:DesignWidth="900" d:DesignHeight="600">
+             d:DesignWidth="1100" d:DesignHeight="700">
 
     <UserControl.Resources>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
+            <!-- MinWidth 160 → 120: label ile input arası gereksiz boşluk azaltıldı.
+                 Ortak hizalanma için tüm row'lar aynı kolonu kullanır. -->
             <Setter Property="Margin" Value="0,0,12,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="MinWidth" Value="160" />
+            <Setter Property="MinWidth" Value="120" />
         </Style>
 
         <Style x:Key="FieldRow" TargetType="Grid">
-            <Setter Property="Margin" Value="0,8,0,8" />
+            <!-- Üst margin 0 — section sağ içeriğin ilk row'u başlık ile aynı yatay
+                 hizada başlar. Row'lar arası boşluk için sadece alt margin. -->
+            <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
 
-        <Style x:Key="TabHeading" TargetType="StackPanel">
-            <Setter Property="Orientation" Value="Horizontal" />
-            <Setter Property="Margin" Value="0,0,0,18" />
+        <Style x:Key="SectionDivider" TargetType="Border">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Background" Value="{StaticResource TacticalOverlayBorder}" />
+            <Setter Property="Margin" Value="0,28,0,28" />
         </Style>
-
-        <DataTemplate x:Key="TabHeadingTemplate">
-            <!-- Used as a mini-template for the big heading inside each tab body. -->
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,18" />
-        </DataTemplate>
     </UserControl.Resources>
 
     <TabControl Background="Transparent" BorderThickness="0" Padding="0">
+        <!-- Lokal TabControl Template — tab strip outer ile aynı margin/maxwidth
+             pattern'inde, içinde UniformGrid sol kolon (240) + gap (64) sonrası başlar.
+             Sonuç: tab'lar sağ içerik kolonunun üstüne hizalı, sağ kenara kadar eşit dağılır. -->
+        <TabControl.Resources>
+            <Style TargetType="TabControl">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabControl">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <!-- Tab strip container — outer StackPanel ile aynı bounding -->
+                                <Border Grid.Row="0"
+                                        HorizontalAlignment="Stretch"
+                                        MaxWidth="1100"
+                                        Margin="16,0,32,0"
+                                        Background="Transparent">
+                                    <UniformGrid Rows="1"
+                                                 IsItemsHost="True"
+                                                 Margin="304,0,0,0"
+                                                 Background="Transparent"
+                                                 KeyboardNavigation.TabIndex="1" />
+                                </Border>
+                                <Border Grid.Row="1"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter ContentSource="SelectedContent" />
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </TabControl.Resources>
 
-        <!-- ============== SUNUCU ============== -->
-        <core:IconTabItem IconKind="Server" Label="SUNUCU">
+        <!-- ============== BAĞLANTI ============== -->
+        <core:IconTabItem IconKind="Server" Label="BAĞLANTI">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="Server" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="YARIŞMA SUNUCUSU" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Takım kimlik bilgileri ve sunucu adresi"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                <StackPanel Margin="16,24,32,24" MaxWidth="1100" HorizontalAlignment="Stretch">
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Sunucu adresi" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Server.ServerBaseUrl, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="http://127.0.0.25:5000" />
-                    </Grid>
+                    <core:SettingsSection IconKind="Server"
+                                          Title="YARIŞMA SUNUCUSU"
+                                          Subtitle="Adres + kimlik bilgileri">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sunucu adresi" Style="{StaticResource FieldLabel}" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Server.ServerBaseUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="http://127.0.0.25:5000" />
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Kullanıcı adı" Style="{StaticResource FieldLabel}" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Server.TeamUsername, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Şifre" Style="{StaticResource FieldLabel}" />
+                                <PasswordBox Grid.Column="1" x:Name="PasswordInput"
+                                             PasswordChanged="OnPasswordChanged" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="160,16,0,0">
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Content="BAĞLANTIYI TEST ET"
+                                        Command="{Binding Server.TestConnectionCommand}"
+                                        Padding="18,8" FontSize="11"
+                                        Margin="0,0,10,0" />
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Content="BAĞLAN · POLL BAŞLAT"
+                                        Command="{Binding Server.ConnectCommand}"
+                                        Padding="18,8" FontSize="11" />
+                            </StackPanel>
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Kullanıcı adı" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Server.TeamUsername, UpdateSourceTrigger=PropertyChanged}" />
-                    </Grid>
+                    <Border Style="{StaticResource SectionDivider}" />
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Şifre" Style="{StaticResource FieldLabel}" />
-                        <PasswordBox Grid.Column="1" x:Name="PasswordInput"
-                                     PasswordChanged="OnPasswordChanged" />
-                    </Grid>
+                    <core:SettingsSection IconKind="AccountGroup"
+                                          Title="TAKIM"
+                                          Subtitle="Telemetri paketlerinde gönderilen kimlik">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Takım numarası" Style="{StaticResource FieldLabel}" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Team.TeamNumber, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Hakemler tarafından verilir" />
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Çağrı işareti" Style="{StaticResource FieldLabel}" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Team.CallSign, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="GÖKDOĞAN-1" />
+                            </Grid>
+                            <!-- KTR ekran görüntüsünde gizli — şartname notu yorum satırına alındı.
+                            <TextBlock Text="Takım numarası her /api/telemetri_gonder paketinde zorunlu."
+                                       FontSize="11" FontStyle="Italic"
+                                       Foreground="{StaticResource TacticalTextSecondary}"
+                                       Margin="160,12,0,0" />
+                            -->
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <StackPanel Orientation="Horizontal" Margin="160,16,0,0">
-                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Content="BAĞLANTIYI TEST ET"
-                                Command="{Binding Server.TestConnectionCommand}"
-                                Padding="18,8" FontSize="11"
-                                Margin="0,0,10,0" />
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                                Content="BAĞLAN · POLL BAŞLAT"
-                                Command="{Binding Server.ConnectCommand}"
-                                Padding="18,8" FontSize="11" />
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </core:IconTabItem>
+                    <Border Style="{StaticResource SectionDivider}" />
 
-        <!-- ============== TAKIM ============== -->
-        <core:IconTabItem IconKind="AccountGroup" Label="TAKIM">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="AccountGroup" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="TAKIM" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Telemetri paketlerinde gönderilen kimlik"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                    <core:SettingsSection IconKind="AccessPoint"
+                                          Title="TELEMETRİ"
+                                          Subtitle="İHA durum paketlerinin gönderimi">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Gönderim frekansı" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="0.5" Maximum="2.0" TickFrequency="0.5"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding Telemetry.Hz}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text>
+                                        <Binding Path="Telemetry.Hz" StringFormat="{}{0:0.0} Hz" />
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Takım numarası" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Team.TeamNumber, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Hakemler tarafından verilir" />
-                    </Grid>
+                            <CheckBox IsChecked="{Binding Telemetry.AutoReconnect}"
+                                      Content="Bağlantı kopunca otomatik yeniden bağlan"
+                                      Margin="160,10,0,0" />
+                            <CheckBox IsChecked="{Binding Telemetry.UseSimulator}"
+                                      Content="Simülatör ile sahte İHA verisi üret (gerçek MAVLink yokken)"
+                                      Margin="160,10,0,0" />
+                            <!-- KTR ekran görüntüsünde gizli — açıklayıcı notlar yorum satırına alındı.
+                            <TextBlock Text="Açıkken: 100ms tick'te FlightState sahte değerlerle dolar (sin/cos osilasyonlar). Yarışma modunda KAPALI tutun — gerçek pixhawk yokken telemetri sıfır kalır."
+                                       FontSize="10" FontStyle="Italic"
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource TacticalTextSecondary}"
+                                       Margin="184,4,0,0" />
+                            <TextBlock Text="Şartname: 2 Hz üzeri telemetri 400 döner."
+                                       FontSize="11" FontStyle="Italic"
+                                       Foreground="{StaticResource TacticalWarn}"
+                                       Margin="160,16,0,0" />
+                            -->
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Çağrı işareti" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Team.CallSign, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="GÖKDOĞAN-1" />
-                    </Grid>
-
-                    <TextBlock Text="Takım numarası her /api/telemetri_gonder paketinde zorunlu."
-                               FontSize="11" FontStyle="Italic"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="160,12,0,0" />
-                </StackPanel>
-            </ScrollViewer>
-        </core:IconTabItem>
-
-        <!-- ============== TELEMETRİ ============== -->
-        <core:IconTabItem IconKind="AccessPoint" Label="TELEMETRİ">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="AccessPoint" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="TELEMETRİ" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="İHA durum paketlerinin gönderimi"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Gönderim frekansı" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="0.5" Maximum="2.0" TickFrequency="0.5"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding Telemetry.Hz}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text>
-                                <Binding Path="Telemetry.Hz" StringFormat="{}{0:0.0} Hz" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <CheckBox IsChecked="{Binding Telemetry.AutoReconnect}"
-                              Content="Bağlantı kopunca otomatik yeniden bağlan"
-                              Margin="160,10,0,0" />
-
-                    <CheckBox IsChecked="{Binding Telemetry.UseSimulator}"
-                              Content="Simülatör ile sahte İHA verisi üret (gerçek MAVLink yokken)"
-                              Margin="160,10,0,0" />
-                    <TextBlock Text="Açıkken: 100ms tick'te FlightState sahte değerlerle dolar (sin/cos osilasyonlar). Yarışma modunda KAPALI tutun — gerçek pixhawk yokken telemetri sıfır kalır."
-                               FontSize="10" FontStyle="Italic"
-                               TextWrapping="Wrap"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="184,4,0,0" />
-
-                    <TextBlock Text="Şartname: 2 Hz üzeri telemetri 400 döner."
-                               FontSize="11" FontStyle="Italic"
-                               Foreground="{StaticResource TacticalWarn}"
-                               Margin="160,16,0,0" />
                 </StackPanel>
             </ScrollViewer>
         </core:IconTabItem>
@@ -208,293 +215,221 @@
         <!-- ============== VİDEO ============== -->
         <core:IconTabItem IconKind="Video" Label="VİDEO">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="Video" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="VİDEO AKIŞI" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Kamera bağlantısı ve kayıt profili"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="RTSP URL" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Video.RtspUrl, UpdateSourceTrigger=PropertyChanged}" />
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Profil" Style="{StaticResource FieldLabel}" />
-                        <ComboBox Grid.Column="1"
-                                  SelectedValue="{Binding Video.Preset}" SelectedValuePath="Content">
-                            <ComboBoxItem Content="720p/30" />
-                            <ComboBoxItem Content="1080p/30" />
-                            <ComboBoxItem Content="1080p/60" />
-                        </ComboBox>
-                    </Grid>
+                <StackPanel Margin="16,24,32,24" MaxWidth="1100" HorizontalAlignment="Stretch">
+                    <core:SettingsSection IconKind="Video"
+                                          Title="VİDEO AKIŞI"
+                                          Subtitle="Kamera bağlantısı ve kayıt profili">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="RTSP URL" Style="{StaticResource FieldLabel}" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Video.RtspUrl, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Profil" Style="{StaticResource FieldLabel}" />
+                                <ComboBox Grid.Column="1"
+                                          SelectedValue="{Binding Video.Preset}" SelectedValuePath="Content">
+                                    <ComboBoxItem Content="720p/30" />
+                                    <ComboBoxItem Content="1080p/30" />
+                                    <ComboBoxItem Content="1080p/60" />
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </core:SettingsSection>
                 </StackPanel>
             </ScrollViewer>
         </core:IconTabItem>
 
-        <!-- HARİTA tab kaldırıldı — ana ekranda sağ-alt FAB butonu ile popover olarak
-             açılıyor (Map FAB → ARAÇLAR / ARKA PLAN / KATMANLAR). MapSettingsViewModel ve
-             Settings.Map property'si geriye uyumlu testler için korunuyor; UI'da kullanılmıyor. -->
-
-        <!-- ============== UYARILAR ============== -->
-        <core:IconTabItem IconKind="BellRing" Label="UYARILAR">
+        <!-- ============== GÜVENLİK ============== -->
+        <core:IconTabItem IconKind="ShieldAlert" Label="GÜVENLİK">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="BellRing" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="UYARILAR" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Sesli bildirimler ve eşikler"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                <StackPanel Margin="16,24,32,24" MaxWidth="1100" HorizontalAlignment="Stretch">
 
-                    <CheckBox IsChecked="{Binding Alerts.EnableAudioAlerts}" Content="Sesli uyarılar" Margin="0,8,0,0" />
-                    <CheckBox IsChecked="{Binding Alerts.EnableLockBeep}" Content="Kilitlenme bip sesi" Margin="0,8,0,0" />
+                    <core:SettingsSection IconKind="BellRing"
+                                          Title="UYARILAR"
+                                          Subtitle="Sesli bildirimler ve eşikler">
+                        <StackPanel>
+                            <CheckBox IsChecked="{Binding Alerts.EnableAudioAlerts}" Content="Sesli uyarılar" Margin="0,8,0,0" />
+                            <CheckBox IsChecked="{Binding Alerts.EnableLockBeep}" Content="Kilitlenme bip sesi" Margin="0,8,0,0" />
 
-                    <Grid Style="{StaticResource FieldRow}" Margin="0,16,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Düşük batarya eşiği" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="18" Maximum="30" TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding Alerts.LowBatteryThreshold}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalWarn}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text>
-                                <Binding Path="Alerts.LowBatteryThreshold" StringFormat="{}{0} V" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                            <Grid Style="{StaticResource FieldRow}" Margin="0,16,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Düşük batarya eşiği" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="18" Maximum="30" TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding Alerts.LowBatteryThreshold}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalWarn}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text>
+                                        <Binding Path="Alerts.LowBatteryThreshold" StringFormat="{}{0} V" />
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
 
-                    <!-- Yakınlık eşikleri — tüketici AlertService sonraki iterasyonda eklenecek. -->
-                    <TextBlock Text="YAKLAŞMA EŞİKLERİ" FontSize="11" FontWeight="Bold"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="0,20,0,8" />
+                            <TextBlock Text="YAKLAŞMA EŞİKLERİ" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TacticalTextSecondary}"
+                                       Margin="0,20,0,8" />
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Rakip İHA yakınlığı" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="100" Maximum="2000" TickFrequency="100"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding Alerts.OpponentProximityThreshold}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text>
-                                <Binding Path="Alerts.OpponentProximityThreshold" StringFormat="{}{0:0} m" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Rakip İHA yakınlığı" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="100" Maximum="2000" TickFrequency="100"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding Alerts.OpponentProximityThreshold}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="Alerts.OpponentProximityThreshold" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="HSS tampon mesafesi" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="20" Maximum="300" TickFrequency="10"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding Alerts.HssProximityThreshold}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalCritical}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="Alerts.HssProximityThreshold" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Saha sınırı yakınlığı" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="50" Maximum="500" TickFrequency="25"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding Alerts.BoundaryProximityThreshold}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalWarn}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="Alerts.BoundaryProximityThreshold" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Haberleşme gecikme" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="100" Maximum="2000" TickFrequency="100"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding Alerts.CommLatencyThreshold}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalWarn}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="Alerts.CommLatencyThreshold" StringFormat="{}{0} ms" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="HSS tampon mesafesi" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="20" Maximum="300" TickFrequency="10"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding Alerts.HssProximityThreshold}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalCritical}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text>
-                                <Binding Path="Alerts.HssProximityThreshold" StringFormat="{}{0:0} m" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                    <Border Style="{StaticResource SectionDivider}" />
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Saha sınırı yakınlığı" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="50" Maximum="500" TickFrequency="25"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding Alerts.BoundaryProximityThreshold}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalWarn}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text>
-                                <Binding Path="Alerts.BoundaryProximityThreshold" StringFormat="{}{0:0} m" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                    <core:SettingsSection IconKind="MapMarkerRadius"
+                                          Title="GEOFENCE"
+                                          Subtitle="Uçuş sahası sınırları ve RTL parametreleri"
+                                          DataContext="{Binding Geofence}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Max irtifa" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="50" Maximum="500" TickFrequency="25"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding MaxAltitudeMeters}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="MaxAltitudeMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Max mesafe (home)" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="500" Maximum="5000" TickFrequency="250"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding MaxDistanceMeters}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="MaxDistanceMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="RTL irtifa" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="50" Maximum="300" TickFrequency="10"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding RtlAltitudeMeters}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalOk}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="RtlAltitudeMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Tampon bölge" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="25" Maximum="500" TickFrequency="25"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding BufferMeters}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalWarn}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="BufferMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Haberleşme gecikme" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="100" Maximum="2000" TickFrequency="100"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding Alerts.CommLatencyThreshold}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalWarn}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text>
-                                <Binding Path="Alerts.CommLatencyThreshold" StringFormat="{}{0} ms" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-                </StackPanel>
-            </ScrollViewer>
-        </core:IconTabItem>
+                    <Border Style="{StaticResource SectionDivider}" />
 
-        <!-- ============== GEOFENCE ============== -->
-        <core:IconTabItem IconKind="MapMarkerRadius" Label="GEOFENCE" DataContext="{Binding Geofence}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="MapMarkerRadius" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="GEOFENCE" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Uçuş sahası sınırları ve RTL parametreleri"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                    <core:SettingsSection IconKind="ShieldAlert"
+                                          Title="FAILSAFE"
+                                          Subtitle="GCS timeout ve batarya failsafe davranışları"
+                                          DataContext="{Binding Failsafe}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="GCS timeout" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="5" Maximum="30" TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding GcsTimeoutSeconds}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalCritical}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="GcsTimeoutSeconds" StringFormat="{}{0} sn" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Batarya RTL eşiği" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="10" Maximum="50" TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding BatteryRtlPercent}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalWarn}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="BatteryRtlPercent" StringFormat="{}%{0}" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <TextBlock Text="Şartname: GCS kaybı 10 sn → otonom iniş (default)"
+                                       FontSize="11" FontStyle="Italic"
+                                       Foreground="{StaticResource TacticalTextSecondary}"
+                                       Margin="160,16,0,0" />
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Max irtifa" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="50" Maximum="500" TickFrequency="25"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding MaxAltitudeMeters}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="MaxAltitudeMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Max mesafe (home)" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="500" Maximum="5000" TickFrequency="250"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding MaxDistanceMeters}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="MaxDistanceMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="RTL irtifa" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="50" Maximum="300" TickFrequency="10"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding RtlAltitudeMeters}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalOk}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="RtlAltitudeMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Tampon bölge" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="25" Maximum="500" TickFrequency="25"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding BufferMeters}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalWarn}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="BufferMeters" StringFormat="{}{0:0} m" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-                </StackPanel>
-            </ScrollViewer>
-        </core:IconTabItem>
-
-        <!-- ============== FAILSAFE ============== -->
-        <core:IconTabItem IconKind="ShieldAlert" Label="FAILSAFE" DataContext="{Binding Failsafe}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="ShieldAlert" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="FAILSAFE" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="GCS timeout ve batarya failsafe davranışları"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="GCS timeout" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="5" Maximum="30" TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding GcsTimeoutSeconds}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalCritical}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="GcsTimeoutSeconds" StringFormat="{}{0} sn" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Batarya RTL eşiği" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="10" Maximum="50" TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding BatteryRtlPercent}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalWarn}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="BatteryRtlPercent" StringFormat="{}%{0}" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <TextBlock Text="Şartname: GCS kaybı 10 sn → otonom iniş (default)"
-                               FontSize="11" FontStyle="Italic"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="160,16,0,0" />
                 </StackPanel>
             </ScrollViewer>
         </core:IconTabItem>
@@ -502,161 +437,153 @@
         <!-- ============== OTONOM ============== -->
         <core:IconTabItem IconKind="Robot" Label="OTONOM" DataContext="{Binding Autonomy}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel MaxWidth="680" Margin="32,24,32,24">
-                    <StackPanel Style="{StaticResource TabHeading}">
-                        <materialIcons:MaterialIcon Kind="Robot" Width="18" Height="18"
-                                                    Foreground="{StaticResource TacticalAccent}"
-                                                    VerticalAlignment="Center" />
-                        <TextBlock Text="OTONOM" FontSize="14" FontWeight="Bold"
-                                   Foreground="{StaticResource TacticalTextPrimary}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Hedef seçim ağırlıkları · kilitlenme kuralları · kamikaze"
-                                   FontSize="11"
-                                   Foreground="{StaticResource TacticalTextSecondary}"
-                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                <StackPanel Margin="16,24,32,24" MaxWidth="1100" HorizontalAlignment="Stretch">
 
-                    <TextBlock Text="HEDEF SEÇİM AĞIRLIKLARI" FontSize="11" FontWeight="Bold"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="0,8,0,8" />
+                    <core:SettingsSection IconKind="Target"
+                                          Title="HEDEF AĞIRLIKLARI"
+                                          Subtitle="Mesafe · açı · geçmiş · risk skoru">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Mesafe (w₁)" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding WeightDistance}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="WeightDistance" StringFormat="{}{0:0.00}" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Açı uyumu (w₂)" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding WeightAngle}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="WeightAngle" StringFormat="{}{0:0.00}" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Hedef geçmişi (w₃)" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding WeightHistory}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="WeightHistory" StringFormat="{}{0:0.00}" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="HSS riski (w₄)" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding WeightRisk}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalCritical}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="WeightRisk" StringFormat="{}{0:0.00}" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Mesafe (w₁)" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding WeightDistance}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="WeightDistance" StringFormat="{}{0:0.00}" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                    <Border Style="{StaticResource SectionDivider}" />
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Açı uyumu (w₂)" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding WeightAngle}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="WeightAngle" StringFormat="{}{0:0.00}" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                    <core:SettingsSection IconKind="Crosshairs"
+                                          Title="KİLİTLENME"
+                                          Subtitle="Şartname m. 6.1.1 — tolerans, pencere, gerekli süre">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Boyut toleransı" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="3" Maximum="10" TickFrequency="1"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding LockTolerancePercent}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="LockTolerancePercent" StringFormat="{}%{0:0}" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Pencere süresi" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="3" Maximum="10" TickFrequency="0.5"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding LockWindowSeconds}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="LockWindowSeconds" StringFormat="{}{0:0.0} sn" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Gerekli süre" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="2" Maximum="8" TickFrequency="0.5"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding LockRequiredSeconds}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="LockRequiredSeconds" StringFormat="{}{0:0.0} sn" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Hedef geçmişi (w₃)" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding WeightHistory}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="WeightHistory" StringFormat="{}{0:0.00}" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                    <Border Style="{StaticResource SectionDivider}" />
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="HSS riski (w₄)" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="0" Maximum="1" TickFrequency="0.05"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding WeightRisk}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalCritical}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="WeightRisk" StringFormat="{}{0:0.00}" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
+                    <core:SettingsSection IconKind="Bomb"
+                                          Title="KAMİKAZE"
+                                          Subtitle="TYF: 100m → 45° dalış → 30m pas geç">
+                        <StackPanel>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Başlangıç irtifası" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="50" Maximum="200" TickFrequency="10"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding KamikazeApproachAltitude}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalAccent}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="KamikazeApproachAltitude" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Dalış açısı" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="20" Maximum="70" TickFrequency="5"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding KamikazeDiveAngle}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalWarn}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="KamikazeDiveAngle" StringFormat="{}{0:0}°" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Pas geç irtifası" Style="{StaticResource FieldLabel}" />
+                                <Slider Grid.Column="1" Minimum="20" Maximum="80" TickFrequency="5"
+                                        IsSnapToTickEnabled="True"
+                                        Value="{Binding KamikazePullUpAltitude}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
+                                           Foreground="{StaticResource TacticalOk}"
+                                           VerticalAlignment="Center" TextAlignment="Right">
+                                    <TextBlock.Text><Binding Path="KamikazePullUpAltitude" StringFormat="{}{0:0} m" /></TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </core:SettingsSection>
 
-                    <TextBlock Text="KİLİTLENME KURALLARI" FontSize="11" FontWeight="Bold"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="0,20,0,8" />
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Boyut toleransı" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="3" Maximum="10" TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding LockTolerancePercent}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="LockTolerancePercent" StringFormat="{}%{0:0}" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Pencere süresi" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="3" Maximum="10" TickFrequency="0.5"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding LockWindowSeconds}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="LockWindowSeconds" StringFormat="{}{0:0.0} sn" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Gerekli süre" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="2" Maximum="8" TickFrequency="0.5"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding LockRequiredSeconds}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="LockRequiredSeconds" StringFormat="{}{0:0.0} sn" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <TextBlock Text="KAMİKAZE FAZLARI" FontSize="11" FontWeight="Bold"
-                               Foreground="{StaticResource TacticalTextSecondary}"
-                               Margin="0,20,0,8" />
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Başlangıç irtifası" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="50" Maximum="200" TickFrequency="10"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding KamikazeApproachAltitude}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalAccent}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="KamikazeApproachAltitude" StringFormat="{}{0:0} m" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Dalış açısı" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="20" Maximum="70" TickFrequency="5"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding KamikazeDiveAngle}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalWarn}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="KamikazeDiveAngle" StringFormat="{}{0:0}°" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
-
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Pas geç irtifası" Style="{StaticResource FieldLabel}" />
-                        <Slider Grid.Column="1" Minimum="20" Maximum="80" TickFrequency="5"
-                                IsSnapToTickEnabled="True"
-                                Value="{Binding KamikazePullUpAltitude}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" FontFamily="Consolas" FontSize="12" MinWidth="60"
-                                   Foreground="{StaticResource TacticalOk}"
-                                   VerticalAlignment="Center" TextAlignment="Right">
-                            <TextBlock.Text><Binding Path="KamikazePullUpAltitude" StringFormat="{}{0:0} m" /></TextBlock.Text>
-                        </TextBlock>
-                    </Grid>
                 </StackPanel>
             </ScrollViewer>
         </core:IconTabItem>

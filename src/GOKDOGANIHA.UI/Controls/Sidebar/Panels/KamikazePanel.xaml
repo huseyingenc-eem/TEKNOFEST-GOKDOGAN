@@ -12,9 +12,9 @@
         <!-- Faz dot taban stili — 4 dot ortak; her birinin kendi DataTrigger zinciri var.
              Hata fazında HEPSİ kırmızı yansır (visual feedback: görev başarısız). -->
         <Style x:Key="PhaseDot" TargetType="Border">
-            <Setter Property="Width" Value="10" />
-            <Setter Property="Height" Value="10" />
-            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
+            <Setter Property="CornerRadius" Value="7" />
             <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
             <Setter Property="BorderBrush" Value="{StaticResource TacticalOverlayBorder}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -143,19 +143,55 @@
             </Border>
 
             <!-- Label row -->
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="İNTİKAL" Style="{StaticResource MetricLabel}" HorizontalAlignment="Center" Margin="0,4,0,0" />
-            <TextBlock Grid.Row="1" Grid.Column="1" Text="DALIŞ" Style="{StaticResource MetricLabel}" HorizontalAlignment="Center" Margin="0,4,0,0" />
-            <TextBlock Grid.Row="1" Grid.Column="2" Text="QR" Style="{StaticResource MetricLabel}" HorizontalAlignment="Center" Margin="0,4,0,0" />
-            <TextBlock Grid.Row="1" Grid.Column="3" Text="PAS GEÇ" Style="{StaticResource MetricLabel}" HorizontalAlignment="Center" Margin="0,4,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="İNTİKAL" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{StaticResource TacticalTextSecondary}"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="DALIŞ" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{StaticResource TacticalTextSecondary}"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="QR" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{StaticResource TacticalTextSecondary}"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="3" Text="PAS GEÇ" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{StaticResource TacticalTextSecondary}"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" />
         </Grid>
 
+        <!-- GEÇEN SÜRE — büyük, prominent. Şartname m. 6.2 kamikazeBaslangicZamani
+             ↔ kamikazeBitisZamani farkı sunucuya bildirilir; pilota canlı görünüm. -->
+        <Border Background="{StaticResource TacticalGlass}"
+                BorderBrush="{StaticResource TacticalAccent}"
+                BorderThickness="1" CornerRadius="4"
+                Padding="12,10" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="GEÇEN SÜRE"
+                               FontSize="10" FontWeight="SemiBold"
+                               Foreground="{StaticResource TacticalTextSecondary}" />
+                    <TextBlock Text="dak:sn.ms"
+                               FontSize="9"
+                               Foreground="{StaticResource TacticalTextSecondary}"
+                               Opacity="0.6" Margin="0,2,0,0" />
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding KamikazeElapsed}"
+                           FontFamily="Consolas" FontSize="22" FontWeight="Bold"
+                           Foreground="{StaticResource TacticalAccent}"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
         <!-- Durum metni — FSM'den canlı (renk severity'ye göre) -->
-        <Border Background="{StaticResource TacticalSurface}"
+        <Border Background="{StaticResource TacticalGlass}"
                 BorderBrush="{StaticResource TacticalOverlayBorder}"
-                BorderThickness="1" CornerRadius="3"
-                Padding="8,6" Margin="0,0,0,8">
+                BorderThickness="1" CornerRadius="4"
+                Padding="12,10" Margin="0,0,0,10">
             <TextBlock Text="{Binding KamikazeStatus}"
-                       FontSize="10" FontWeight="SemiBold"
+                       FontSize="12" FontWeight="SemiBold"
                        TextWrapping="Wrap">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
@@ -174,7 +210,7 @@
         </Border>
 
         <!-- Detaylar -->
-        <Grid Margin="0,0,0,8">
+        <Grid Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -185,24 +221,30 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="QR KONUM" Style="{StaticResource MetricLabel}" Margin="0,0,12,3" />
-            <TextBlock Grid.Row="0" Grid.Column="1" FontFamily="Consolas" FontSize="10"
-                       Foreground="{StaticResource TacticalAccent}">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="QR KONUM"
+                       Style="{StaticResource MetricLabel}" Margin="0,0,16,6"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Row="0" Grid.Column="1" FontFamily="Consolas" FontSize="12"
+                       Foreground="{StaticResource TacticalAccent}" Margin="0,0,0,6">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:F4}, {1:F4}" FallbackValue="—">
+                    <MultiBinding StringFormat="{}{0:F5}, {1:F5}" FallbackValue="—">
                         <Binding Path="MapVm.QrTarget.Enlem" />
                         <Binding Path="MapVm.QrTarget.Boylam" />
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="QR METNİ" Style="{StaticResource MetricLabel}" Margin="0,0,12,3" />
-            <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="10"
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="QR METNİ"
+                       Style="{StaticResource MetricLabel}" Margin="0,0,16,6"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="12"
                        Text="{Binding KamikazeQrText, FallbackValue=—, TargetNullValue=—}"
-                       Foreground="{StaticResource TacticalOk}" />
+                       Foreground="{StaticResource TacticalOk}" Margin="0,0,0,6" />
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="DENEME" Style="{StaticResource MetricLabel}" Margin="0,0,12,0" />
-            <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="10"
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="DENEME"
+                       Style="{StaticResource MetricLabel}" Margin="0,0,16,0"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold"
                        Foreground="{StaticResource TacticalTextPrimary}">
                 <TextBlock.Text>
                     <Binding Path="KamikazeAttempt" StringFormat="{}{0} / 2" />
@@ -210,58 +252,44 @@
             </TextBlock>
         </Grid>
 
-        <!-- Aksiyon butonları — Başlat / Mock QR (debug) / İptal -->
-        <UniformGrid Columns="3">
-            <Button Margin="0,0,2,0"
-                    Padding="6,6"
-                    Background="#3A2A10"
-                    BorderBrush="#6A4A20"
-                    BorderThickness="1"
-                    Foreground="{StaticResource TacticalWarn}"
-                    FontWeight="Bold" FontSize="9"
-                    Cursor="Hand"
-                    Command="{Binding StartKamikazeCommand}"
-                    ToolTip="QR koordinatına kamikaze görevi başlat">
-                <StackPanel Orientation="Horizontal">
-                    <materialIcons:MaterialIcon Kind="Bomb" Width="11" Height="11" VerticalAlignment="Center" />
-                    <TextBlock Text="BAŞLAT" Margin="4,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
-            <!-- QR SİM debug butonu — yalnızca Settings'te simülatör açıkken görünür.
-                 Üretim modunda gizli, jüri ekranında karışıklık yaratmaz. -->
-            <Button Margin="2,0,2,0"
-                    Padding="6,6"
-                    Background="{StaticResource TacticalSurface}"
-                    BorderBrush="{StaticResource TacticalOverlayBorder}"
-                    BorderThickness="1"
-                    Foreground="{StaticResource TacticalAccent}"
-                    FontWeight="SemiBold" FontSize="9"
-                    Cursor="Hand"
-                    Command="{Binding SimulateQrReadCommand}"
-                    Visibility="{Binding Settings.Telemetry.UseSimulator,
-                                 Converter={x:Static md:BooleanToVisibilityConverter.CollapsedInstance}}"
-                    ToolTip="DEBUG: gerçek kamera/YOLO yokken FSM'i ileri it">
-                <StackPanel Orientation="Horizontal">
-                    <materialIcons:MaterialIcon Kind="QrcodeScan" Width="11" Height="11" VerticalAlignment="Center" />
-                    <TextBlock Text="QR SİM" Margin="4,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
-            <Button Margin="2,0,0,0"
-                    Padding="6,6"
-                    Background="#3A2020"
-                    BorderBrush="#6A3030"
-                    BorderThickness="1"
-                    Foreground="{StaticResource TacticalCritical}"
-                    FontWeight="Bold" FontSize="9"
-                    Cursor="Hand"
-                    Command="{Binding AbortKamikazeCommand}"
-                    IsEnabled="{Binding IsKamikazeActive}"
-                    ToolTip="Görevi iptal et — pull-up ve eve dönüş">
-                <StackPanel Orientation="Horizontal">
-                    <materialIcons:MaterialIcon Kind="StopCircle" Width="11" Height="11" VerticalAlignment="Center" />
-                    <TextBlock Text="İPTAL" Margin="4,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
-        </UniformGrid>
+        <!-- Aksiyon: BAŞLAT — tek başına büyük, prominent. İPTAL fullscreen overlay'de
+             büyük ABORT butonu olarak zaten var (görev anında pilot oraya odaklanır).
+             QR SİM yalnızca debug (simulator on) modunda küçük altta görünür. -->
+        <Button Padding="14,12"
+                Background="#3A2A10"
+                BorderBrush="#6A4A20"
+                BorderThickness="1"
+                Foreground="{StaticResource TacticalWarn}"
+                FontWeight="Bold" FontSize="13"
+                Cursor="Hand"
+                Command="{Binding StartKamikazeCommand}"
+                ToolTip="QR koordinatına kamikaze görevi başlat">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="Bomb" Width="16" Height="16" VerticalAlignment="Center" />
+                <TextBlock Text="KAMİKAZE GÖREVİNİ BAŞLAT"
+                           Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
+
+        <!-- QR SİM debug butonu — yalnızca Settings'te simülatör açıkken görünür.
+             Ufak, ikincil; jüri ekranında karışıklık yaratmaz. -->
+        <Button Margin="0,8,0,0"
+                Padding="8,6"
+                Background="{StaticResource TacticalSurface}"
+                BorderBrush="{StaticResource TacticalOverlayBorder}"
+                BorderThickness="1"
+                Foreground="{StaticResource TacticalAccent}"
+                FontWeight="SemiBold" FontSize="11"
+                Cursor="Hand"
+                HorizontalAlignment="Stretch"
+                Command="{Binding SimulateQrReadCommand}"
+                Visibility="{Binding Settings.Telemetry.UseSimulator,
+                             Converter={x:Static md:BooleanToVisibilityConverter.CollapsedInstance}}"
+                ToolTip="DEBUG: gerçek kamera/YOLO yokken FSM'i ileri it">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <materialIcons:MaterialIcon Kind="QrcodeScan" Width="12" Height="12" VerticalAlignment="Center" />
+                <TextBlock Text="QR SİM (DEBUG)" Margin="6,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
     </StackPanel>
 </UserControl>

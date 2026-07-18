@@ -18,13 +18,13 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="BAĞLANTI"
-                   Style="{StaticResource MetricLabel}" Margin="0,0,12,4" />
-        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
-            <Ellipse Width="8" Height="8" VerticalAlignment="Center">
+                   Style="{StaticResource MetricLabel}" Margin="0,0,16,8"
+                   VerticalAlignment="Center" />
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <Ellipse Width="10" Height="10" VerticalAlignment="Center">
                 <Ellipse.Style>
                     <Style TargetType="Ellipse">
                         <Setter Property="Fill" Value="{StaticResource TacticalCritical}" />
@@ -36,7 +36,7 @@
                     </Style>
                 </Ellipse.Style>
             </Ellipse>
-            <TextBlock Margin="6,0,0,0" FontFamily="Consolas" FontSize="11">
+            <TextBlock Margin="8,0,0,0" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Text" Value="Bağlı değil" />
@@ -53,40 +53,39 @@
         </StackPanel>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="GECİKME"
-                   Style="{StaticResource MetricLabel}" Margin="0,4,12,4" />
-        <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="11"
-                   Foreground="{StaticResource TacticalTextPrimary}" Margin="0,4,0,4">
+                   Style="{StaticResource MetricLabel}" Margin="0,0,16,8"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{StaticResource TacticalTextPrimary}" Margin="0,0,0,8">
             <TextBlock.Text>
                 <Binding Path="ServerLatencyLiveMs" StringFormat="{}{0:F0} ms" FallbackValue="— ms" />
             </TextBlock.Text>
         </TextBlock>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="TELEMETRİ Hz"
-                   Style="{StaticResource MetricLabel}" Margin="0,0,12,4" />
-        <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="11"
-                   Foreground="{StaticResource TacticalAccent}">
+                   Style="{StaticResource MetricLabel}" Margin="0,0,16,8"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{StaticResource TacticalAccent}" Margin="0,0,0,8">
             <TextBlock.Text>
                 <Binding Path="TelemetryHzMeasured" StringFormat="{}{0:F1} Hz" FallbackValue="— Hz" />
             </TextBlock.Text>
         </TextBlock>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="SUNUCU SAATİ"
-                   Style="{StaticResource MetricLabel}" Margin="0,4,12,4" />
-        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ServerTime}"
-                   FontFamily="Consolas" FontSize="11"
-                   Foreground="#F1C40F" Margin="0,4,0,4" />
-
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="SON DURUM"
-                   Style="{StaticResource MetricLabel}" Margin="0,0,12,4" />
-        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TelemetryStatus}"
-                   FontFamily="Consolas" FontSize="11"
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="SON DURUM"
+                   Style="{StaticResource MetricLabel}" Margin="0,0,16,8"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TelemetryStatus}"
+                   FontFamily="Consolas" FontSize="13"
                    Foreground="{StaticResource TacticalOk}"
+                   Margin="0,0,0,8"
                    TextTrimming="CharacterEllipsis" />
 
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="LINK RSSI"
-                   Style="{StaticResource MetricLabel}" Margin="0,4,12,0" />
-        <TextBlock Grid.Row="5" Grid.Column="1" Margin="0,4,0,0"
-                   FontFamily="Consolas" FontSize="11"
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="LINK RSSI"
+                   Style="{StaticResource MetricLabel}" Margin="0,0,16,0"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Row="4" Grid.Column="1"
+                   FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
                    Foreground="{StaticResource TacticalTextPrimary}">
             <TextBlock.Text>
                 <Binding Path="LinkRssi" StringFormat="{}{0} dBm" FallbackValue="— dBm" />

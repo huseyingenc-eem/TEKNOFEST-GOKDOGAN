@@ -19,8 +19,9 @@
         <ItemsControl x:Name="AlertItems">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock FontFamily="Consolas" FontSize="11" Margin="0,0,0,3"
-                               TextWrapping="Wrap">
+                    <TextBlock FontFamily="Consolas" FontSize="12" Margin="0,0,0,5"
+                               TextWrapping="Wrap"
+                               LineHeight="18">
                         <Run Text="{Binding TimeLabel, Mode=OneTime}"
                              Foreground="{StaticResource TacticalTextSecondary}" />
                         <Run Text=" " />

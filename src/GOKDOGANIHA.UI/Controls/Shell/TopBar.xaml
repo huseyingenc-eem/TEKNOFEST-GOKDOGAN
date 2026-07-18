@@ -83,7 +83,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!-- ========== LEFT: Identity (logo + callsign) ========== -->
@@ -98,27 +97,10 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- ========== CENTER: Server clock ========== -->
+            <!-- ========== RIGHT: Active overlay chips · MOD · LINK · API · Settings ==========
+                 BAT ve SUNUCU SAATİ artık sidebar'ın üst header'ında (RightSidebar.xaml). -->
             <StackPanel Grid.Column="1" Orientation="Horizontal"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                <materialIcons:MaterialIcon Kind="ClockOutline"
-                                            Width="16" Height="16"
-                                            Foreground="{StaticResource TacticalTextSecondary}"
-                                            VerticalAlignment="Center" />
-                <TextBlock Text="SUNUCU SAATİ"
-                           FontSize="10" FontWeight="SemiBold"
-                           Foreground="{StaticResource TacticalTextSecondary}"
-                           Margin="6,0,10,0"
-                           VerticalAlignment="Center" />
-                <TextBlock Text="{Binding ServerTime}"
-                           FontFamily="Consolas" FontSize="18"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TacticalTextPrimary}"
-                           VerticalAlignment="Center" />
-            </StackPanel>
-
-            <!-- ========== RIGHT: Active overlay · Mode · Link · API · Battery · Settings ========== -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        HorizontalAlignment="Right" VerticalAlignment="Center">
 
                 <!-- Active overlay chip — Camera -->
                 <Border Background="#3300D1C7"
@@ -166,8 +148,9 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Telemetry / status pills -->
-                <core:StatusPill IconKind="Cog"
+                <!-- Telemetry / status pills — MOD ikonu Robot (otonom/manuel ayrımı için
+                     anlamlı), Cog ile Settings butonunun karışmaması için. -->
+                <core:StatusPill IconKind="Robot"
                                  IconBrush="{StaticResource TacticalAccent}"
                                  Label="MOD"
                                  Value="{Binding FlightMode}" />
@@ -180,11 +163,6 @@
                                  IconBrush="{StaticResource TacticalAccent}"
                                  Label="API"
                                  Value="{Binding ServerLatencyMs, StringFormat={}{0} ms}"
-                                 Margin="8,0,0,0" />
-                <core:StatusPill IconKind="BatteryHigh"
-                                 IconBrush="{StaticResource TacticalOk}"
-                                 Label="BAT"
-                                 Value="{Binding Battery, StringFormat={}{0}%}"
                                  Margin="8,0,0,0" />
 
                 <!-- Settings pill-button (matches StatusPill geometry) -->

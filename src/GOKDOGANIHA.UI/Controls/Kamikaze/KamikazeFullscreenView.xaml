@@ -64,70 +64,107 @@
                 </Border>
             </StackPanel>
 
-            <!-- 4 dot phase indicator: İNTİKAL · DALIŞ · QR · PAS GEÇ -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Style="{StaticResource BigMetricLabel}" Margin="0,0,8,0"
-                           VerticalAlignment="Center"
+            <!-- 4 faz indicator: İNTİKAL · DALIŞ · QR · PAS GEÇ — her birinin altında etiket -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <!-- Üstte status text -->
+                <TextBlock Style="{StaticResource BigMetricLabel}"
+                           HorizontalAlignment="Right"
+                           Margin="0,0,0,8"
                            Text="{Binding KamikazeStatus}" />
-                <Border Width="8" Height="8" CornerRadius="4" Margin="2,0">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Intikal">
-                                    <Setter Property="Background" Value="{StaticResource TacticalAccent}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Dalis"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="QrAriyor"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="QrOkundu"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                </Border>
-                <Border Width="8" Height="8" CornerRadius="4" Margin="2,0">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Dalis"><Setter Property="Background" Value="{StaticResource TacticalWarn}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="QrAriyor"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="QrOkundu"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                </Border>
-                <Border Width="8" Height="8" CornerRadius="4" Margin="2,0">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="QrAriyor"><Setter Property="Background" Value="{StaticResource TacticalAccent}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="QrOkundu"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                </Border>
-                <Border Width="8" Height="8" CornerRadius="4" Margin="2,0">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalAccent}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
-                                <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                </Border>
+                <!-- 4 dot + label tek satırda -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0" HorizontalAlignment="Center">
+                        <Border Width="12" Height="12" CornerRadius="6"
+                                HorizontalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Intikal"><Setter Property="Background" Value="{StaticResource TacticalAccent}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Dalis"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="QrAriyor"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="QrOkundu"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <TextBlock Text="İNTİKAL" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalTextSecondary}"
+                                   HorizontalAlignment="Center" Margin="0,6,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,16,0" HorizontalAlignment="Center">
+                        <Border Width="12" Height="12" CornerRadius="6"
+                                HorizontalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Dalis"><Setter Property="Background" Value="{StaticResource TacticalWarn}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="QrAriyor"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="QrOkundu"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <TextBlock Text="DALIŞ" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalTextSecondary}"
+                                   HorizontalAlignment="Center" Margin="0,6,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="0,0,16,0" HorizontalAlignment="Center">
+                        <Border Width="12" Height="12" CornerRadius="6"
+                                HorizontalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="QrAriyor"><Setter Property="Background" Value="{StaticResource TacticalAccent}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="QrOkundu"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <TextBlock Text="QR" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalTextSecondary}"
+                                   HorizontalAlignment="Center" Margin="0,6,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                        <Border Width="12" Height="12" CornerRadius="6"
+                                HorizontalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource TacticalSurface}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="PasGec"><Setter Property="Background" Value="{StaticResource TacticalAccent}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Tamam"><Setter Property="Background" Value="{StaticResource TacticalOk}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding KamikazePhase}" Value="Hata"><Setter Property="Background" Value="{StaticResource TacticalCritical}" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <TextBlock Text="PAS GEÇ" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalTextSecondary}"
+                                   HorizontalAlignment="Center" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </Grid>
 
@@ -424,21 +461,86 @@
             </Border>
         </Grid>
 
-        <!-- ============== ALT: ABORT KAMİKAZE BÜYÜK BUTON ============== -->
-        <Button Grid.Row="2" Margin="0,16,0,0"
-                Padding="20,16"
-                Background="#3A0A0A"
-                BorderBrush="{StaticResource TacticalCritical}"
-                BorderThickness="2"
-                Foreground="{StaticResource TacticalCritical}"
-                FontSize="18" FontWeight="Bold"
-                Cursor="Hand"
-                Command="{Binding AbortKamikazeCommand}">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <materialIcons:MaterialIcon Kind="AlertOctagon" Width="22" Height="22"
-                                            VerticalAlignment="Center" />
-                <TextBlock Text="ABORT KAMİKAZE" Margin="12,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-        </Button>
+        <!-- ============== ALT: GEÇEN SÜRE + ABORT BUTONU ============== -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- GEÇEN SÜRE — büyük, prominent. Şartname m. 6.2 görev süresi. -->
+            <Border Grid.Column="0" Margin="0,0,16,0"
+                    Background="#CC0A1620"
+                    BorderBrush="{StaticResource TacticalAccent}"
+                    BorderThickness="1" CornerRadius="6"
+                    Padding="20,12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialIcons:MaterialIcon Kind="Timer" Width="22" Height="22"
+                                                Foreground="{StaticResource TacticalAccent}"
+                                                VerticalAlignment="Center" />
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="GEÇEN SÜRE"
+                                   FontSize="9" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalTextSecondary}" />
+                        <TextBlock Text="{Binding KamikazeElapsed}"
+                                   FontFamily="Consolas" FontSize="26" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalAccent}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ABORT KAMİKAZE — büyük, kırmızı, içerik açıkça görünür. -->
+            <Button Grid.Column="1"
+                    Cursor="Hand"
+                    Command="{Binding AbortKamikazeCommand}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Padding" Value="20,16" />
+                        <Setter Property="Background" Value="#3A0A0A" />
+                        <Setter Property="BorderBrush" Value="{StaticResource TacticalCritical}" />
+                        <Setter Property="BorderThickness" Value="2" />
+                        <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                        <Setter Property="FontSize" Value="18" />
+                        <Setter Property="FontWeight" Value="Bold" />
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="6"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            TextElement.Foreground="{TemplateBinding Foreground}"
+                                            TextElement.FontSize="{TemplateBinding FontSize}"
+                                            TextElement.FontWeight="{TemplateBinding FontWeight}" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{StaticResource TacticalCritical}" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <materialIcons:MaterialIcon Kind="AlertOctagon" Width="24" Height="24"
+                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                VerticalAlignment="Center" />
+                    <TextBlock Text="ABORT — GÖREVİ İPTAL ET"
+                               Margin="14,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
     </Grid>
 </UserControl>

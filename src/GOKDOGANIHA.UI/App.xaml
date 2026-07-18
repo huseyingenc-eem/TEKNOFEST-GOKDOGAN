@@ -19,6 +19,7 @@
                 <ResourceDictionary Source="Core/CollapsiblePanelFrame.xaml" />
                 <ResourceDictionary Source="Core/OverlayHost.xaml" />
                 <ResourceDictionary Source="Core/TacticalTabs.xaml" />
+                <ResourceDictionary Source="Core/SettingsSection.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Global converters — sidebar panellerinde + harita popover'da paylaşılır. -->

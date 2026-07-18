@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
              xmlns:core="clr-namespace:GOKDOGANIHA.UI.Core"
              xmlns:alerts="clr-namespace:GOKDOGANIHA.UI.Controls.Alerts"
              xmlns:panels="clr-namespace:GOKDOGANIHA.UI.Controls.Sidebar.Panels"
@@ -15,16 +16,105 @@
          GÖREV  → Rakipler/Kilitlenme/Kamikaze (muharebe odaklı)
          SİSTEM → Sunucu/Güvenlik/Komutlar (operasyonel)
          GÜNLÜK → Olay log (geniş alan) -->
-    <Border Background="{StaticResource TacticalBgDeep}"
+    <Border Background="{StaticResource TacticalGlass}"
             BorderBrush="{StaticResource TacticalOverlayBorder}"
-            BorderThickness="1,0,0,0"
-            Opacity="0.96">
-        <TabControl Background="Transparent" BorderThickness="0" Padding="0"
-                    SelectedIndex="0">
+            BorderThickness="1,0,0,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- ========== HEADER: Batarya · Sunucu Saati ==========
+                 Tek kart içinde 2 sütun (BAT 1 tab genişliği, SAAT kalan). Aralarında
+                 ince dikey ayraç. Renkler birebir aynı (tek Border = tek bg), çizgi
+                 hizalaması net. -->
+            <Border Grid.Row="0"
+                    Background="{StaticResource TacticalGlass}"
+                    BorderBrush="{StaticResource TacticalOverlayBorder}"
+                    BorderThickness="1" CornerRadius="4"
+                    Margin="10,10,10,10">
+                <!-- TopBar ile aynı: kart altında yumuşak gölge → bitiş çizgisi etkisi -->
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" Direction="270"
+                                      ShadowDepth="3" BlurRadius="18" Opacity="0.45" />
+                </Border.Effect>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!-- 1 tab genişliği (sidebar iç ≈ 400, /3 ≈ 130) -->
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- BAT — sol, tek satır (SAAT ile aynı yükseklik):
+                         [icon] BAT [progress bar] % -->
+                    <Grid Grid.Column="0" Margin="12,7,12,7" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialIcons:MaterialIcon Grid.Column="0"
+                                                    Kind="BatteryHigh"
+                                                    Width="14" Height="14"
+                                                    Foreground="{StaticResource TacticalOk}"
+                                                    VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="BAT"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TacticalTextSecondary}"
+                                   Margin="4,0,8,0"
+                                   VerticalAlignment="Center" />
+                        <ProgressBar Grid.Column="2"
+                                     Minimum="0" Maximum="100"
+                                     Value="{Binding Battery, Mode=OneWay}"
+                                     Height="6" VerticalAlignment="Center"
+                                     Background="{StaticResource TacticalBgDeep}"
+                                     BorderThickness="0"
+                                     Foreground="{StaticResource TacticalOk}" />
+                        <TextBlock Grid.Column="3" Text="{Binding Battery, StringFormat={}{0}%}"
+                                   FontFamily="Consolas" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   Margin="8,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- Dikey ayraç -->
+                    <Border Grid.Column="1"
+                            Background="{StaticResource TacticalOverlayBorder}"
+                            Margin="0,8" />
+
+                    <!-- SAAT — sağ -->
+                    <Grid Grid.Column="2" Margin="12,7,12,7">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+                                    VerticalAlignment="Center">
+                            <materialIcons:MaterialIcon Kind="ClockOutline"
+                                                        Width="14" Height="14"
+                                                        Foreground="{StaticResource TacticalAccent}"
+                                                        VerticalAlignment="Center" />
+                            <TextBlock Text="SUNUCU SAATİ"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TacticalTextSecondary}"
+                                       Margin="6,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding ServerTime}"
+                                   FontFamily="Consolas" FontSize="15" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalTextPrimary}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ========== TAB CONTROL ========== -->
+            <TabControl Grid.Row="1"
+                        Background="Transparent" BorderThickness="0" Padding="0"
+                        SelectedIndex="0">
             <core:IconTabItem IconKind="Sword" Label="GÖREV">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              Padding="8,8,8,8">
+                              Padding="10,4,10,12">
                     <StackPanel>
                         <core:CollapsiblePanelFrame Header="RAKİP İHA'LAR"
                                                     IconKind="Airplane"
@@ -50,7 +140,7 @@
             <core:IconTabItem IconKind="Cog" Label="SİSTEM">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              Padding="8,8,8,8">
+                              Padding="10,4,10,12">
                     <StackPanel>
                         <core:CollapsiblePanelFrame Header="SUNUCU HABERLEŞME"
                                                     IconKind="Web"
@@ -82,6 +172,7 @@
                     <alerts:AlertConsole />
                 </Border>
             </core:IconTabItem>
-        </TabControl>
+            </TabControl>
+        </Grid>
     </Border>
 </UserControl>

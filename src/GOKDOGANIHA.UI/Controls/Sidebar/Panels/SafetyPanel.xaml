@@ -9,7 +9,16 @@
     <UserControl.Resources>
         <!-- Renk LED satırı stili — diğer panellerle DRY tutarlılık. -->
         <Style x:Key="StatusRow" TargetType="Grid">
-            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="StatusValue" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="StatusLabel" TargetType="TextBlock" BasedOn="{StaticResource MetricLabel}">
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </UserControl.Resources>
 
@@ -23,10 +32,10 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="ALAN SINIRI"
-                       Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11">
+                       Style="{StaticResource StatusLabel}" />
+            <TextBlock Grid.Column="1">
                 <TextBlock.Style>
-                    <Style TargetType="TextBlock">
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource StatusValue}">
                         <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsInsideBoundary}" Value="False">
@@ -48,10 +57,10 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="HSS İHLALİ"
-                       Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11">
+                       Style="{StaticResource StatusLabel}" />
+            <TextBlock Grid.Column="1">
                 <TextBlock.Style>
-                    <Style TargetType="TextBlock">
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource StatusValue}">
                         <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding HssViolationCount}" Value="0">
@@ -77,8 +86,8 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="MANUEL GEÇİŞ"
-                       Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11"
+                       Style="{StaticResource StatusLabel}" />
+            <TextBlock Grid.Column="1" Style="{StaticResource StatusValue}"
                        Foreground="{StaticResource TacticalWarn}">
                 <TextBlock.Text>
                     <Binding Path="ManualTransitionCount" StringFormat="{}{0} kez" />
@@ -93,10 +102,10 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="FAILSAFE"
-                       Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11">
+                       Style="{StaticResource StatusLabel}" />
+            <TextBlock Grid.Column="1">
                 <TextBlock.Style>
-                    <Style TargetType="TextBlock">
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource StatusValue}">
                         <Setter Property="Text" Value="Hazır" />
                         <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                         <Style.Triggers>
@@ -117,8 +126,8 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="TELEMETRİ KOPMA"
-                       Style="{StaticResource MetricLabel}" />
-            <TextBlock Grid.Column="1" FontFamily="Consolas" FontSize="11"
+                       Style="{StaticResource StatusLabel}" />
+            <TextBlock Grid.Column="1" Style="{StaticResource StatusValue}"
                        Foreground="{StaticResource TacticalTextPrimary}">
                 <TextBlock.Text>
                     <Binding Path="CommDropoutCount" StringFormat="{}{0} kez" />
