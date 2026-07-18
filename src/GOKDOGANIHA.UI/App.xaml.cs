@@ -1,10 +1,12 @@
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using GOKDOGANIHA.Core.Abstractions;
 using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models;
 using GOKDOGANIHA.Core.Models.Alerts;
+using GOKDOGANIHA.Core.Models.Connection;
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.Core.Services.Alerts;
 using GOKDOGANIHA.Core.Services.Alerts.Monitors;
@@ -32,6 +34,12 @@ public partial class App : Application
     public static FlightState FlightState { get; } = new();
     public static IClock Clock { get; } = new SystemClock();
     public static AlertBus AlertBus { get; } = new();
+
+    // Bağlantı durumu göstergeleri — servisler ilerletir, UI (TopBar) gözlemler.
+    // Tek ortak dil (ConnectionStatus) sayesinde her bağlantı aynı rozetle gösterilir.
+    public static ConnectionStatus ServerConnection { get; } = new("SUNUCU");
+    public static ConnectionStatus TelemetryConnection { get; } = new("TELEMETRİ");
+    public static ConnectionStatus VideoConnection { get; } = new("VİDEO");
 
     // Services built in OnStartup
     public static IGameServerClient? GameServer { get; private set; }
@@ -123,8 +131,11 @@ public partial class App : Application
                 simulationCommands,
                 commandProxy,
                 transitionBlocked);
+            // Telemetri (uçuş veri kaynağı) durumunu ortak bağlantı göstergesine köprüle.
+            FlightBackend.PropertyChanged += OnFlightBackendConnectionChanged;
+            MapFlightBackendToConnection();
             Failsafe = new FailsafeMonitor(AppOptions.Failsafe, AlertBus, Commands, Clock);
-            Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock, AppOptions.Telemetry);
+            Connection = new ConnectionOrchestrator(client, TelemetryPoll, HssPoll, AlertBus, Clock, AppOptions.Telemetry, ServerConnection);
             TelemetryPoll.PacketRejected += (_, validation) =>
                 AlertBus.Publish(Alert.Create(
                     kind: "telemetry.validation",
@@ -175,7 +186,8 @@ public partial class App : Application
             AppOptions.Video.PropertyChanged += (_, _) => ScheduleSettingsSave();
             AppOptions.Map.PropertyChanged   += (_, _) => ScheduleSettingsSave();
             AppOptions.Mavlink.PropertyChanged += (_, _) => ScheduleSettingsSave();
-            // GameServer/Alerts/Failsafe INPC değil — Settings kapanırken explicit save yapılır.
+            AppOptions.GameServer.PropertyChanged += (_, _) => ScheduleSettingsSave();
+            // Alerts/Failsafe INPC değil; uygulama kapanışında kaydedilir.
         }
         catch (Exception ex)
         {
@@ -270,6 +282,46 @@ public partial class App : Application
             }
             catch (OperationCanceledException) { }
         }, _pumpCts!.Token);
+    }
+
+    private static void OnFlightBackendConnectionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(FlightBackendCoordinator.Status)
+            or nameof(FlightBackendCoordinator.StatusMessage)
+            or nameof(FlightBackendCoordinator.ActiveMode))
+            MapFlightBackendToConnection();
+    }
+
+    /// <summary>
+    /// FlightBackend durumunu ortak <see cref="ConnectionStatus"/> diline çevirir; böylece
+    /// telemetri de sunucu ile ayni rozet/renk/retry davranışını paylaşır.
+    /// </summary>
+    private static void MapFlightBackendToConnection()
+    {
+        if (FlightBackend is null) return;
+        var msg = string.IsNullOrWhiteSpace(FlightBackend.StatusMessage)
+            ? "Veri bekleniyor"
+            : FlightBackend.StatusMessage;
+        switch (FlightBackend.Status)
+        {
+            case FlightBackendStatus.Live:
+                TelemetryConnection.MarkOnline(msg);
+                break;
+            case FlightBackendStatus.Simulation:
+                TelemetryConnection.MarkOnline($"Simülasyon · {msg}");
+                break;
+            case FlightBackendStatus.ConnectingLive:
+            case FlightBackendStatus.StartingSimulation:
+            case FlightBackendStatus.Switching:
+                TelemetryConnection.MarkConnecting(msg);
+                break;
+            case FlightBackendStatus.Faulted:
+                TelemetryConnection.MarkFaulted(msg);
+                break;
+            default:
+                TelemetryConnection.MarkOffline(msg);
+                break;
+        }
     }
 
     private static async Task StartDefaultLiveBackendAsync()

@@ -10,6 +10,8 @@
     <PackageReference Include="LibVLCSharp.WPF" Version="3.10.0" />
     <PackageReference Include="Material.Icons.WPF" Version="3.0.2" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.1" />
+    <!-- GMap.NET 2.1.7'nin eski ve savunmasız 4.8.3 geçişli sürümünü güvenli yamaya yükseltir. -->
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
   </ItemGroup>
 

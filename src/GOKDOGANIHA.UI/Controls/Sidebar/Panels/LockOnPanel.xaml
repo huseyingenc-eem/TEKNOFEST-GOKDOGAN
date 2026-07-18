@@ -120,7 +120,7 @@
                         <Setter Property="Text" Value="HAYIR" />
                         <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsAutonomous}" Value="True">
+                            <DataTrigger Binding="{Binding IsAutonomousDisplay}" Value="True">
                                 <Setter Property="Text" Value="EVET ✓" />
                                 <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                             </DataTrigger>

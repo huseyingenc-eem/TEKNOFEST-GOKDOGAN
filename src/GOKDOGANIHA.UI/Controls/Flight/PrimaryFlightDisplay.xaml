@@ -5,191 +5,376 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              x:Name="Self"
              mc:Ignorable="d"
-             Width="280" Height="180"
+             Width="400" Height="250"
+             d:DesignWidth="400" d:DesignHeight="250"
              IsHitTestVisible="False">
 
     <UserControl.Resources>
-        <!-- Tape ortak text stili — DRY (speed + altitude tape paylaşır) -->
-        <Style x:Key="TapeText" TargetType="TextBlock">
+        <Style x:Key="TapeCaption" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Consolas" />
-            <Setter Property="FontSize" Value="9" />
-            <Setter Property="Foreground" Value="#99E6ECF2" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
             <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="TapeScaleText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#BFE6ECF2" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="AttitudeValue" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
         </Style>
     </UserControl.Resources>
 
-    <!-- Glass kart — şeffaf koyu zemin, ince border, drop shadow. Tasarım: minimal + tactical. -->
-    <Border Background="#CC0A1620"
-            BorderBrush="{StaticResource TacticalOverlayBorder}"
+    <Border Background="#F00A141D"
+            BorderBrush="#665A7890"
             BorderThickness="1"
-            CornerRadius="6">
+            CornerRadius="9">
         <Border.Effect>
             <DropShadowEffect Color="Black" Direction="270"
-                              ShadowDepth="3" BlurRadius="12" Opacity="0.5" />
+                              ShadowDepth="4" BlurRadius="18" Opacity="0.65" />
         </Border.Effect>
 
-        <Grid Margin="6">
+        <Grid>
+        <Grid x:Name="DisplayContent" Margin="8">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsDataValid, ElementName=Self}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="42" />   <!-- Speed tape -->
-                <ColumnDefinition Width="*" />    <!-- Attitude indicator -->
-                <ColumnDefinition Width="42" />   <!-- Altitude tape -->
+                <ColumnDefinition Width="66" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="66" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="22" />     <!-- Heading strip -->
+                <RowDefinition Height="32" />
             </Grid.RowDefinitions>
 
-            <!-- ============ SPEED TAPE (sol şerit) ============ -->
+            <!-- HIZ BANDI -->
             <Border Grid.Column="0" Grid.Row="0"
-                    Background="#33000000"
-                    BorderBrush="#33FFFFFF"
-                    BorderThickness="0,0,1,0">
-                <Grid>
-                    <TextBlock Text="m/s" Style="{StaticResource TapeText}"
-                               VerticalAlignment="Top" Margin="0,2,0,0" />
-                    <Border Background="{StaticResource TacticalAccent}"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Center" Height="22">
-                        <TextBlock FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                   Foreground="Black"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock.Text>
-                                <Binding Path="Airspeed" ElementName="Self"
-                                         StringFormat="{}{0:0}" FallbackValue="0" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </Border>
-                    <TextBlock Text="IAS" Style="{StaticResource TapeText}"
-                               VerticalAlignment="Bottom" Margin="0,0,0,2"
-                               Foreground="{StaticResource TacticalAccent}" />
+                    Background="#B509121A"
+                    BorderBrush="#445A7890"
+                    BorderThickness="1,1,0,1"
+                    CornerRadius="5,0,0,5">
+                <Grid Margin="0,5">
+                    <TextBlock Text="AIRSPEED"
+                               Style="{StaticResource TapeCaption}"
+                               FontSize="8"
+                               VerticalAlignment="Top" />
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="SpeedUpperText"
+                                   Text="005"
+                                   Style="{StaticResource TapeScaleText}"
+                                   Opacity="0.65"
+                                   Margin="0,0,0,10" />
+                        <Border Height="36"
+                                Background="{StaticResource TacticalAccent}"
+                                BorderBrush="#CCFFFFFF"
+                                BorderThickness="0,1,0,1">
+                            <TextBlock FontFamily="Consolas"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="#071015"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center">
+                                <TextBlock.Text>
+                                    <Binding Path="Airspeed" ElementName="Self"
+                                             StringFormat="{}{0:0}" FallbackValue="0" />
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Border>
+                        <TextBlock x:Name="SpeedLowerText"
+                                   Text="000"
+                                   Style="{StaticResource TapeScaleText}"
+                                   Opacity="0.65"
+                                   Margin="0,10,0,0" />
+                    </StackPanel>
+
+                    <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,1">
+                        <TextBlock Text="IAS"
+                                   Style="{StaticResource TapeCaption}"
+                                   Foreground="{StaticResource TacticalAccent}" />
+                        <TextBlock Text="m/s"
+                                   Style="{StaticResource TapeCaption}"
+                                   FontSize="8" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ============ ATTITUDE INDICATOR (orta yapay ufuk) ============ -->
-            <Grid Grid.Column="1" Grid.Row="0" ClipToBounds="True">
-                <!-- Roll: outer rotation (tüm horizon Roll açısıyla döner).
-                     Pitch: inner translate (Y kayar, code-behind'de 1.8x ölçeklenir).
-                     Transform'lar code-behind'de PitchProperty/RollProperty Changed callback ile set edilir. -->
-                <Grid x:Name="RollGroup" RenderTransformOrigin="0.5,0.5">
-                    <Grid.RenderTransform>
-                        <RotateTransform x:Name="RollTransform" Angle="0" />
-                    </Grid.RenderTransform>
+            <!-- YAPAY UFUK -->
+            <Border Grid.Column="1" Grid.Row="0"
+                    BorderBrush="#665A7890"
+                    BorderThickness="1"
+                    Background="#08121A"
+                    ClipToBounds="True">
+                <Grid ClipToBounds="True">
+                    <Grid x:Name="RollGroup" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <RotateTransform x:Name="RollTransform" Angle="0" />
+                        </Grid.RenderTransform>
 
-                    <Canvas x:Name="HorizonCanvas" Width="178" Height="136"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Canvas.RenderTransform>
-                            <TranslateTransform x:Name="PitchTransform" Y="0" />
-                        </Canvas.RenderTransform>
+                        <Canvas x:Name="HorizonCanvas"
+                                Width="252" Height="200"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                            <Canvas.RenderTransform>
+                                <TranslateTransform x:Name="PitchTransform" Y="0" />
+                            </Canvas.RenderTransform>
 
-                        <!-- Sky (üst yarı) -->
-                        <Rectangle Canvas.Left="-100" Canvas.Top="-200" Width="378" Height="268">
-                            <Rectangle.Fill>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#3A6080" Offset="0" />
-                                    <GradientStop Color="#5A8AAA" Offset="1" />
-                                </LinearGradientBrush>
-                            </Rectangle.Fill>
-                        </Rectangle>
+                            <Rectangle Canvas.Left="-250" Canvas.Top="-400"
+                                       Width="752" Height="500">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#315D80" Offset="0" />
+                                        <GradientStop Color="#6FA7CC" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Rectangle Canvas.Left="-250" Canvas.Top="100"
+                                       Width="752" Height="500">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#77552E" Offset="0" />
+                                        <GradientStop Color="#392511" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
 
-                        <!-- Ground (alt yarı) -->
-                        <Rectangle Canvas.Left="-100" Canvas.Top="68" Width="378" Height="268">
-                            <Rectangle.Fill>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#6A5030" Offset="0" />
-                                    <GradientStop Color="#3E2E18" Offset="1" />
-                                </LinearGradientBrush>
-                            </Rectangle.Fill>
-                        </Rectangle>
+                            <Line X1="-250" Y1="100" X2="502" Y2="100"
+                                  Stroke="White" StrokeThickness="2" Opacity="0.95" />
 
-                        <!-- Horizon line -->
-                        <Line X1="-100" Y1="68" X2="278" Y2="68"
-                              Stroke="White" StrokeThickness="1.5" Opacity="0.85" />
+                            <!-- Pitch merdiveni: 1° = 2.5 px -->
+                            <Line X1="80" Y1="25" X2="172" Y2="25" Stroke="White" StrokeThickness="1" Opacity="0.75" />
+                            <TextBlock Canvas.Left="178" Canvas.Top="17" Text="+30" Foreground="White" Opacity="0.85" FontSize="10" FontFamily="Consolas" />
+                            <Line X1="90" Y1="50" X2="162" Y2="50" Stroke="White" StrokeThickness="1" Opacity="0.72" />
+                            <TextBlock Canvas.Left="168" Canvas.Top="42" Text="+20" Foreground="White" Opacity="0.82" FontSize="10" FontFamily="Consolas" />
+                            <Line X1="100" Y1="75" X2="152" Y2="75" Stroke="White" StrokeThickness="1" Opacity="0.68" />
+                            <TextBlock Canvas.Left="158" Canvas.Top="67" Text="+10" Foreground="White" Opacity="0.8" FontSize="10" FontFamily="Consolas" />
+                            <Line X1="100" Y1="125" X2="152" Y2="125" Stroke="White" StrokeThickness="1" Opacity="0.68" />
+                            <TextBlock Canvas.Left="158" Canvas.Top="117" Text="-10" Foreground="White" Opacity="0.8" FontSize="10" FontFamily="Consolas" />
+                            <Line X1="90" Y1="150" X2="162" Y2="150" Stroke="White" StrokeThickness="1" Opacity="0.72" />
+                            <TextBlock Canvas.Left="168" Canvas.Top="142" Text="-20" Foreground="White" Opacity="0.82" FontSize="10" FontFamily="Consolas" />
+                            <Line X1="80" Y1="175" X2="172" Y2="175" Stroke="White" StrokeThickness="1" Opacity="0.75" />
+                            <TextBlock Canvas.Left="178" Canvas.Top="167" Text="-30" Foreground="White" Opacity="0.85" FontSize="10" FontFamily="Consolas" />
+                        </Canvas>
+                    </Grid>
 
-                        <!-- Pitch ladder — 10°/20° işaretleri (1° ≈ 1.8 px) -->
-                        <Line X1="59" Y1="32" X2="119" Y2="32" Stroke="White" StrokeThickness="0.8" Opacity="0.6" />
-                        <TextBlock Canvas.Left="123" Canvas.Top="26" Text="+20" Foreground="White" Opacity="0.7" FontSize="8" FontFamily="Consolas" />
-                        <Line X1="69" Y1="50" X2="109" Y2="50" Stroke="White" StrokeThickness="0.8" Opacity="0.6" />
-                        <TextBlock Canvas.Left="113" Canvas.Top="44" Text="+10" Foreground="White" Opacity="0.7" FontSize="8" FontFamily="Consolas" />
-                        <Line X1="69" Y1="86" X2="109" Y2="86" Stroke="White" StrokeThickness="0.8" Opacity="0.6" />
-                        <TextBlock Canvas.Left="113" Canvas.Top="80" Text="-10" Foreground="White" Opacity="0.7" FontSize="8" FontFamily="Consolas" />
-                        <Line X1="59" Y1="104" X2="119" Y2="104" Stroke="White" StrokeThickness="0.8" Opacity="0.6" />
-                        <TextBlock Canvas.Left="123" Canvas.Top="98" Text="-20" Foreground="White" Opacity="0.7" FontSize="8" FontFamily="Consolas" />
+                    <!-- Uçak referansı sabit kalır. -->
+                    <Canvas Width="252" Height="200"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False">
+                        <Line X1="69" Y1="100" X2="111" Y2="100"
+                              Stroke="{StaticResource TacticalWarn}" StrokeThickness="3" />
+                        <Line X1="111" Y1="100" X2="111" Y2="107"
+                              Stroke="{StaticResource TacticalWarn}" StrokeThickness="2.5" />
+                        <Ellipse Canvas.Left="119" Canvas.Top="93" Width="14" Height="14"
+                                 Stroke="{StaticResource TacticalWarn}" StrokeThickness="2" Fill="Transparent" />
+                        <Line X1="141" Y1="100" X2="141" Y2="107"
+                              Stroke="{StaticResource TacticalWarn}" StrokeThickness="2.5" />
+                        <Line X1="141" Y1="100" X2="183" Y2="100"
+                              Stroke="{StaticResource TacticalWarn}" StrokeThickness="3" />
                     </Canvas>
-                </Grid>
 
-                <!-- Aircraft reference symbol — rotate ETMEZ (uçak hep dümdüz görünür).
-                     Canvas Width=178 + HorizontalAlignment=Center → HorizonCanvas ile aynı
-                     hizada, içindeki x koordinatları center=89 referansıyla simetrik. -->
-                <Canvas Width="178" Height="136"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        IsHitTestVisible="False">
-                    <Line X1="50"  Y1="68" X2="78"  Y2="68"
-                          Stroke="{StaticResource TacticalWarn}" StrokeThickness="2.5" />
-                    <Line X1="78"  Y1="68" X2="78"  Y2="73"
-                          Stroke="{StaticResource TacticalWarn}" StrokeThickness="2" />
-                    <Ellipse Canvas.Left="84" Canvas.Top="63" Width="10" Height="10"
-                             Stroke="{StaticResource TacticalWarn}" StrokeThickness="1.5" Fill="Transparent" />
-                    <Line X1="100" Y1="68" X2="100" Y2="73"
-                          Stroke="{StaticResource TacticalWarn}" StrokeThickness="2" />
-                    <Line X1="100" Y1="68" X2="128" Y2="68"
-                          Stroke="{StaticResource TacticalWarn}" StrokeThickness="2.5" />
-                </Canvas>
-            </Grid>
-
-            <!-- ============ ALTITUDE TAPE (sağ şerit) ============ -->
-            <Border Grid.Column="2" Grid.Row="0"
-                    Background="#33000000"
-                    BorderBrush="#33FFFFFF"
-                    BorderThickness="1,0,0,0">
-                <Grid>
-                    <TextBlock Text="m" Style="{StaticResource TapeText}"
-                               VerticalAlignment="Top" Margin="0,2,0,0" />
-                    <Border Background="{StaticResource TacticalOk}"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Center" Height="22">
-                        <TextBlock FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                   Foreground="Black"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Roll referansı ve sayısal tutum doğrulaması. -->
+                    <Path Data="M 0,0 L 7,8 L -7,8 Z"
+                          Fill="{StaticResource TacticalWarn}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Top"
+                          Margin="0,5,0,0" />
+                    <Border HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Background="#99071118" CornerRadius="3"
+                            Padding="6,3" Margin="6">
+                        <TextBlock Style="{StaticResource AttitudeValue}">
                             <TextBlock.Text>
-                                <Binding Path="Altitude" ElementName="Self"
-                                         StringFormat="{}{0:0}" FallbackValue="0" />
+                                <Binding Path="Pitch" ElementName="Self"
+                                         StringFormat="P {0:+0.0;-0.0;0.0}°" />
                             </TextBlock.Text>
                         </TextBlock>
                     </Border>
-                    <!-- V/S sub-readout — code-behind callback rengi günceller (yeşil/sarı) -->
-                    <TextBlock x:Name="VerticalSpeedText" Style="{StaticResource TapeText}"
-                               VerticalAlignment="Bottom" Margin="0,0,0,2"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource TacticalOk}">
-                        <TextBlock.Text>
-                            <Binding Path="VerticalSpeed" ElementName="Self"
-                                     StringFormat="V/S {0:+0.0;-0.0;0.0}" FallbackValue="V/S 0.0" />
-                        </TextBlock.Text>
-                    </TextBlock>
+                    <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Background="#99071118" CornerRadius="3"
+                            Padding="6,3" Margin="6">
+                        <TextBlock Style="{StaticResource AttitudeValue}">
+                            <TextBlock.Text>
+                                <Binding Path="Roll" ElementName="Self"
+                                         StringFormat="R {0:+0.0;-0.0;0.0}°" />
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Border>
                 </Grid>
             </Border>
 
-            <!-- ============ HEADING COMPASS STRIP (alt) ============ -->
-            <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
-                    Background="#22000000"
-                    BorderBrush="#33FFFFFF"
-                    BorderThickness="0,1,0,0"
-                    Margin="0,2,0,0">
-                <Grid>
-                    <TextBlock FontFamily="Consolas" FontSize="13" FontWeight="Bold"
-                               Foreground="{StaticResource TacticalAccent}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock.Text>
-                            <Binding Path="Heading" ElementName="Self"
-                                     StringFormat="HDG {0:000}°" FallbackValue="HDG 000°" />
-                        </TextBlock.Text>
-                    </TextBlock>
-                    <Path Data="M 0,4 L 5,0 L 10,4 Z"
-                          Fill="{StaticResource TacticalAccent}"
-                          HorizontalAlignment="Center" VerticalAlignment="Top"
-                          Margin="0,1,0,0" />
+            <!-- İRTİFA BANDI -->
+            <Border Grid.Column="2" Grid.Row="0"
+                    Background="#B509121A"
+                    BorderBrush="#445A7890"
+                    BorderThickness="0,1,1,1"
+                    CornerRadius="0,5,5,0">
+                <Grid Margin="0,5">
+                    <TextBlock Text="ALTITUDE"
+                               Style="{StaticResource TapeCaption}"
+                               FontSize="8"
+                               VerticalAlignment="Top" />
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="AltitudeUpperText"
+                                   Text="010"
+                                   Style="{StaticResource TapeScaleText}"
+                                   Opacity="0.65"
+                                   Margin="0,0,0,10" />
+                        <Border Height="36"
+                                Background="{StaticResource TacticalOk}"
+                                BorderBrush="#CCFFFFFF"
+                                BorderThickness="0,1,0,1">
+                            <TextBlock FontFamily="Consolas"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="#071015"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center">
+                                <TextBlock.Text>
+                                    <Binding Path="Altitude" ElementName="Self"
+                                             StringFormat="{}{0:0}" FallbackValue="0" />
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Border>
+                        <TextBlock x:Name="AltitudeLowerText"
+                                   Text="000"
+                                   Style="{StaticResource TapeScaleText}"
+                                   Opacity="0.65"
+                                   Margin="0,10,0,0" />
+                    </StackPanel>
+
+                    <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,1">
+                        <TextBlock Text="ALT"
+                                   Style="{StaticResource TapeCaption}"
+                                   Foreground="{StaticResource TacticalOk}" />
+                        <TextBlock x:Name="VerticalSpeedText"
+                                   Style="{StaticResource TapeCaption}"
+                                   FontSize="9"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalOk}">
+                            <TextBlock.Text>
+                                <Binding Path="VerticalSpeed" ElementName="Self"
+                                         StringFormat="V/S {0:+0.0;-0.0;0.0}" FallbackValue="V/S 0.0" />
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
                 </Grid>
             </Border>
+
+            <!-- YÖN ŞERİDİ -->
+            <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
+                    Background="#D1071118"
+                    BorderBrush="#445A7890"
+                    BorderThickness="1,0,1,1"
+                    CornerRadius="0,0,5,5">
+                <Grid Margin="8,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="HeadingLeftText" Grid.Column="0"
+                               Text="350" Style="{StaticResource TapeScaleText}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,18,0" Opacity="0.5" />
+                    <Border Grid.Column="1"
+                            Background="#3300D1C7"
+                            BorderBrush="{StaticResource TacticalAccent}"
+                            BorderThickness="1,0,1,0"
+                            Padding="16,0">
+                        <TextBlock x:Name="HeadingText"
+                                   Text="HDG 000°"
+                                   FontFamily="Consolas" FontSize="16" FontWeight="Bold"
+                                   Foreground="{StaticResource TacticalAccent}"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock x:Name="HeadingRightText" Grid.Column="2"
+                               Text="010" Style="{StaticResource TapeScaleText}"
+                               HorizontalAlignment="Left" VerticalAlignment="Center"
+                               Margin="18,0,0,0" Opacity="0.5" />
+                    <Path Grid.Column="1"
+                          Data="M 0,5 L 6,0 L 12,5 Z"
+                          Fill="{StaticResource TacticalAccent}"
+                          HorizontalAlignment="Center" VerticalAlignment="Top" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- PFD bağlantı yokken kaybolmaz; stale/default sayılar yerine kart içi
+             geri bildirim gösterir. Geçerli ilk paketle canlı yüz otomatik açılır. -->
+        <Border Margin="8"
+                Background="#D908121A"
+                BorderBrush="#665A7890"
+                BorderThickness="1"
+                CornerRadius="5">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsDataValid, ElementName=Self}" Value="False">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="32" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Grid Width="42" Height="42" HorizontalAlignment="Center">
+                        <Ellipse Stroke="{StaticResource TacticalWarn}"
+                                 StrokeThickness="2" Opacity="0.8" />
+                        <Line X1="10" Y1="10" X2="32" Y2="32"
+                              Stroke="{StaticResource TacticalWarn}"
+                              StrokeThickness="2.5" />
+                        <Ellipse Width="8" Height="8"
+                                 Fill="{StaticResource TacticalWarn}" />
+                    </Grid>
+                    <TextBlock Text="TELEMETRİ BAĞLANTISI YOK"
+                               Margin="0,13,0,0"
+                               FontFamily="Consolas"
+                               FontSize="14" FontWeight="Bold"
+                               Foreground="{StaticResource TacticalWarn}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Uçuş verileri bekleniyor…"
+                               Margin="0,6,0,0"
+                               FontSize="11"
+                               Foreground="{StaticResource TacticalTextSecondary}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <Border Grid.Row="1"
+                        Background="#66071118"
+                        BorderBrush="#445A7890"
+                        BorderThickness="0,1,0,0">
+                    <TextBlock Text="PFD · VERİ BEKLENİYOR"
+                               FontFamily="Consolas"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource TacticalTextSecondary}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Border>
+            </Grid>
+        </Border>
         </Grid>
     </Border>
 </UserControl>

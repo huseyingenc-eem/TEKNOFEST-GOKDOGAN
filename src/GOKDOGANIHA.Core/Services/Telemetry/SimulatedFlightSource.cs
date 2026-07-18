@@ -38,6 +38,7 @@ public sealed class SimulatedFlightSource : IManagedFlightStateSource
         _state.Mode = FlightMode.Auto;
         _state.GpsFix = GpsFix.Fix3D;
         _state.SatelliteCount = 14;
+        _state.GpsHdop = 0.9;
         _state.SignalRssi = -62;
         _state.WpDistance = 145;
         _state.TargetTeamNumber = null;
@@ -79,7 +80,14 @@ public sealed class SimulatedFlightSource : IManagedFlightStateSource
                 _state.GroundSpeed = 24 + Math.Sin(t * 0.4) * 2;
                 _state.Airspeed = _state.GroundSpeed + Math.Sin(t * 0.7) * 1.5; // ~rüzgar etkisi
                 _state.VerticalSpeed = Math.Cos(t * 0.3) * 2.4;                 // climb rate ±2.4 m/s
-                _state.Heading = (t * 4) % 360;
+                var phase = t * 0.08;
+                var northVelocity = 0.015 * 0.08 * Math.Cos(phase);
+                var eastVelocity = -0.018 * 0.08 * Math.Sin(phase)
+                                   * Math.Cos(_state.Latitude * Math.PI / 180.0);
+                var groundTrack = Math.Atan2(eastVelocity, northVelocity) * 180.0 / Math.PI;
+                if (groundTrack < 0) groundTrack += 360.0;
+                _state.GroundTrack = groundTrack;
+                _state.Heading = groundTrack;
                 _state.Pitch = Math.Sin(t * 0.3) * 5;
                 _state.Roll = Math.Sin(t * 0.2) * 12;
                 _state.BatteryPercent = Math.Max(0, (int)(100 - t * 0.1));
@@ -87,6 +95,7 @@ public sealed class SimulatedFlightSource : IManagedFlightStateSource
                 _state.WpDistance = Math.Max(20, 200 - (t * 0.5) % 180);
                 _state.SignalRssi = -62 + Math.Sin(t * 0.5) * 6;                // -68 ... -56 dBm
                 _state.Touch("SIMULATION", DateTime.UtcNow);
+                _state.TouchNavigation();
                 // Hedef bbox + IsLocked + TargetTeamNumber bu simülatörden BESLENMEZ —
                 // kilitlenme ve hedef takibi ileride gerçek kameradan/YOLO'dan veya
                 // sunucu mock'undan gelir. UI'da bu alanlar 0 / false / null kalır.

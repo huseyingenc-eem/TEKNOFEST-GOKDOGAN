@@ -84,6 +84,8 @@ public sealed class SettingsStore
         bool? AutoReconnect,
         bool? UseSimulator,
         string? VideoRtspUrl,
+        bool? VideoUseTcp,
+        int? VideoNetworkCachingMs,
         string? MapTileProvider,
         bool? MapShowBoundary,
         bool? MapShowHssZones,
@@ -97,7 +99,11 @@ public sealed class SettingsStore
         string? MavlinkListenAddress,
         int? MavlinkPort,
         int? MavlinkExpectedSystemId,
-        double? MavlinkStaleAfterSeconds)
+        double? MavlinkStaleAfterSeconds,
+        MavlinkTransport? MavlinkTransport,
+        string? MavlinkSerialPortName,
+        int? MavlinkBaudRate,
+        bool? MavlinkAutoReconnect)
     {
         public void ApplyTo(ApplicationOptions o)
         {
@@ -110,6 +116,8 @@ public sealed class SettingsStore
             // Legacy UseSimulator alanı bilinçli olarak uygulanmaz. Aktif uçuş modu
             // session state'tir ve uygulama açılışında her zaman canlı moddan başlar.
             if (VideoRtspUrl is not null)         o.Video.RtspUrl = VideoRtspUrl;
+            if (VideoUseTcp.HasValue)             o.Video.UseTcp = VideoUseTcp.Value;
+            if (VideoNetworkCachingMs.HasValue)   o.Video.NetworkCachingMs = VideoNetworkCachingMs.Value;
             if (MapTileProvider is not null)      o.Map.TileProvider = MapTileProvider;
             if (MapShowBoundary.HasValue)         o.Map.ShowBoundary = MapShowBoundary.Value;
             if (MapShowHssZones.HasValue)         o.Map.ShowHssZones = MapShowHssZones.Value;
@@ -124,6 +132,10 @@ public sealed class SettingsStore
             if (MavlinkPort.HasValue)             o.Mavlink.Port = MavlinkPort.Value;
             if (MavlinkExpectedSystemId.HasValue) o.Mavlink.ExpectedSystemId = MavlinkExpectedSystemId.Value;
             if (MavlinkStaleAfterSeconds.HasValue)o.Mavlink.StaleAfterSeconds = MavlinkStaleAfterSeconds.Value;
+            if (MavlinkTransport.HasValue)        o.Mavlink.Transport = MavlinkTransport.Value;
+            if (MavlinkSerialPortName is not null)o.Mavlink.SerialPortName = MavlinkSerialPortName;
+            if (MavlinkBaudRate.HasValue)         o.Mavlink.BaudRate = MavlinkBaudRate.Value;
+            if (MavlinkAutoReconnect.HasValue)    o.Mavlink.AutoReconnect = MavlinkAutoReconnect.Value;
         }
 
         public static OptionsSnapshot From(ApplicationOptions o) => new(
@@ -135,6 +147,8 @@ public sealed class SettingsStore
             AutoReconnect: o.Telemetry.AutoReconnect,
             UseSimulator: null,
             VideoRtspUrl: o.Video.RtspUrl,
+            VideoUseTcp: o.Video.UseTcp,
+            VideoNetworkCachingMs: o.Video.NetworkCachingMs,
             MapTileProvider: o.Map.TileProvider,
             MapShowBoundary: o.Map.ShowBoundary,
             MapShowHssZones: o.Map.ShowHssZones,
@@ -148,6 +162,10 @@ public sealed class SettingsStore
             MavlinkListenAddress: o.Mavlink.ListenAddress,
             MavlinkPort: o.Mavlink.Port,
             MavlinkExpectedSystemId: o.Mavlink.ExpectedSystemId,
-            MavlinkStaleAfterSeconds: o.Mavlink.StaleAfterSeconds);
+            MavlinkStaleAfterSeconds: o.Mavlink.StaleAfterSeconds,
+            MavlinkTransport: o.Mavlink.Transport,
+            MavlinkSerialPortName: o.Mavlink.SerialPortName,
+            MavlinkBaudRate: o.Mavlink.BaudRate,
+            MavlinkAutoReconnect: o.Mavlink.AutoReconnect);
     }
 }

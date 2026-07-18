@@ -12,12 +12,29 @@
 
     <core:PanelFrame Header="GÖREV VİDEOSU" IconKind="Video">
         <video:RtspVideoView x:Name="LiveVideo"
+                             SessionKey="MissionCamera"
+                             SurfacePriority="0"
                              StreamUrl="{Binding Settings.Video.RtspUrl}"
-                             NetworkCachingMs="150"
-                             UseTcp="True">
+                             NetworkCachingMs="{Binding Settings.Video.NetworkCachingMs}"
+                             UseTcp="{Binding Settings.Video.UseTcp}"
+                             VideoStatus="{Binding VideoConnection}">
             <!-- LibVLC WPF airspace kuralı gereği HUD içeriği VideoView içinde
                  tutulur; böylece canlı görüntünün üzerinde görünmeye devam eder. -->
-            <Grid Background="#02000000">
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Background" Value="#02000000" />
+                        <Setter Property="Visibility" Value="Visible" />
+                        <!-- VideoView HUD'u ayrı bir ForegroundWindow içinde yaşar.
+                             Parent panelin Collapsed olması bu pencereyi otomatik gizlemez;
+                             overlay durumunu HUD içeriğine de doğrudan uygula. -->
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAnyOverlayOpen}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
 
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <StackPanel.Style>
@@ -107,7 +124,7 @@
                         CornerRadius="2" Padding="6,2"
                         Background="{StaticResource TacticalCritical}"
                         VerticalAlignment="Center"
-                        Visibility="{Binding IsLocked, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                        Visibility="{Binding IsLockedDisplay, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
                     <TextBlock Text="KİLİTLİ"
                                FontSize="10" FontWeight="Bold"
                                Foreground="White" />

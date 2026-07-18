@@ -271,7 +271,7 @@
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="ALT_CUR" Style="{StaticResource BigMetricLabel}" Margin="0,0,12,2" />
                             <TextBlock Grid.Row="0" Grid.Column="1" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
                                        Foreground="{StaticResource TacticalAccent}">
-                                <TextBlock.Text><Binding Path="Altitude" StringFormat="{}{0:0} m" FallbackValue="— m" /></TextBlock.Text>
+                                <TextBlock.Text><Binding Path="AltitudeDisplay" FallbackValue="—" /></TextBlock.Text>
                             </TextBlock>
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="ALT_TGT" Style="{StaticResource BigMetricLabel}" Margin="0,2,12,2" />
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="30 m"
@@ -280,7 +280,7 @@
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="ANGLE" Style="{StaticResource BigMetricLabel}" Margin="0,2,12,0" />
                             <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
                                        Foreground="{StaticResource TacticalCritical}">
-                                <TextBlock.Text><Binding Path="Pitch" StringFormat="{}{0:0}°" FallbackValue="—°" /></TextBlock.Text>
+                                <TextBlock.Text><Binding Path="PitchDisplay" FallbackValue="—" /></TextBlock.Text>
                             </TextBlock>
                         </Grid>
                     </Border>
@@ -403,7 +403,7 @@
                                     <TextBlock Style="{StaticResource BigMetricValue}"
                                                Foreground="{StaticResource TacticalCritical}">
                                         <TextBlock.Text>
-                                            <Binding Path="VerticalSpeed" StringFormat="{}{0:0}" FallbackValue="—" />
+                                            <Binding Path="VerticalSpeedDisplay" FallbackValue="—" />
                                         </TextBlock.Text>
                                     </TextBlock>
                                     <TextBlock Text="m/s" FontSize="12" VerticalAlignment="Bottom"

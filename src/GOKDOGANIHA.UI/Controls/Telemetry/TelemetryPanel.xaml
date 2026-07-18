@@ -42,7 +42,18 @@
             <DropShadowEffect Color="Black" Direction="270"
                               ShadowDepth="3" BlurRadius="14" Opacity="0.4" />
         </Border.Effect>
+        <Grid>
         <DockPanel>
+            <DockPanel.Style>
+                <Style TargetType="DockPanel">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasVehicleTelemetrySnapshot}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DockPanel.Style>
             <!-- Tıklanabilir header — chevron + icon + title -->
             <Border DockPanel.Dock="Top"
                     Background="Transparent"
@@ -92,6 +103,41 @@
                                    Foreground="{StaticResource TacticalAccent}" />
                     </Border>
                 </Grid>
+            </Border>
+
+            <!-- Bağlantı kesilince sayılar kaybolmaz; yalnızca son snapshot
+                 gösterildiğini belirten kısa bir durum satırı eklenir. -->
+            <Border DockPanel.Dock="Top"
+                    Background="#22FFB020"
+                    BorderBrush="{StaticResource TacticalWarn}"
+                    BorderThickness="0,1,0,1"
+                    Padding="10,4">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding HasVehicleTelemetrySnapshot}" Value="True" />
+                                    <Condition Binding="{Binding IsVehicleDataValid}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <materialIcons:MaterialIcon Kind="AccessPointOff"
+                                                Width="13" Height="13"
+                                                Foreground="{StaticResource TacticalWarn}" />
+                    <TextBlock Text="{Binding TelemetryAvailabilityMessage}"
+                               Margin="6,0,0,0"
+                               FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TacticalWarn}" />
+                    <TextBlock Text=" · SON VERİ"
+                               FontSize="9"
+                               Foreground="{StaticResource TacticalTextSecondary}" />
+                </StackPanel>
             </Border>
 
             <!-- ============== KOMPAKT GÖRÜNÜM ============== -->
@@ -180,9 +226,30 @@
 
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="GPS"
                                    Style="{StaticResource MetricLabel}" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="13"
-                                   Text="{Binding GpsFixDisplay}"
-                                   Foreground="{StaticResource TacticalOk}" />
+                        <StackPanel Grid.Row="1" Grid.Column="1">
+                            <TextBlock FontFamily="Consolas" FontSize="12" FontWeight="SemiBold"
+                                       Text="{Binding GpsHealthDisplay}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GpsHealth}" Value="Healthy">
+                                                <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding GpsHealth}" Value="Warning">
+                                                <Setter Property="Foreground" Value="{StaticResource TacticalWarn}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding GpsHealth}" Value="Critical">
+                                                <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock FontFamily="Consolas" FontSize="9.5"
+                                       Text="{Binding GpsFixDisplay}"
+                                       Foreground="{StaticResource TacticalTextSecondary}" />
+                        </StackPanel>
                     </Grid>
 
                     <!-- KONUM -->
@@ -214,5 +281,33 @@
                 </StackPanel>
             </Border>
         </DockPanel>
+
+        <!-- Henüz hiç snapshot alınmadıysa varsayılan sıfırlar yerine bekleme durumu. -->
+        <StackPanel Margin="14,12"
+                    MinHeight="64"
+                    VerticalAlignment="Center">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasVehicleTelemetrySnapshot}" Value="False">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="AccessPointOff"
+                                            Width="16" Height="16"
+                                            Foreground="{StaticResource TacticalWarn}"
+                                            VerticalAlignment="Center" />
+                <TextBlock Text="TELEMETRİ BEKLENİYOR"
+                           Margin="7,0,0,0"
+                           FontSize="11" FontWeight="Bold"
+                           Foreground="{StaticResource TacticalWarn}"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+        </Grid>
     </Border>
 </UserControl>

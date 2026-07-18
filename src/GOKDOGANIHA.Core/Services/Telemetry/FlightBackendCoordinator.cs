@@ -118,7 +118,7 @@ public sealed class FlightBackendCoordinator : INotifyPropertyChanged, IDisposab
                 ? FlightBackendStatus.ConnectingLive
                 : FlightBackendStatus.StartingSimulation;
             StatusMessage = requestedMode == FlightDataMode.Live
-                ? "MAVLink UDP dinleyici başlatılıyor"
+                ? $"{_liveSource.Name} başlatılıyor"
                 : "Simülasyon senaryosu başlatılıyor";
 
             try

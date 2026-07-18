@@ -157,18 +157,17 @@
                 <core:StatusPill IconKind="Robot"
                                  IconBrush="{StaticResource TacticalAccent}"
                                  Label="MOD"
-                                 Value="{Binding FlightMode}"
+                                 Value="{Binding FlightModeDisplay}"
                                  Margin="8,0,0,0" />
-                <core:StatusPill IconKind="AccessPoint"
-                                 IconBrush="{StaticResource TacticalOk}"
-                                 Label="LINK"
-                                 Value="{Binding LinkRssi, StringFormat={}{0} dBm}"
-                                 Margin="8,0,0,0" />
-                <core:StatusPill IconKind="Server"
-                                 IconBrush="{StaticResource TacticalAccent}"
-                                 Label="API"
-                                 Value="{Binding ServerLatencyMs, StringFormat={}{0} ms}"
-                                 Margin="8,0,0,0" />
+                <core:ConnectionStatusPill Status="{Binding TelemetryConnection}"
+                                           RetryCommand="{Binding RetryTelemetryCommand}"
+                                           ShowRetryWhileBusy="True"
+                                           Margin="8,0,0,0" VerticalAlignment="Center" />
+                <core:ConnectionStatusPill Status="{Binding ServerConnection}"
+                                           RetryCommand="{Binding RetryServerConnectionCommand}"
+                                           Margin="8,0,0,0" VerticalAlignment="Center" />
+                <core:ConnectionStatusPill Status="{Binding VideoConnection}"
+                                           Margin="8,0,0,0" VerticalAlignment="Center" />
 
                 <!-- Settings pill-button (matches StatusPill geometry) -->
                 <Button Command="{Binding OpenSettingsCommand}"

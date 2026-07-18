@@ -83,10 +83,16 @@ public class OptionsSyncTests
         var vm = new TelemetrySettingsViewModel(opts, mavlink);
         vm.MavlinkListenAddress = "127.0.0.1";
         vm.MavlinkPort = 14551;
+        vm.MavlinkTransport = MavlinkTransport.Serial;
+        vm.MavlinkSerialPortName = "COM8";
+        vm.MavlinkBaudRate = 115200;
         vm.MavlinkExpectedSystemId = 7;
 
         Assert.Equal("127.0.0.1", mavlink.ListenAddress);
         Assert.Equal(14551, mavlink.Port);
+        Assert.Equal(MavlinkTransport.Serial, mavlink.Transport);
+        Assert.Equal("COM8", mavlink.SerialPortName);
+        Assert.Equal(115200, mavlink.BaudRate);
         Assert.Equal(7, mavlink.ExpectedSystemId);
     }
 

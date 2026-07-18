@@ -132,8 +132,27 @@
                                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                         Content="BAĞLAN · POLL BAŞLAT"
                                         Command="{Binding Server.ConnectCommand}"
+                                        Padding="18,8" FontSize="11"
+                                        Margin="0,0,10,0" />
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Content="BAĞLANTIYI KES"
+                                        Command="{Binding Server.DisconnectCommand}"
                                         Padding="18,8" FontSize="11" />
                             </StackPanel>
+                            <TextBlock Margin="160,12,0,0" FontFamily="Consolas" FontSize="11">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="SUNUCU OTURUMU: BAĞLI DEĞİL" />
+                                        <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Server.IsConnected}" Value="True">
+                                                <Setter Property="Text" Value="SUNUCU OTURUMU: BAĞLI" />
+                                                <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
                     </core:SettingsSection>
 
@@ -198,7 +217,7 @@
                             </Grid>
 
                     <CheckBox IsChecked="{Binding Telemetry.AutoReconnect}"
-                              Content="Bağlantı kopunca otomatik yeniden bağlan"
+                              Content="Yarışma sunucusu oturumu kopunca yeniden bağlan"
                               Margin="160,10,0,0" />
 
                     <Border Style="{StaticResource PanelCard}" Margin="0,18,0,12">
@@ -234,7 +253,7 @@
                         </Grid>
                     </Border>
 
-                    <TextBlock Text="MAVLINK UDP"
+                    <TextBlock Text="MAVLINK CANLI BAĞLANTI"
                                FontSize="11" FontWeight="Bold"
                                Foreground="{StaticResource TacticalAccent}"
                                Margin="0,12,0,4" />
@@ -244,21 +263,100 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Dinleme adresi" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Telemetry.MavlinkListenAddress, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="0.0.0.0" />
+                        <TextBlock Grid.Column="0" Text="Bağlantı türü" Style="{StaticResource FieldLabel}" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding Telemetry.MavlinkTransportOptions}"
+                                  SelectedItem="{Binding Telemetry.MavlinkTransport}" />
                     </Grid>
 
-                    <Grid Style="{StaticResource FieldRow}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="UDP port" Style="{StaticResource FieldLabel}" />
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Telemetry.MavlinkPort, UpdateSourceTrigger=LostFocus}" />
-                    </Grid>
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Telemetry.IsUdpMavlinkTransport}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Dinleme adresi" Style="{StaticResource FieldLabel}" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding Telemetry.MavlinkListenAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="0.0.0.0" />
+                        </Grid>
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="UDP port" Style="{StaticResource FieldLabel}" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding Telemetry.MavlinkPort, UpdateSourceTrigger=LostFocus}" />
+                        </Grid>
+                        <TextBlock Text="SITL, MAVProxy veya UDP köprüsü kullanıyorsanız bu türü seçin."
+                                   Margin="160,-4,0,12" FontSize="10" FontStyle="Italic"
+                                   Foreground="{StaticResource TacticalTextSecondary}" />
+                    </StackPanel>
+
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Telemetry.IsSerialMavlinkTransport}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="COM portu" Style="{StaticResource FieldLabel}" />
+                            <ComboBox Grid.Column="1" IsEditable="True"
+                                      ItemsSource="{Binding Telemetry.AvailableSerialPorts}"
+                                      Text="{Binding Telemetry.MavlinkSerialPortName, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Grid.Column="2" Content="YENİLE"
+                                    Command="{Binding Telemetry.RefreshSerialPortsCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Padding="12,6" Margin="8,0,0,0" />
+                        </Grid>
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Baud hızı" Style="{StaticResource FieldLabel}" />
+                            <ComboBox Grid.Column="1" IsEditable="True"
+                                      ItemsSource="{Binding Telemetry.MavlinkBaudRateOptions}"
+                                      Text="{Binding Telemetry.MavlinkBaudRate, UpdateSourceTrigger=LostFocus}" />
+                        </Grid>
+                        <TextBlock Text="RFD868x yer modemi USB ile bu bilgisayara bağlıysa Seri türünü kullanın. Hat 8N1 olarak açılır."
+                                   Margin="160,-4,0,12" FontSize="10" FontStyle="Italic"
+                                   Foreground="{StaticResource TacticalTextSecondary}" />
+                        <TextBlock Text="{Binding Telemetry.SerialPortStatusText}"
+                                   Margin="160,-4,0,12" FontSize="11" FontFamily="Consolas">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource TacticalWarn}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Telemetry.IsSelectedSerialPortAvailable}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
 
                     <Grid Style="{StaticResource FieldRow}">
                         <Grid.ColumnDefinitions>
@@ -282,6 +380,14 @@
                                  materialDesign:HintAssist.Hint="saniye" />
                     </Grid>
 
+                    <CheckBox IsChecked="{Binding Telemetry.MavlinkAutoReconnect}"
+                              Content="USB/seri hat kopunca portu otomatik izle ve yeniden bağlan"
+                              Margin="160,0,0,12" />
+
+                    <TextBlock Text="{Binding Telemetry.MavlinkConnectionSummary}"
+                               Margin="160,0,0,4" FontFamily="Consolas" FontSize="11"
+                               Foreground="{StaticResource TacticalTextPrimary}" />
+
                     <Button Content="MAVLINK'İ YENİ AYARLARLA BAĞLA"
                             Command="{Binding Telemetry.ReconnectLiveCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -293,23 +399,6 @@
                                FontSize="11" FontStyle="Italic"
                                Foreground="{StaticResource TacticalWarn}"
                                Margin="160,16,0,0" />
-                            <CheckBox IsChecked="{Binding Telemetry.AutoReconnect}"
-                                      Content="Bağlantı kopunca otomatik yeniden bağlan"
-                                      Margin="160,10,0,0" />
-                            <CheckBox IsChecked="{Binding Telemetry.UseSimulator}"
-                                      Content="Simülatör ile sahte İHA verisi üret (gerçek MAVLink yokken)"
-                                      Margin="160,10,0,0" />
-                            <!-- KTR ekran görüntüsünde gizli — açıklayıcı notlar yorum satırına alındı.
-                            <TextBlock Text="Açıkken: 100ms tick'te FlightState sahte değerlerle dolar (sin/cos osilasyonlar). Yarışma modunda KAPALI tutun — gerçek pixhawk yokken telemetri sıfır kalır."
-                                       FontSize="10" FontStyle="Italic"
-                                       TextWrapping="Wrap"
-                                       Foreground="{StaticResource TacticalTextSecondary}"
-                                       Margin="184,4,0,0" />
-                            <TextBlock Text="Şartname: 2 Hz üzeri telemetri 400 döner."
-                                       FontSize="11" FontStyle="Italic"
-                                       Foreground="{StaticResource TacticalWarn}"
-                                       Margin="160,16,0,0" />
-                            -->
                         </StackPanel>
                     </core:SettingsSection>
 
@@ -331,8 +420,10 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="RTSP URL" Style="{StaticResource FieldLabel}" />
+                                <!-- LostFocus: URL yazarken her tuşta video motorunu yeniden başlatıp
+                                     UI'ı dondurmasın; alandan çıkınca tek seferde bağlanır. -->
                                 <TextBox Grid.Column="1"
-                                         Text="{Binding Video.RtspUrl, UpdateSourceTrigger=PropertyChanged}" />
+                                         Text="{Binding Video.RtspUrl, UpdateSourceTrigger=LostFocus}" />
                             </Grid>
                             <Grid Style="{StaticResource FieldRow}">
                                 <Grid.ColumnDefinitions>
@@ -346,6 +437,26 @@
                                     <ComboBoxItem Content="1080p/30" />
                                     <ComboBoxItem Content="1080p/60" />
                                 </ComboBox>
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Aktarım" Style="{StaticResource FieldLabel}" />
+                                <CheckBox Grid.Column="1"
+                                          IsChecked="{Binding Video.UseTcp}"
+                                          Content="TCP kullan  (işaretsiz = UDP · KTR 6.2 varsayılanı, düşük gecikme)" />
+                            </Grid>
+                            <Grid Style="{StaticResource FieldRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Ağ tamponu" Style="{StaticResource FieldLabel}" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Video.NetworkCachingMs, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="ms · düşük = az gecikme (0–5000)" />
                             </Grid>
                         </StackPanel>
                     </core:SettingsSection>

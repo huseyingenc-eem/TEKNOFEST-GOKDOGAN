@@ -56,7 +56,21 @@
             <video:VideoPanel
                 VerticalAlignment="Top" HorizontalAlignment="Right"
                 Width="400" Height="280"
-                Margin="0,78,16,0" />
+                Margin="0,78,16,0">
+                <video:VideoPanel.Style>
+                    <Style TargetType="{x:Type video:VideoPanel}">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <!-- LibVLC native/airspace yüzeyi WPF Z-order'ini izlemez.
+                             Overlay açıkken küçük yüzeyi gerçekten gizle; paylaşılan
+                             oynatıcı arka planda akışı kesmeden devam eder. -->
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAnyOverlayOpen}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </video:VideoPanel.Style>
+            </video:VideoPanel>
 
             <!-- Bottom-left: Flight dial (ARM/OTONOM/RTL/İNİŞ) — fans up-right -->
             <core:RadialMenu

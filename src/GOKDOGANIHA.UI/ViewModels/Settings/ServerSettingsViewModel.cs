@@ -6,6 +6,7 @@ using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.Core.Services.Session;
 using System;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GOKDOGANIHA.UI.ViewModels.Settings;
 
@@ -36,6 +37,11 @@ public partial class ServerSettingsViewModel : OptionsBackedViewModel<GameServer
         _teamUsername = string.IsNullOrWhiteSpace(options.KullaniciAdi) ? _teamUsername : options.KullaniciAdi;
         _teamPassword = options.Sifre;
         _useTestEnvironment = options.Environment == CompetitionServerEnvironment.Test;
+        if (_orchestrator is not null)
+        {
+            _isConnected = _orchestrator.IsConnected;
+            _orchestrator.ConnectionStateChanged += OnConnectionStateChanged;
+        }
     }
 
     [ObservableProperty] private string _serverBaseUrl = "http://127.0.0.25:5000";
@@ -107,9 +113,28 @@ public partial class ServerSettingsViewModel : OptionsBackedViewModel<GameServer
 
         var ok = await _orchestrator.ConnectAsync();
         IsConnected = ok;
-        if (!ok && _dialog is not null)
+        if (_dialog is null) return;
+        if (ok)
+            await _dialog.ShowInfoAsync("BAĞLAN",
+                "Yarışma sunucusuna bağlanıldı. Telemetri gönderimi başladı.\n\nÜst çubuktaki SUNUCU göstergesi artık bağlantı durumunu ve kopma olursa otomatik yeniden denemeleri gösterir.");
+        else
             await _dialog.ShowErrorAsync("BAĞLAN",
-                "Bağlantı kurulamadı. AlertConsole'daki detaylara bakın.");
+                "Bağlantı kurulamadı. Üst çubuktaki SUNUCU göstergesinde 'Tekrar Dene' ile yeniden deneyebilir, ayrıntı için Olay Günlüğü'ne bakabilirsiniz.");
+    }
+
+    [RelayCommand]
+    private async Task DisconnectAsync()
+    {
+        if (_orchestrator is null) return;
+        await _orchestrator.DisconnectAsync();
+        IsConnected = false;
+    }
+
+    private void OnConnectionStateChanged(object? sender, bool connected)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess()) IsConnected = connected;
+        else dispatcher.BeginInvoke((Action)(() => IsConnected = connected));
     }
 
     /// <summary>Login başarılı olunca takım numarasını dinleyiciye verir.</summary>

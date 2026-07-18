@@ -21,6 +21,7 @@
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="IsEnabled" Value="{Binding IsVehicleDataValid}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -44,7 +45,7 @@
                                 <DataTrigger.Binding>
                                     <MultiBinding Converter="{StaticResource StringEqualsConverter}">
                                         <Binding Path="Tag" RelativeSource="{RelativeSource Self}" />
-                                        <Binding Path="FlightMode" />
+                                        <Binding Path="FlightModeDisplay" />
                                     </MultiBinding>
                                 </DataTrigger.Binding>
                                 <Setter TargetName="Root" Property="Background" Value="#1A2A1A" />
@@ -72,7 +73,7 @@
                    TextWrapping="Wrap"
                    Foreground="{StaticResource TacticalTextSecondary}">
             <TextBlock.Text>
-                <Binding Path="FlightMode" StringFormat="Aktif mod: {0} · komutlar simülasyonda Olay Günlüğü'ne yazılır" />
+                <Binding Path="FlightModeDisplay" StringFormat="Aktif mod: {0} · komutlar simülasyonda Olay Günlüğü'ne yazılır" />
             </TextBlock.Text>
         </TextBlock>
 
@@ -117,7 +118,7 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="Text" Value="ARM" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsArmed}" Value="True">
+                                    <DataTrigger Binding="{Binding IsArmedDisplay}" Value="True">
                                         <Setter Property="Text" Value="DISARM" />
                                     </DataTrigger>
                                 </Style.Triggers>

@@ -82,6 +82,17 @@ public class GameServerClientTests
         Assert.Equal(248, response.KonumBilgileri[0].ZamanFarkiMs);
     }
 
+    [Fact]
+    public async Task Login_rejects_missing_credentials_before_network_call()
+    {
+        var options = new GameServerOptions { BaseUrl = "http://127.0.0.1:5000" };
+        using var client = new GameServerClient(options, new HttpClient(new DelegateHandler(
+            _ => throw new InvalidOperationException("Ağa çıkılmamalıydı."))));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.GirisAsync());
+        Assert.Contains("kullanıcı adı", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static GameServerClient CreateClient(Func<HttpRequestMessage, HttpResponseMessage> response)
     {
         var options = new GameServerOptions

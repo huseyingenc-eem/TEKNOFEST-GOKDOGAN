@@ -29,6 +29,8 @@ public sealed class FlightState : INotifyPropertyChanged
     private FlightMode _mode = FlightMode.Manual;
     private GpsFix _gpsFix = GpsFix.None;
     private int _satelliteCount;
+    private double? _gpsHdop;
+    private double? _groundTrack;
     private int? _targetTeamNumber;     // şu an kilitlenmeye çalışılan rakip ID
     private double _signalRssi;         // telemetri link gücü (dBm; negatif normaldir)
     private int _targetCenterX, _targetCenterY, _targetWidth, _targetHeight;
@@ -37,6 +39,8 @@ public sealed class FlightState : INotifyPropertyChanged
     private DateTime? _lastUpdatedUtc;
     private DateTime? _gpsTimeUtc;
     private long _sequence;
+    private long _navigationSequence;
+    private DateTime? _lastNavigationUpdatedUtc;
 
     public double Latitude       { get => _latitude;        set => Set(ref _latitude, value); }
     public double Longitude      { get => _longitude;       set => Set(ref _longitude, value); }
@@ -56,6 +60,8 @@ public sealed class FlightState : INotifyPropertyChanged
     public FlightMode Mode       { get => _mode;            set => Set(ref _mode, value); }
     public GpsFix GpsFix         { get => _gpsFix;          set => Set(ref _gpsFix, value); }
     public int    SatelliteCount { get => _satelliteCount;  set => Set(ref _satelliteCount, value); }
+    public double? GpsHdop       { get => _gpsHdop;         set => Set(ref _gpsHdop, value); }
+    public double? GroundTrack   { get => _groundTrack;     set => Set(ref _groundTrack, value); }
     public int?   TargetTeamNumber { get => _targetTeamNumber; set => Set(ref _targetTeamNumber, value); }
     public double SignalRssi     { get => _signalRssi;      set => Set(ref _signalRssi, value); }
     public int    TargetCenterX  { get => _targetCenterX;   set => Set(ref _targetCenterX, value); }
@@ -67,6 +73,12 @@ public sealed class FlightState : INotifyPropertyChanged
     public DateTime? LastUpdatedUtc { get => _lastUpdatedUtc; private set => Set(ref _lastUpdatedUtc, value); }
     public DateTime? GpsTimeUtc  { get => _gpsTimeUtc;      private set => Set(ref _gpsTimeUtc, value); }
     public long Sequence         { get => _sequence;        private set => Set(ref _sequence, value); }
+    public long NavigationSequence { get => _navigationSequence; private set => Set(ref _navigationSequence, value); }
+    public DateTime? LastNavigationUpdatedUtc
+    {
+        get => _lastNavigationUpdatedUtc;
+        private set => Set(ref _lastNavigationUpdatedUtc, value);
+    }
 
     public void Touch(string source, DateTime? gpsTimeUtc = null)
     {
@@ -77,12 +89,33 @@ public sealed class FlightState : INotifyPropertyChanged
         IsDataValid = true;
     }
 
+    /// <summary>
+    /// Konum/yön tüketicilerini heartbeat ve batarya gibi ilgisiz paketlerden ayırır.
+    /// Bir MAVLink konum paketi tamamen uygulandıktan sonra bir kez çağrılır.
+    /// </summary>
+    public void TouchNavigation()
+    {
+        LastNavigationUpdatedUtc = DateTime.UtcNow;
+        NavigationSequence++;
+    }
+
     public void MarkUnavailable(string source)
     {
         DataSource = source;
         IsDataValid = false;
         LastUpdatedUtc = null;
         GpsTimeUtc = null;
+        LastNavigationUpdatedUtc = null;
+    }
+
+    /// <summary>
+    /// Bağlantı/veri akışı geçici olarak kesildiğinde son snapshot'ı ve
+    /// zamanı korur; yalnızca canlı kullanım/gönderim kapısını geçersiz yapar.
+    /// </summary>
+    public void MarkStale(string source)
+    {
+        DataSource = source;
+        IsDataValid = false;
     }
 
     public bool IsFresh(DateTime nowUtc, TimeSpan maxAge)

@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using GMap.NET;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsPresentation;
@@ -20,6 +21,11 @@ namespace GOKDOGANIHA.UI.Controls.Map;
 
 public partial class MapPanel : UserControl
 {
+    private static readonly TimeSpan TrailFullyVisibleAge = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan TrailFadeDuration = TimeSpan.FromMinutes(2);
+    private const double TrailMinimumOpacity = 0.08;
+    private const int TrailFadeBuckets = 16;
+
     private readonly Dictionary<int, GMapMarker> _enemyMarkers = new();
     private readonly Dictionary<int, (GMapMarker marker, HssCircleMarker circle, HssKoordinat data)> _hssMarkers = new();
     private readonly Dictionary<int, (GMapMarker marker, JammingCircleMarker circle, JammingZone data)> _jammingMarkers = new();
@@ -28,16 +34,23 @@ public partial class MapPanel : UserControl
     private OwnDroneMarker? _ownVisual;
     private GMapMarker? _qrMarker;
     private GMapPolygon? _boundaryPoly;
-    private GMapPolygon? _trailPoly;
+    private readonly List<GMapRoute> _trailRoutes = new();
     private GMapPolygon? _routePoly;
     private GMapPolygon? _userPoly;
 
     private MapViewModel? _vm;
     private MapOptions? _mapOptions;
+    private readonly DispatcherTimer _trailFadeTimer;
 
     public MapPanel()
     {
         InitializeComponent();
+
+        _trailFadeTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _trailFadeTimer.Tick += OnTrailFadeTimerTick;
 
         // Stadia Maps "Alidade Smooth Dark" — dark tactical basemap with
         // terrain/contour shading. Free tier allows localhost use without
@@ -70,6 +83,7 @@ public partial class MapPanel : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _trailFadeTimer.Start();
         // MapOptions (live INPC) — ayarlar değişince harita anında adapte olur.
         _mapOptions = App.AppOptions?.Map;
         if (_mapOptions is not null)
@@ -85,8 +99,15 @@ public partial class MapPanel : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        _trailFadeTimer.Stop();
         if (_mapOptions is not null)
             _mapOptions.PropertyChanged -= OnMapOptionsChanged;
+    }
+
+    private void OnTrailFadeTimerTick(object? sender, EventArgs e)
+    {
+        if (_vm is { ShowOwnTrail: true } && _trailRoutes.Count > 0)
+            RebuildTrail();
     }
 
     private void OnMapOptionsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -310,7 +331,7 @@ public partial class MapPanel : UserControl
             _ownMarker = new GMapMarker(new PointLatLng(_vm.OwnLatitude, _vm.OwnLongitude))
             {
                 Shape = _ownVisual,
-                Offset = new Point(-18, -18),
+                Offset = new Point(-22, -22),
                 ZIndex = 500
             };
             MapCtrl.Markers.Add(_ownMarker);
@@ -346,27 +367,110 @@ public partial class MapPanel : UserControl
     // ============================== TRAIL ==============================
     private void RebuildTrail()
     {
-        if (_trailPoly is not null)
-        {
-            MapCtrl.Markers.Remove(_trailPoly);
-            _trailPoly = null;
-        }
+        foreach (var route in _trailRoutes)
+            MapCtrl.Markers.Remove(route);
+        _trailRoutes.Clear();
         if (_vm is null || !_vm.ShowOwnTrail || _vm.OwnTrail.Count < 2) return;
 
-        // GMapPolygon polyline gibi de çalışır — Fill verilmediği sürece sadece stroke.
-        _trailPoly = new GMapPolygon(_vm.OwnTrail.ToList()) { Tag = "trail" };
-        MapCtrl.Markers.Add(_trailPoly);
-        StyleTrailShape();
+        // Polygon son noktayı ilk noktaya kapatır ve izi elips/alan gibi gösterir.
+        // GMapRoute açık uçlu gerçek bir polyline üretir. Yaş kovaları
+        // sayesinde eski segmentler kademeli solar, yeni segment tam parlak kalır.
+        var nowUtc = DateTime.UtcNow;
+        foreach (var segment in BuildTrailFadeSegments(_vm.GetOwnTrailSamples(), nowUtc))
+        {
+            var haloRoute = new GMapRoute(segment.Points)
+            {
+                Tag = "trail-halo",
+                ZIndex = 198
+            };
+            var coreRoute = new GMapRoute(segment.Points)
+            {
+                Tag = "trail",
+                ZIndex = 199
+            };
+            _trailRoutes.Add(haloRoute);
+            _trailRoutes.Add(coreRoute);
+            MapCtrl.Markers.Add(haloRoute);
+            MapCtrl.Markers.Add(coreRoute);
+            StyleTrailShape(haloRoute, coreRoute, segment.Opacity);
+        }
     }
 
-    private void StyleTrailShape()
+    private void StyleTrailShape(GMapRoute haloRoute, GMapRoute coreRoute, double opacity)
     {
-        if (_trailPoly is null) return;
         var accent = (Brush)FindResource("TacticalAccent");
-        // GMap.NET WPF GMapPolygon.Shape varsayılanda Path döndürür ama farklı
-        // versiyonlarda Polygon olabilir — her iki yola da style uygula (DRY/safe).
-        ApplyShapeStyle(_trailPoly.Shape, accent, thickness: 2.5, opacity: 0.55, fill: null, dashed: false);
+        var halo = new SolidColorBrush(Color.FromArgb(210, 3, 12, 17));
+        ApplyShapeStyle(haloRoute.Shape, halo,
+            thickness: 6.5, opacity: 0.82 * opacity, fill: null, dashed: false);
+        ApplyShapeStyle(coreRoute.Shape, accent,
+            thickness: 2.4, opacity: 0.96 * opacity, fill: null, dashed: false);
     }
+
+    private static IReadOnlyList<TrailFadeSegment> BuildTrailFadeSegments(
+        IReadOnlyList<OwnTrailSample> samples,
+        DateTime nowUtc)
+    {
+        if (samples.Count < 2) return [];
+
+        var result = new List<TrailFadeSegment>();
+        var currentPoints = new List<PointLatLng>();
+        var currentBucket = -1;
+
+        foreach (var sample in samples)
+        {
+            var opacity = TrailOpacity(nowUtc - sample.RecordedUtc);
+            var bucket = Math.Clamp((int)Math.Round(
+                    (opacity - TrailMinimumOpacity)
+                    / (1.0 - TrailMinimumOpacity)
+                    * (TrailFadeBuckets - 1)),
+                0,
+                TrailFadeBuckets - 1);
+
+            if (sample.StartsNewSegment && currentPoints.Count > 0)
+            {
+                AddFadeSegment(result, currentPoints, currentBucket);
+                currentPoints = [];
+                currentBucket = -1;
+            }
+            else if (currentBucket != -1 && bucket != currentBucket)
+            {
+                AddFadeSegment(result, currentPoints, currentBucket);
+
+                var boundaryPoint = currentPoints[^1];
+                currentPoints = [boundaryPoint];
+            }
+
+            currentBucket = bucket;
+            currentPoints.Add(sample.Position);
+        }
+
+        AddFadeSegment(result, currentPoints, currentBucket);
+
+        return result;
+    }
+
+    private static void AddFadeSegment(
+        ICollection<TrailFadeSegment> result,
+        List<PointLatLng> points,
+        int bucket)
+    {
+        if (points.Count < 2 || bucket < 0) return;
+        var opacity = TrailMinimumOpacity
+                      + bucket / (double)(TrailFadeBuckets - 1)
+                      * (1.0 - TrailMinimumOpacity);
+        result.Add(new TrailFadeSegment(points, opacity));
+    }
+
+    private static double TrailOpacity(TimeSpan age)
+    {
+        if (age <= TrailFullyVisibleAge) return 1.0;
+        var fadeProgress = (age - TrailFullyVisibleAge).TotalMilliseconds
+                           / TrailFadeDuration.TotalMilliseconds;
+        return 1.0 - Math.Clamp(fadeProgress, 0.0, 1.0)
+            * (1.0 - TrailMinimumOpacity);
+    }
+
+    private sealed record TrailFadeSegment(List<PointLatLng> Points, double Opacity);
 
     private static void ApplyShapeStyle(System.Windows.UIElement? shape, Brush stroke, double thickness,
                                         double opacity, Brush? fill, bool dashed,
@@ -377,12 +481,18 @@ public partial class MapPanel : UserControl
             p.Stroke = stroke; p.StrokeThickness = thickness;
             p.Opacity = opacity; p.Fill = fill;
             p.StrokeDashArray = dashed ? (dashArray ?? new DoubleCollection { 4, 3 }) : null!;
+            p.StrokeStartLineCap = PenLineCap.Round;
+            p.StrokeEndLineCap = PenLineCap.Round;
+            p.StrokeLineJoin = PenLineJoin.Round;
+            p.IsHitTestVisible = false;
         }
         else if (shape is System.Windows.Shapes.Polygon poly)
         {
             poly.Stroke = stroke; poly.StrokeThickness = thickness;
             poly.Opacity = opacity; poly.Fill = fill;
             poly.StrokeDashArray = dashed ? (dashArray ?? new DoubleCollection { 4, 3 }) : null!;
+            poly.StrokeLineJoin = PenLineJoin.Round;
+            poly.IsHitTestVisible = false;
         }
     }
 

@@ -52,7 +52,9 @@ public partial class KamikazeFullscreenView : UserControl
         {
             case nameof(MainWindowViewModel.Altitude):
             case nameof(MainWindowViewModel.Pitch):
+            case nameof(MainWindowViewModel.IsVehicleDataValid):
                 UpdateGeometry();
+                UpdateDistance();
                 break;
             case nameof(MainWindowViewModel.Latitude):
             case nameof(MainWindowViewModel.Longitude):
@@ -70,6 +72,15 @@ public partial class KamikazeFullscreenView : UserControl
     private void UpdateGeometry()
     {
         if (_vm is null) return;
+        if (!_vm.IsVehicleDataValid)
+        {
+            DroneIcon.Visibility = Visibility.Collapsed;
+            ApproachCurve.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        DroneIcon.Visibility = Visibility.Visible;
+        ApproachCurve.Visibility = Visibility.Visible;
 
         // Drone Y: GroundY - alt*pix. Alt 100m → 80, 30m → 240, 0m → 280.
         var alt = Math.Max(0, Math.Min(AltitudeReference + 50, _vm.Altitude));
@@ -102,7 +113,7 @@ public partial class KamikazeFullscreenView : UserControl
     /// </summary>
     private void UpdateDistance()
     {
-        if (_vm?.MapVm?.QrTarget is not { } target)
+        if (_vm?.IsVehicleDataValid != true || _vm.MapVm?.QrTarget is not { } target)
         {
             DistanceText.Text = "—";
             return;

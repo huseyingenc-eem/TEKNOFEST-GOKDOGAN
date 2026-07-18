@@ -1,20 +1,32 @@
 <UserControl x:Class="GOKDOGANIHA.UI.Controls.Map.Markers.OwnDroneMarker"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:materialIcons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
-             Width="36" Height="36"
+             Width="44" Height="44"
+             IsHitTestVisible="False"
              RenderTransformOrigin="0.5,0.5">
     <UserControl.RenderTransform>
         <RotateTransform x:Name="Heading" Angle="0" />
     </UserControl.RenderTransform>
-    <Grid>
-        <Ellipse Width="32" Height="32"
-                 Fill="{StaticResource TacticalAccent}"
-                 Opacity="0.25" />
-        <materialIcons:MaterialIcon Kind="AirplaneMarker"
-                                    Width="24" Height="24"
-                                    Foreground="{StaticResource TacticalAccent}"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center" />
+    <!-- Kuzeye bakan, heading ile dönen sade üstten uçak silüeti.
+         Dairesel halo ve pin/ok ikonu bilerek kullanılmıyor. -->
+    <Grid Width="44" Height="44">
+        <Path Data="M22,2 L26,17 L40,24 L40,28 L26,25 L25,36 L31,41 L30,43 L22,39 L14,43 L13,41 L19,36 L18,25 L4,28 L4,24 L18,17 Z"
+              Fill="#F20A1620"
+              Stroke="{StaticResource TacticalAccent}"
+              StrokeThickness="2"
+              StrokeLineJoin="Round">
+            <Path.Effect>
+                <DropShadowEffect Color="#FF00D1C7"
+                                  BlurRadius="9"
+                                  ShadowDepth="0"
+                                  Opacity="0.85" />
+            </Path.Effect>
+        </Path>
+        <Path Data="M22,5 L22,37 M18,25 L26,25"
+              Stroke="#D9E9FFFD"
+              StrokeThickness="1.2"
+              StrokeStartLineCap="Round"
+              StrokeEndLineCap="Round"
+              Opacity="0.9" />
     </Grid>
 </UserControl>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,21 +8,30 @@ using GOKDOGANIHA.Core.Configuration;
 using GOKDOGANIHA.Core.Models;
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.Core.Services.Polling;
+using GOKDOGANIHA.Core.Services.Telemetry;
 
 namespace GOKDOGANIHA.UI.ViewModels;
 
+public readonly record struct OwnTrailSample(
+    PointLatLng Position,
+    DateTime RecordedUtc,
+    bool StartsNewSegment);
+
 public sealed partial class MapViewModel : ObservableObject
 {
-    /// <summary>Kendi İHA iz çizgisinde tutulan max nokta sayısı (FIFO).</summary>
-    private const int MaxTrailPoints = 200;
+    private const double MinTrailSpacingMeters = 3.0;
+    private const double TrailBreakDistanceMeters = 2_000.0;
+    private static readonly TimeSpan TrailBreakAfter = TimeSpan.FromSeconds(10);
 
     private readonly TelemetryPollService? _telemetryPoll;
     private readonly HssPollService? _hssPoll;
+    private readonly OwnshipMapTrackFilter _ownshipTrackFilter = new();
+    private readonly Dictionary<PointLatLng, TrailPointMetadata> _trailMetadata = new();
 
     public ObservableCollection<KonumBilgisi> EnemyDrones { get; } = new();
     public ObservableCollection<HssKoordinat> HssZones { get; } = new();
 
-    /// <summary>Kendi İHA'nın geçtiği yol — son MaxTrailPoints noktası.</summary>
+    /// <summary>Kendi İHA'nın geçtiği yol — kullanıcı temizleyene kadar korunur.</summary>
     public ObservableCollection<PointLatLng> OwnTrail { get; } = new();
 
     /// <summary>Mission planner waypoint'leri — Faz 4'te yalnızca görselleştirme.</summary>
@@ -54,9 +64,12 @@ public sealed partial class MapViewModel : ObservableObject
     [ObservableProperty] private bool showOwnTrail = true;
 
     // Design-time / preview ctor (no services)
-    public MapViewModel() { }
+    public MapViewModel()
+    {
+        OwnTrail.CollectionChanged += OnOwnTrailCollectionChanged;
+    }
 
-    public MapViewModel(TelemetryPollService telemetryPoll, HssPollService hssPoll)
+    public MapViewModel(TelemetryPollService telemetryPoll, HssPollService hssPoll) : this()
     {
         _telemetryPoll = telemetryPoll;
         _hssPoll = hssPoll;
@@ -64,20 +77,42 @@ public sealed partial class MapViewModel : ObservableObject
         _hssPoll.HssUpdated += OnHssUpdated;
     }
 
-    public void SetOwnPosition(double lat, double lng, double headingDeg, bool isValid = true)
+    public void SetOwnPosition(
+        double lat,
+        double lng,
+        double headingDeg,
+        bool isValid = true,
+        double? groundTrackDeg = null,
+        double groundSpeedMps = 0,
+        double? gpsHdop = null,
+        DateTime? sampleUtc = null)
     {
         HasOwnPosition = isValid
             && lat is >= -90 and <= 90
             && lng is >= -180 and <= 180
             && (Math.Abs(lat) > 0.000001 || Math.Abs(lng) > 0.000001);
-        if (!HasOwnPosition) return;
+        if (!HasOwnPosition)
+        {
+            _ownshipTrackFilter.Reset();
+            return;
+        }
 
-        OwnLatitude = lat;
-        OwnLongitude = lng;
-        OwnHeading = headingDeg;
+        var filtered = _ownshipTrackFilter.Apply(
+            lat,
+            lng,
+            headingDeg,
+            groundTrackDeg,
+            groundSpeedMps,
+            gpsHdop,
+            sampleUtc ?? DateTime.UtcNow);
+        if (!filtered.Accepted) return;
+
+        OwnLatitude = filtered.Latitude;
+        OwnLongitude = filtered.Longitude;
+        OwnHeading = filtered.Heading;
 
         // İz çizgisi: yeni nokta yeterince uzaktıysa append (gürültüye karşı min mesafe).
-        if (ShowOwnTrail) AppendTrailPoint(lat, lng);
+        if (ShowOwnTrail) AppendTrailPoint(filtered.Latitude, filtered.Longitude);
     }
 
     public void SetVehicleStatus(
@@ -92,7 +127,11 @@ public sealed partial class MapViewModel : ObservableObject
         VehicleLinkStatus = status;
         IsSimulationMode = simulation;
         LastVehicleUpdateUtc = lastUpdateUtc;
-        if (!isValid) HasOwnPosition = false;
+        if (!isValid)
+        {
+            HasOwnPosition = false;
+            _ownshipTrackFilter.Reset();
+        }
         if (leavingSimulation)
         {
             // Simülasyondan canlıya geçildiğinde sahte HSS/rakip/iz verileri canlı
@@ -100,6 +139,7 @@ public sealed partial class MapViewModel : ObservableObject
             HssZones.Clear();
             EnemyDrones.Clear();
             OwnTrail.Clear();
+            _ownshipTrackFilter.Reset();
         }
     }
 
@@ -109,23 +149,96 @@ public sealed partial class MapViewModel : ObservableObject
         CursorLongitude = lng;
     }
 
-    /// <summary>İz çizgisine yeni nokta ekler. Çok yakın noktaları ele eler.</summary>
+    /// <summary>
+    /// İz çizgisine yeni nokta ekler. GPS titreşimini metre bazında eler ve
+    /// kaynağın başka bir konuma sıçramasında eski iz ile sahte bağlantı kurmaz.
+    /// </summary>
     public void AppendTrailPoint(double lat, double lng)
     {
+        var nowUtc = DateTime.UtcNow;
+        var startsNewSegment = OwnTrail.Count == 0;
         if (OwnTrail.Count > 0)
         {
             var last = OwnTrail[OwnTrail.Count - 1];
-            if (System.Math.Abs(last.Lat - lat) > 0.1 || System.Math.Abs(last.Lng - lng) > 0.1)
-            {
-                OwnTrail.Clear();
-            }
-            else if (System.Math.Abs(last.Lat - lat) < 0.00002 && System.Math.Abs(last.Lng - lng) < 0.00002)
+            var distanceMeters = DistanceMeters(last.Lat, last.Lng, lat, lng);
+            var hasLongGap = _trailMetadata.TryGetValue(last, out var lastMetadata)
+                             && nowUtc - lastMetadata.RecordedUtc > TrailBreakAfter;
+
+            if (!hasLongGap && distanceMeters < MinTrailSpacingMeters)
             {
                 return;
             }
+
+            // Eski izi silmek yerine yeni ve bağımsız bir çizgi parçası başlat.
+            startsNewSegment = hasLongGap || distanceMeters > TrailBreakDistanceMeters;
         }
-        OwnTrail.Add(new PointLatLng(lat, lng));
-        while (OwnTrail.Count > MaxTrailPoints) OwnTrail.RemoveAt(0);
+        AddTrailPoint(lat, lng, nowUtc, startsNewSegment);
+    }
+
+    private void AddTrailPoint(
+        double lat,
+        double lng,
+        DateTime recordedUtc,
+        bool startsNewSegment)
+    {
+        var point = new PointLatLng(lat, lng);
+        _trailMetadata[point] = new TrailPointMetadata(recordedUtc, startsNewSegment);
+        OwnTrail.Add(point);
+    }
+
+    public IReadOnlyList<OwnTrailSample> GetOwnTrailSamples()
+    {
+        var nowUtc = DateTime.UtcNow;
+        return OwnTrail
+            .Select(point => new OwnTrailSample(
+                point,
+                _trailMetadata.TryGetValue(point, out var metadata)
+                    ? metadata.RecordedUtc
+                    : nowUtc,
+                _trailMetadata.TryGetValue(point, out metadata)
+                    ? metadata.StartsNewSegment
+                    : OwnTrail.IndexOf(point) == 0))
+            .ToList();
+    }
+
+    private void OnOwnTrailCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            _trailMetadata.Clear();
+            return;
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (PointLatLng point in e.OldItems)
+                _trailMetadata.Remove(point);
+        }
+
+        if (e.NewItems is not null)
+        {
+            var nowUtc = DateTime.UtcNow;
+            foreach (PointLatLng point in e.NewItems)
+            {
+                var startsNewSegment = e.NewStartingIndex <= 0 && OwnTrail.IndexOf(point) == 0;
+                _trailMetadata.TryAdd(point, new TrailPointMetadata(nowUtc, startsNewSegment));
+            }
+        }
+    }
+
+    private readonly record struct TrailPointMetadata(DateTime RecordedUtc, bool StartsNewSegment);
+
+    private static double DistanceMeters(double lat1, double lng1, double lat2, double lng2)
+    {
+        const double earthRadiusMeters = 6_371_000.0;
+        var lat1Rad = lat1 * Math.PI / 180.0;
+        var lat2Rad = lat2 * Math.PI / 180.0;
+        var deltaLat = (lat2 - lat1) * Math.PI / 180.0;
+        var deltaLng = (lng2 - lng1) * Math.PI / 180.0;
+        var a = Math.Sin(deltaLat / 2.0) * Math.Sin(deltaLat / 2.0)
+                + Math.Cos(lat1Rad) * Math.Cos(lat2Rad)
+                * Math.Sin(deltaLng / 2.0) * Math.Sin(deltaLng / 2.0);
+        return earthRadiusMeters * 2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1.0 - a));
     }
 
     public void ClearTrail() => OwnTrail.Clear();
@@ -222,11 +335,7 @@ public sealed partial class MapViewModel : ObservableObject
         Marshal(() =>
         {
             EnemyDrones.Clear();
-            foreach (var k in resp.KonumBilgileri
-                         .Where(IsUsableOpponentPosition)
-                         .GroupBy(x => x.TakimNumarasi)
-                         .Select(group => group.OrderBy(x => x.ZamanFarkiMs).First())
-                         .OrderBy(x => x.TakimNumarasi))
+            foreach (var k in OpponentTelemetrySanitizer.Clean(resp.KonumBilgileri))
             {
                 EnemyDrones.Add(k);
             }
@@ -242,14 +351,6 @@ public sealed partial class MapViewModel : ObservableObject
                 HssZones.Add(h);
         });
     }
-
-    private static bool IsUsableOpponentPosition(KonumBilgisi position)
-        => position.TakimNumarasi > 0
-           && double.IsFinite(position.Enlem)
-           && double.IsFinite(position.Boylam)
-           && position.Enlem is >= -90 and <= 90
-           && position.Boylam is >= -180 and <= 180
-           && position.ZamanFarkiMs is >= 0 and <= 5_000;
 
     private static bool IsUsableHssZone(HssKoordinat zone)
         => zone.Id >= 0

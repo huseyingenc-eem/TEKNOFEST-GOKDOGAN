@@ -68,12 +68,12 @@
                                    VerticalAlignment="Center" />
                         <ProgressBar Grid.Column="2"
                                      Minimum="0" Maximum="100"
-                                     Value="{Binding Battery, Mode=OneWay}"
+                                     Value="{Binding BatteryProgressValue, Mode=OneWay}"
                                      Height="6" VerticalAlignment="Center"
                                      Background="{StaticResource TacticalBgDeep}"
                                      BorderThickness="0"
                                      Foreground="{StaticResource TacticalOk}" />
-                        <TextBlock Grid.Column="3" Text="{Binding Battery, StringFormat={}{0}%}"
+                        <TextBlock Grid.Column="3" Text="{Binding BatteryDisplay}"
                                    FontFamily="Consolas" FontSize="12" FontWeight="Bold"
                                    Foreground="{StaticResource TacticalTextPrimary}"
                                    Margin="8,0,0,0"

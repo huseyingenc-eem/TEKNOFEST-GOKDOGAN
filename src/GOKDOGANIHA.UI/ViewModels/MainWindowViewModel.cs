@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GOKDOGANIHA.Core.Models;
 using GOKDOGANIHA.Core.Models.Alerts;
+using GOKDOGANIHA.Core.Models.Connection;
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.Core.Services.Polling;
 using GOKDOGANIHA.UI;
@@ -13,6 +14,7 @@ using GOKDOGANIHA.UI;
 // enum'a alias veriyoruz — yoksa `FlightMode.Auto` ifadesi string property'sinin
 // üyesini arar (bulamaz).
 using FlightModeEnum = GOKDOGANIHA.Core.Models.FlightMode;
+using GpsHealthLevel = GOKDOGANIHA.Core.Models.GpsHealth;
 
 namespace GOKDOGANIHA.UI.ViewModels;
 
@@ -37,6 +39,9 @@ public partial class MainWindowViewModel : ObservableObject
         // Runtime'da App.FlightState'e köprü kur — design-time'da Application yok.
         if (Application.Current is App)
         {
+            ServerConnection = App.ServerConnection;
+            TelemetryConnection = App.TelemetryConnection;
+            VideoConnection = App.VideoConnection;
             _flightState = App.FlightState;
             _flightState.PropertyChanged += OnFlightStateChanged;
             SyncFromFlightState();
@@ -102,6 +107,7 @@ public partial class MainWindowViewModel : ObservableObject
     private void OnClockTick(object? sender, EventArgs e)
     {
         SyncFlightBackendPresentation();
+        IsConnected = App.Connection?.IsConnected == true;
         var sc = App.ServerClock;
         var now = sc?.Now ?? DateTime.UtcNow;
         // Şartname formatı: gün-saat:dakika:saniye.ms
@@ -206,31 +212,82 @@ public partial class MainWindowViewModel : ObservableObject
     public MapViewModel MapVm { get; }
     public SettingsViewModel Settings { get; }
 
+    /// <summary>Ortak bağlantı durumu göstergeleri — TopBar rozetleri bunları bağlar (runtime'da atanır).</summary>
+    public ConnectionStatus? ServerConnection { get; }
+    public ConnectionStatus? TelemetryConnection { get; }
+    public ConnectionStatus? VideoConnection { get; }
+
     [ObservableProperty] private string _serverTime = "00:00:00.000";
-    [ObservableProperty] private string _flightMode = "MANUAL";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FlightModeDisplay))]
+    private string _flightMode = "MANUAL";
     [ObservableProperty] private bool _isConnected;
-    [ObservableProperty] private bool _isAutonomous;
-    [ObservableProperty] private bool _isLocked;
-    [ObservableProperty] private bool _isArmed;
-    [ObservableProperty] private string _flightBackendStatusText = "Veri kaynağı başlatılıyor";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAutonomousDisplay))]
+    private bool _isAutonomous;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLockedDisplay))]
+    private bool _isLocked;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsArmedDisplay))]
+    private bool _isArmed;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TelemetryAvailabilityMessage))]
+    private string _flightBackendStatusText = "Veri kaynağı başlatılıyor";
     [ObservableProperty] private string _flightDataModeText = "CANLI";
     [ObservableProperty] private bool _isSimulationMode;
-    [ObservableProperty] private bool _isVehicleDataValid;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsVehicleDataUnavailable))]
+    [NotifyPropertyChangedFor(nameof(TelemetryAvailabilityMessage))]
+    [NotifyPropertyChangedFor(nameof(FlightModeDisplay))]
+    [NotifyPropertyChangedFor(nameof(BatteryDisplay))]
+    [NotifyPropertyChangedFor(nameof(BatteryProgressValue))]
+    [NotifyPropertyChangedFor(nameof(AltitudeDisplay))]
+    [NotifyPropertyChangedFor(nameof(PitchDisplay))]
+    [NotifyPropertyChangedFor(nameof(VerticalSpeedDisplay))]
+    [NotifyPropertyChangedFor(nameof(HasTargetBox))]
+    [NotifyPropertyChangedFor(nameof(IsLockingActive))]
+    [NotifyPropertyChangedFor(nameof(IsArmedDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsAutonomousDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsLockedDisplay))]
+    private bool _isVehicleDataValid;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsVehicleDataUnavailable))]
+    [NotifyPropertyChangedFor(nameof(TelemetryAvailabilityMessage))]
+    [NotifyPropertyChangedFor(nameof(FlightModeDisplay))]
+    [NotifyPropertyChangedFor(nameof(BatteryDisplay))]
+    [NotifyPropertyChangedFor(nameof(BatteryProgressValue))]
+    [NotifyPropertyChangedFor(nameof(AltitudeDisplay))]
+    [NotifyPropertyChangedFor(nameof(PitchDisplay))]
+    [NotifyPropertyChangedFor(nameof(VerticalSpeedDisplay))]
+    private bool _hasVehicleTelemetrySnapshot;
     [ObservableProperty] private double _vehicleDataAgeSeconds;
 
     [ObservableProperty] private double _airspeed;
     [ObservableProperty] private double _groundSpeed;
-    [ObservableProperty] private double _verticalSpeed;
-    [ObservableProperty] private double _altitude;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VerticalSpeedDisplay))]
+    private double _verticalSpeed;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AltitudeDisplay))]
+    private double _altitude;
     [ObservableProperty] private double _heading;
-    [ObservableProperty] private double _pitch;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PitchDisplay))]
+    private double _pitch;
     [ObservableProperty] private double _roll;
-    [ObservableProperty] private int _battery = 100;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BatteryDisplay))]
+    [NotifyPropertyChangedFor(nameof(BatteryProgressValue))]
+    private int _battery = 100;
     [ObservableProperty] private double _latitude;
     [ObservableProperty] private double _longitude;
     [ObservableProperty] private double _wpDistance;
     [ObservableProperty] private string _gpsFixDisplay = "—";
     [ObservableProperty] private int _satelliteCount;
+    [ObservableProperty] private double? _gpsHdop;
+    [ObservableProperty] private GpsHealthLevel _gpsHealth = GpsHealthLevel.Unavailable;
+    [ObservableProperty] private string _gpsHealthDisplay = "VERİ YOK";
     [ObservableProperty] private int? _targetTeamNumber;
     [ObservableProperty] private double _signalRssi;
 
@@ -283,9 +340,30 @@ public partial class MainWindowViewModel : ObservableObject
     public double TargetBoxLeft => TargetCenterX - TargetWidth / 2.0;
     public double TargetBoxTop => TargetCenterY - TargetHeight / 2.0;
     public double TargetLabelTop => Math.Max(0, TargetBoxTop - 18);
-    public bool HasTargetBox => TargetWidth > 0 && TargetHeight > 0;
+    public bool HasTargetBox => IsVehicleDataValid && TargetWidth > 0 && TargetHeight > 0;
     public string LockProgressText => $"{LockProgressSeconds:F1}s / {LockRequiredSeconds:F1}s";
-    public bool IsLockingActive => LockState is LockState.Locking or LockState.Locked;
+    public bool IsLockingActive => IsVehicleDataValid
+        && LockState is LockState.Locking or LockState.Locked;
+
+    /// <summary>
+    /// Son snapshot sayısal göstergelerde korunur; IsVehicleDataValid yalnızca
+    /// verinin canlı/güncel olup olmadığını ve emniyet kapılarını ifade eder.
+    /// </summary>
+    public bool IsVehicleDataUnavailable => !HasVehicleTelemetrySnapshot;
+    public string TelemetryAvailabilityMessage => IsVehicleDataValid
+        ? string.Empty
+        : FlightBackendStatusText.Contains("BAĞLANTI KOPTU", StringComparison.OrdinalIgnoreCase)
+            ? "BAĞLANTI KOPTU"
+            : "TELEMETRİ BEKLENİYOR";
+    public string FlightModeDisplay => HasVehicleTelemetrySnapshot ? FlightMode : "—";
+    public string BatteryDisplay => HasVehicleTelemetrySnapshot ? $"{Battery}%" : "—";
+    public double BatteryProgressValue => HasVehicleTelemetrySnapshot ? Battery : 0;
+    public string AltitudeDisplay => HasVehicleTelemetrySnapshot ? $"{Altitude:0} m" : "—";
+    public string PitchDisplay => HasVehicleTelemetrySnapshot ? $"{Pitch:0}°" : "—";
+    public string VerticalSpeedDisplay => HasVehicleTelemetrySnapshot ? $"{VerticalSpeed:0}" : "—";
+    public bool IsArmedDisplay => IsVehicleDataValid && IsArmed;
+    public bool IsAutonomousDisplay => IsVehicleDataValid && IsAutonomous;
+    public bool IsLockedDisplay => IsVehicleDataValid && IsLocked;
 
     // Target (shown in camera fullscreen when IsLocked)
     [ObservableProperty] private string _targetId = "—";
@@ -351,6 +429,21 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand] private void ExpandCamera() => IsCameraFullscreen = true;
+
+    /// <summary>TopBar SUNUCU rozetindeki "Tekrar Dene" — yarışma sunucusuna yeniden bağlanmayı dener.</summary>
+    [RelayCommand]
+    private async Task RetryServerConnection()
+    {
+        if (App.Connection is not null) await App.Connection.ConnectAsync();
+    }
+
+    /// <summary>TopBar TELEMETRİ rozetindeki "Tekrar Dene" — canlı MAVLink kaynağını yeniden başlatır.</summary>
+    [RelayCommand]
+    private async Task RetryTelemetry()
+    {
+        if (App.FlightBackend is not null)
+            await App.FlightBackend.SwitchAsync(FlightDataMode.Live, forceRestart: true);
+    }
     [RelayCommand] private void OpenSettings() => IsSettingsOpen = true;
     [RelayCommand]
     private void CloseActiveOverlay()
@@ -493,11 +586,29 @@ public partial class MainWindowViewModel : ObservableObject
             case nameof(FlightState.Latitude):
             case nameof(FlightState.Longitude):
             case nameof(FlightState.Heading):
-                // Lat/Lon/Heading değiştiğinde MapVm'i besle — own marker + trail.
+                // Alanlar aynı telemetri paketinde art arda değişir. Haritayı burada
+                // güncellemek ara enlem/boylam çiftleri ve hatalı bearing üretir;
+                // paket tamamlandığında Sequence case'i tek snapshot uygular.
                 Latitude  = _flightState.Latitude;
                 Longitude = _flightState.Longitude;
                 Heading   = _flightState.Heading;
-                MapVm?.SetOwnPosition(_flightState.Latitude, _flightState.Longitude, _flightState.Heading, _flightState.IsDataValid);
+                break;
+            case nameof(FlightState.Sequence):
+                HasVehicleTelemetrySnapshot = _flightState.Sequence > 0;
+                Latitude  = _flightState.Latitude;
+                Longitude = _flightState.Longitude;
+                Heading   = _flightState.Heading;
+                break;
+            case nameof(FlightState.NavigationSequence):
+                MapVm?.SetOwnPosition(
+                    _flightState.Latitude,
+                    _flightState.Longitude,
+                    _flightState.Heading,
+                    isValid: _flightState.IsDataValid,
+                    groundTrackDeg: _flightState.GroundTrack,
+                    groundSpeedMps: _flightState.GroundSpeed,
+                    gpsHdop: _flightState.GpsHdop,
+                    sampleUtc: _flightState.LastNavigationUpdatedUtc);
                 break;
             case nameof(FlightState.Altitude):       Altitude        = _flightState.Altitude; break;
             case nameof(FlightState.Pitch):          Pitch           = _flightState.Pitch; break;
@@ -513,8 +624,10 @@ public partial class MainWindowViewModel : ObservableObject
             case nameof(FlightState.Mode):           FlightMode      = _flightState.Mode.ToString().ToUpperInvariant(); break;
             case nameof(FlightState.GpsFix):
             case nameof(FlightState.SatelliteCount):
-                GpsFixDisplay = $"{FormatGpsFix(_flightState.GpsFix)} ({_flightState.SatelliteCount} sat)";
+            case nameof(FlightState.GpsHdop):
                 SatelliteCount = _flightState.SatelliteCount;
+                GpsHdop = _flightState.GpsHdop;
+                UpdateGpsPresentation();
                 break;
             case nameof(FlightState.TargetTeamNumber): TargetTeamNumber = _flightState.TargetTeamNumber; break;
             case nameof(FlightState.SignalRssi):
@@ -528,8 +641,10 @@ public partial class MainWindowViewModel : ObservableObject
             case nameof(FlightState.IsDataValid):
             case nameof(FlightState.DataSource):
             case nameof(FlightState.LastUpdatedUtc):
+                IsVehicleDataValid = _flightState.IsDataValid;
+                UpdateGpsPresentation();
                 MapVm?.SetVehicleStatus(
-                    _flightState.IsDataValid,
+                    IsVehicleDataValid,
                     _flightState.DataSource,
                     FlightBackendStatusText,
                     IsSimulationMode,
@@ -543,13 +658,23 @@ public partial class MainWindowViewModel : ObservableObject
     private void SyncFromFlightState()
     {
         if (_flightState is null) return;
+        HasVehicleTelemetrySnapshot = _flightState.Sequence > 0;
+        IsVehicleDataValid = _flightState.IsDataValid;
         Latitude       = _flightState.Latitude;
         Longitude      = _flightState.Longitude;
         Altitude       = _flightState.Altitude;
         Pitch          = _flightState.Pitch;
         Heading        = _flightState.Heading;
         Roll           = _flightState.Roll;
-        MapVm?.SetOwnPosition(_flightState.Latitude, _flightState.Longitude, _flightState.Heading, _flightState.IsDataValid);
+        MapVm?.SetOwnPosition(
+            _flightState.Latitude,
+            _flightState.Longitude,
+            _flightState.Heading,
+            _flightState.IsDataValid,
+            _flightState.GroundTrack,
+            _flightState.GroundSpeed,
+            _flightState.GpsHdop,
+            _flightState.LastNavigationUpdatedUtc);
         GroundSpeed    = _flightState.GroundSpeed;
         Airspeed       = _flightState.Airspeed;
         VerticalSpeed  = _flightState.VerticalSpeed;
@@ -560,7 +685,8 @@ public partial class MainWindowViewModel : ObservableObject
         IsArmed        = _flightState.IsArmed;
         FlightMode     = _flightState.Mode.ToString().ToUpperInvariant();
         SatelliteCount = _flightState.SatelliteCount;
-        GpsFixDisplay  = $"{FormatGpsFix(_flightState.GpsFix)} ({_flightState.SatelliteCount} sat)";
+        GpsHdop = _flightState.GpsHdop;
+        UpdateGpsPresentation();
         TargetTeamNumber = _flightState.TargetTeamNumber;
         SignalRssi     = _flightState.SignalRssi;
         LinkRssi       = (int)Math.Round(_flightState.SignalRssi);
@@ -581,7 +707,7 @@ public partial class MainWindowViewModel : ObservableObject
             FlightDataModeText = backend.ActiveMode == FlightDataMode.Simulation ? "SİMÜLASYON" : "CANLI";
             FlightBackendStatusText = backend.StatusMessage;
             MapVm?.SetVehicleStatus(
-                _flightState?.IsDataValid == true,
+                IsVehicleDataValid,
                 _flightState?.DataSource ?? "NONE",
                 FlightBackendStatusText,
                 IsSimulationMode,
@@ -603,4 +729,25 @@ public partial class MainWindowViewModel : ObservableObject
         GpsFix.Rtk   => "RTK",
         _ => "—"
     };
+
+    private void UpdateGpsPresentation()
+    {
+        if (_flightState is null) return;
+        GpsHealth = GpsHealthEvaluator.Evaluate(
+            _flightState.IsDataValid,
+            _flightState.GpsFix,
+            _flightState.SatelliteCount,
+            _flightState.GpsHdop);
+        GpsHealthDisplay = GpsHealth switch
+        {
+            GpsHealthLevel.Healthy => "SAĞLIKLI",
+            GpsHealthLevel.Warning => "UYARI",
+            GpsHealthLevel.Critical => "ZAYIF",
+            _ => "VERİ YOK"
+        };
+        var hdop = _flightState.GpsHdop is > 0
+            ? _flightState.GpsHdop.Value.ToString("F2")
+            : "—";
+        GpsFixDisplay = $"{FormatGpsFix(_flightState.GpsFix).ToUpperInvariant()} · {_flightState.SatelliteCount} SAT · HDOP {hdop}";
+    }
 }

@@ -6,6 +6,7 @@ using GOKDOGANIHA.Core.Models.Alerts;
 using GOKDOGANIHA.Core.Models.Server;
 using GOKDOGANIHA.Core.Services.Api;
 using GOKDOGANIHA.Core.Services.Polling;
+using GOKDOGANIHA.Core.Models.Connection;
 
 namespace GOKDOGANIHA.Core.Services.Session;
 
@@ -13,7 +14,8 @@ namespace GOKDOGANIHA.Core.Services.Session;
 /// Login + poll servislerinin başlatılmasını tek bir iş akışına toplar. UI'nın tek
 /// "connect" butonu veya App startup bunu çağırır. Login başarılı olursa
 /// TelemetryPoll ve HssPoll başlar. Başarısızlık durumunda alert publish edilir.
-/// Auto-reconnect şu an TODO — TelemetryOptions.AutoReconnect flag'i burada okunur.
+/// TelemetryOptions.AutoReconnect etkinse oturum kaybında artan gecikmeli yeniden
+/// giriş uygulanır; kullanıcının yaptığı manuel kesme bu döngüyü durdurur.
 /// </summary>
 public sealed class ConnectionOrchestrator
 {
@@ -23,11 +25,19 @@ public sealed class ConnectionOrchestrator
     private readonly IAlertPublisher _publisher;
     private readonly IClock _clock;
     private readonly TelemetryOptions _telemetryOptions;
+    private readonly ConnectionStatus _status;
     private readonly object _reconnectGate = new();
     private bool _isReconnecting;
     private bool _everConnected;
+    private volatile bool _manualDisconnect;
+    private int _isConnected;
 
     public event EventHandler<QrKoordinat>? QrCoordinateReceived;
+    public event EventHandler<bool>? ConnectionStateChanged;
+    public bool IsConnected => Volatile.Read(ref _isConnected) == 1;
+
+    /// <summary>Yarışma sunucusu bağlantısının gözlemlenebilir durumu (UI göstergesi için).</summary>
+    public ConnectionStatus Status => _status;
 
     public ConnectionOrchestrator(
         IGameServerClient client,
@@ -35,7 +45,8 @@ public sealed class ConnectionOrchestrator
         HssPollService hssPoll,
         IAlertPublisher publisher,
         IClock clock,
-        TelemetryOptions telemetryOptions)
+        TelemetryOptions telemetryOptions,
+        ConnectionStatus? status = null)
     {
         _client = client;
         _telemetryPoll = telemetryPoll;
@@ -43,6 +54,7 @@ public sealed class ConnectionOrchestrator
         _publisher = publisher;
         _clock = clock;
         _telemetryOptions = telemetryOptions;
+        _status = status ?? new ConnectionStatus("SUNUCU");
         _telemetryPoll.PollFailed += OnPollFailed;
     }
 
@@ -51,12 +63,16 @@ public sealed class ConnectionOrchestrator
     /// </summary>
     public async Task<bool> ConnectAsync()
     {
+        _manualDisconnect = false;
+        _status.MarkConnecting("Giriş yapılıyor…");
         try
         {
             var login = await _client.GirisAsync();
             _telemetryPoll.Start();
             _hssPoll.Start();
             _everConnected = true;
+            SetConnected(true);
+            _status.MarkOnline($"Bağlı · takım {login.TakimNumarasi}");
             await TryPublishQrCoordinateAsync().ConfigureAwait(false);
 
             _publisher.Publish(Alert.Create(
@@ -69,6 +85,8 @@ public sealed class ConnectionOrchestrator
         }
         catch (Exception ex)
         {
+            SetConnected(false);
+            _status.MarkFaulted(ex.Message);
             _publisher.Publish(Alert.Create(
                 kind: "session",
                 level: AlertLevel.Danger,
@@ -81,8 +99,11 @@ public sealed class ConnectionOrchestrator
 
     public async Task DisconnectAsync()
     {
+        _manualDisconnect = true;
         await _telemetryPoll.StopAsync();
         await _hssPoll.StopAsync();
+        SetConnected(false);
+        _status.MarkOffline("Bağlantı kesildi");
     }
 
     /// <summary>
@@ -91,16 +112,25 @@ public sealed class ConnectionOrchestrator
     /// </summary>
     private async void OnPollFailed(object? sender, Exception ex)
     {
-        if (!_telemetryOptions.AutoReconnect || !_everConnected) return;
+        SetConnected(false);
+        if (!_telemetryOptions.AutoReconnect || !_everConnected || _manualDisconnect)
+        {
+            // Otomatik yeniden deneme devrede değil — kullanıcıya "Tekrar Dene" düşer.
+            if (!_manualDisconnect)
+                _status.MarkFaulted($"Bağlantı koptu: {ex.Message}");
+            return;
+        }
         lock (_reconnectGate) { if (_isReconnecting) return; _isReconnecting = true; }
 
         try
         {
             int attempt = 0;
-            while (_telemetryOptions.AutoReconnect)
+            while (_telemetryOptions.AutoReconnect && !_manualDisconnect)
             {
                 attempt++;
                 var delay = TimeSpan.FromSeconds(Math.Min(30, Math.Pow(2, attempt - 1)));
+                _status.MarkRetrying(attempt, delay.TotalSeconds,
+                    $"Yeniden bağlanıyor · deneme {attempt} · {delay.TotalSeconds:F0} sn sonra");
                 _publisher.Publish(Alert.Create(
                     kind: "session.reconnect",
                     level: AlertLevel.Warn,
@@ -109,10 +139,13 @@ public sealed class ConnectionOrchestrator
                     timeUtc: _clock.UtcNow));
 
                 await Task.Delay(delay).ConfigureAwait(false);
+                if (_manualDisconnect) return;
 
                 try
                 {
                     await _client.GirisAsync().ConfigureAwait(false);
+                    SetConnected(true);
+                    _status.MarkOnline($"{attempt}. denemede yeniden bağlandı");
                     await TryPublishQrCoordinateAsync().ConfigureAwait(false);
                     _publisher.Publish(Alert.Create(
                         kind: "session.reconnect",
@@ -132,6 +165,13 @@ public sealed class ConnectionOrchestrator
         {
             lock (_reconnectGate) _isReconnecting = false;
         }
+    }
+
+    private void SetConnected(bool value)
+    {
+        var next = value ? 1 : 0;
+        if (Interlocked.Exchange(ref _isConnected, next) == next) return;
+        ConnectionStateChanged?.Invoke(this, value);
     }
 
     private async Task TryPublishQrCoordinateAsync()

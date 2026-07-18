@@ -23,10 +23,24 @@ public sealed class GameServerClient : IGameServerClient, IDisposable
         _http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
     }
 
-    private Uri Url(string path) => new(new Uri(_options.BaseUrl), path);
+    private Uri Url(string path)
+    {
+        if (!Uri.TryCreate(_options.BaseUrl, UriKind.Absolute, out var baseUri)
+            || baseUri.Scheme is not ("http" or "https"))
+        {
+            throw new InvalidOperationException(
+                "Yarışma sunucusu adresi http:// veya https:// ile başlayan geçerli bir adres olmalıdır.");
+        }
+        return new Uri(baseUri, path);
+    }
 
     public async Task<LoginResponse> GirisAsync(CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(_options.KullaniciAdi)
+            || string.IsNullOrWhiteSpace(_options.Sifre))
+        {
+            throw new InvalidOperationException("Yarışma sunucusu kullanıcı adı ve şifresi zorunludur.");
+        }
         var req = new LoginRequest(_options.KullaniciAdi, _options.Sifre);
         using var resp = await _http.PostAsJsonAsync(Url("/api/giris"), req, _json, ct);
         var login = await ReadRequiredJsonAsync<LoginResponse>(resp, "/api/giris", ct);
