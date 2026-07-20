@@ -17,7 +17,7 @@ public readonly record struct OwnTrailSample(
     DateTime RecordedUtc,
     bool StartsNewSegment);
 
-public sealed partial class MapViewModel : ObservableObject
+public sealed partial class MapViewModel : ObservableObject, IDisposable
 {
     private const double MinTrailSpacingMeters = 3.0;
     private const double TrailBreakDistanceMeters = 2_000.0;
@@ -366,5 +366,13 @@ public sealed partial class MapViewModel : ObservableObject
         var disp = Application.Current?.Dispatcher;
         if (disp is null || disp.CheckAccess()) action();
         else disp.Invoke(action);
+    }
+
+    public void Dispose()
+    {
+        if (_telemetryPoll is not null)
+            _telemetryPoll.TelemetryReceived -= OnTelemetryReceived;
+        if (_hssPoll is not null)
+            _hssPoll.HssUpdated -= OnHssUpdated;
     }
 }

@@ -1,0 +1,40 @@
+<UserControl x:Class="GOKDOGANIHA.UI.Core.SliderSettingRow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root"
+             Margin="0,0,0,12"
+             Foreground="{StaticResource TacticalAccent}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Column="0"
+                   Text="{Binding Label, ElementName=Root}"
+                   MinWidth="{Binding LabelMinWidth, ElementName=Root}"
+                   Margin="0,0,12,0"
+                   VerticalAlignment="Center"
+                   FontSize="11"
+                   FontWeight="SemiBold"
+                   Foreground="{StaticResource TacticalTextSecondary}" />
+
+        <Slider Grid.Column="1"
+                Minimum="{Binding Minimum, ElementName=Root}"
+                Maximum="{Binding Maximum, ElementName=Root}"
+                TickFrequency="{Binding TickFrequency, ElementName=Root}"
+                IsSnapToTickEnabled="{Binding IsSnapToTickEnabled, ElementName=Root}"
+                Value="{Binding Value, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                VerticalAlignment="Center" />
+
+        <TextBlock Grid.Column="2"
+                   Text="{Binding FormattedValue, ElementName=Root}"
+                   MinWidth="{Binding ValueMinWidth, ElementName=Root}"
+                   VerticalAlignment="Center"
+                   TextAlignment="Right"
+                   FontFamily="Consolas"
+                   FontSize="12"
+                   Foreground="{Binding Foreground, ElementName=Root}" />
+    </Grid>
+</UserControl>

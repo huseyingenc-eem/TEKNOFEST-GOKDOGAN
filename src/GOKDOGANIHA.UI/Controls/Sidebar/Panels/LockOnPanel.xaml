@@ -7,9 +7,8 @@
              mc:Ignorable="d"
              d:DesignWidth="320" d:DesignHeight="220">
 
-    <!-- DataContext = MainWindowViewModel.
-         LockState: Idle/Tracking/Locking/Locked/Failed
-         LockProgressSeconds: 0-4 sn, görsel progress -->
+    <!-- Kilit durumu Flight alt ViewModel'inden gelir:
+         Idle/Tracking/Locking/Locked/Failed ve 0-4 sn görsel ilerleme. -->
     <StackPanel>
         <!-- Durum kartı: LED + state + hedef ID — tek bir grup içinde, ferah padding -->
         <Border Background="{StaticResource TacticalGlass}"
@@ -27,16 +26,16 @@
                         <Style TargetType="Ellipse">
                             <Setter Property="Fill" Value="{StaticResource TacticalTextSecondary}" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding LockState}" Value="Tracking">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Tracking">
                                     <Setter Property="Fill" Value="{StaticResource TacticalAccent}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding LockState}" Value="Locking">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Locking">
                                     <Setter Property="Fill" Value="{StaticResource TacticalWarn}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding LockState}" Value="Locked">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Locked">
                                     <Setter Property="Fill" Value="{StaticResource TacticalOk}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding LockState}" Value="Failed">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Failed">
                                     <Setter Property="Fill" Value="{StaticResource TacticalCritical}" />
                                 </DataTrigger>
                             </Style.Triggers>
@@ -45,7 +44,7 @@
                 </Ellipse>
                 <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="DURUM" Style="{StaticResource MetricLabel}" />
-                    <TextBlock Text="{Binding LockState}"
+                    <TextBlock Text="{Binding Flight.LockState}"
                                FontSize="14" FontWeight="Bold"
                                Foreground="{StaticResource TacticalTextPrimary}"
                                Margin="0,2,0,0" />
@@ -56,7 +55,7 @@
                         VerticalAlignment="Center">
                     <TextBlock FontFamily="Consolas" FontSize="13" FontWeight="Bold"
                                Foreground="White"
-                               Text="{Binding LockTargetId, StringFormat=T-{0:00}, TargetNullValue=—}" />
+                               Text="{Binding Flight.LockTargetId, StringFormat=T-{0:00}, TargetNullValue=—}" />
                 </Border>
             </Grid>
         </Border>
@@ -70,28 +69,28 @@
                 Height="26" Margin="0,0,0,12">
             <Grid>
                 <ProgressBar Minimum="0"
-                             Maximum="{Binding LockRequiredSeconds}"
-                             Value="{Binding LockProgressSeconds, Mode=OneWay}"
+                             Maximum="{Binding Flight.LockRequiredSeconds}"
+                             Value="{Binding Flight.LockProgressSeconds, Mode=OneWay}"
                              Background="Transparent"
                              BorderThickness="0">
                     <ProgressBar.Style>
                         <Style TargetType="ProgressBar">
                             <Setter Property="Foreground" Value="{StaticResource TacticalAccent}" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding LockState}" Value="Locking">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Locking">
                                     <Setter Property="Foreground" Value="{StaticResource TacticalWarn}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding LockState}" Value="Locked">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Locked">
                                     <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding LockState}" Value="Failed">
+                                <DataTrigger Binding="{Binding Flight.LockState}" Value="Failed">
                                     <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </ProgressBar.Style>
                 </ProgressBar>
-                <TextBlock Text="{Binding LockProgressText}"
+                <TextBlock Text="{Binding Flight.LockProgressText}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            FontFamily="Consolas" FontSize="13" FontWeight="Bold"
@@ -120,7 +119,7 @@
                         <Setter Property="Text" Value="HAYIR" />
                         <Setter Property="Foreground" Value="{StaticResource TacticalTextSecondary}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsAutonomousDisplay}" Value="True">
+                            <DataTrigger Binding="{Binding Flight.IsAutonomousDisplay}" Value="True">
                                 <Setter Property="Text" Value="EVET ✓" />
                                 <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                             </DataTrigger>
@@ -133,7 +132,7 @@
                        Style="{StaticResource MetricLabel}" Margin="0,0,16,0"
                        VerticalAlignment="Center" />
             <TextBlock Grid.Row="1" Grid.Column="1"
-                       Text="{Binding LastLockAck}"
+                       Text="{Binding Flight.LastLockAck}"
                        FontFamily="Consolas" FontSize="13"
                        Foreground="{StaticResource TacticalTextPrimary}" />
         </Grid>
@@ -147,7 +146,7 @@
                 Foreground="{StaticResource TacticalCritical}"
                 FontWeight="Bold" FontSize="12"
                 Cursor="Hand"
-                IsEnabled="{Binding IsConnected}">
+                IsEnabled="{Binding SystemStatus.IsConnected}">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <materialIcons:MaterialIcon Kind="Send" Width="14" Height="14"
                                             VerticalAlignment="Center" />

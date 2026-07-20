@@ -29,7 +29,7 @@
                     <Style TargetType="Ellipse">
                         <Setter Property="Fill" Value="{StaticResource TacticalCritical}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                            <DataTrigger Binding="{Binding SystemStatus.IsConnected}" Value="True">
                                 <Setter Property="Fill" Value="{StaticResource TacticalOk}" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -42,7 +42,7 @@
                         <Setter Property="Text" Value="Bağlı değil" />
                         <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                            <DataTrigger Binding="{Binding SystemStatus.IsConnected}" Value="True">
                                 <Setter Property="Text" Value="Bağlı" />
                                 <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                             </DataTrigger>
@@ -58,7 +58,7 @@
         <TextBlock Grid.Row="1" Grid.Column="1" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
                    Foreground="{StaticResource TacticalTextPrimary}" Margin="0,0,0,8">
             <TextBlock.Text>
-                <Binding Path="ServerLatencyLiveMs" StringFormat="{}{0:F0} ms" FallbackValue="— ms" />
+                <Binding Path="SystemStatus.ServerLatencyLiveMs" StringFormat="{}{0:F0} ms" FallbackValue="— ms" />
             </TextBlock.Text>
         </TextBlock>
 
@@ -68,14 +68,14 @@
         <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
                    Foreground="{StaticResource TacticalAccent}" Margin="0,0,0,8">
             <TextBlock.Text>
-                <Binding Path="TelemetryHzMeasured" StringFormat="{}{0:F1} Hz" FallbackValue="— Hz" />
+                <Binding Path="SystemStatus.TelemetryHzMeasured" StringFormat="{}{0:F1} Hz" FallbackValue="— Hz" />
             </TextBlock.Text>
         </TextBlock>
 
         <TextBlock Grid.Row="3" Grid.Column="0" Text="SON DURUM"
                    Style="{StaticResource MetricLabel}" Margin="0,0,16,8"
                    VerticalAlignment="Center" />
-        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TelemetryStatus}"
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SystemStatus.TelemetryStatus}"
                    FontFamily="Consolas" FontSize="13"
                    Foreground="{StaticResource TacticalOk}"
                    Margin="0,0,0,8"
@@ -88,7 +88,7 @@
                    FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
                    Foreground="{StaticResource TacticalTextPrimary}">
             <TextBlock.Text>
-                <Binding Path="LinkRssi" StringFormat="{}{0} dBm" FallbackValue="— dBm" />
+                <Binding Path="Flight.LinkRssi" StringFormat="{}{0} dBm" FallbackValue="— dBm" />
             </TextBlock.Text>
         </TextBlock>
     </Grid>

@@ -22,8 +22,8 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- DataContext = MainWindowViewModel.
-         Tüm sayaçlar 100ms tick'te güncellenir; renk durum severity'sine göre. -->
+    <!-- Sayaçlar SystemStatus alt ViewModel'inden güncellenir;
+         renkler durum önem derecesine göre değişir. -->
     <StackPanel>
         <!-- Alan Sınırı -->
         <Grid Style="{StaticResource StatusRow}">
@@ -38,14 +38,14 @@
                     <Style TargetType="TextBlock" BasedOn="{StaticResource StatusValue}">
                         <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsInsideBoundary}" Value="False">
+                            <DataTrigger Binding="{Binding SystemStatus.IsInsideBoundary}" Value="False">
                                 <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </TextBlock.Style>
                 <TextBlock.Text>
-                    <Binding Path="DistanceToBoundaryEdge" StringFormat="İçeride · {0:F0} m" FallbackValue="— " />
+                    <Binding Path="SystemStatus.DistanceToBoundaryEdge" StringFormat="İçeride · {0:F0} m" FallbackValue="— " />
                 </TextBlock.Text>
             </TextBlock>
         </Grid>
@@ -63,7 +63,7 @@
                     <Style TargetType="TextBlock" BasedOn="{StaticResource StatusValue}">
                         <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HssViolationCount}" Value="0">
+                            <DataTrigger Binding="{Binding SystemStatus.HssViolationCount}" Value="0">
                                 <Setter Property="Text" Value="Temiz · 0 s" />
                                 <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                             </DataTrigger>
@@ -72,8 +72,8 @@
                 </TextBlock.Style>
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0} ihlal · {1:F0} s">
-                        <Binding Path="HssViolationCount" />
-                        <Binding Path="HssViolationSeconds" />
+                        <Binding Path="SystemStatus.HssViolationCount" />
+                        <Binding Path="SystemStatus.HssViolationSeconds" />
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
@@ -90,7 +90,7 @@
             <TextBlock Grid.Column="1" Style="{StaticResource StatusValue}"
                        Foreground="{StaticResource TacticalWarn}">
                 <TextBlock.Text>
-                    <Binding Path="ManualTransitionCount" StringFormat="{}{0} kez" />
+                    <Binding Path="SystemStatus.ManualTransitionCount" StringFormat="{}{0} kez" />
                 </TextBlock.Text>
             </TextBlock>
         </Grid>
@@ -109,7 +109,7 @@
                         <Setter Property="Text" Value="Hazır" />
                         <Setter Property="Foreground" Value="{StaticResource TacticalOk}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsFailsafeActive}" Value="True">
+                            <DataTrigger Binding="{Binding SystemStatus.IsFailsafeActive}" Value="True">
                                 <Setter Property="Text" Value="GCS Kayıp · RTL" />
                                 <Setter Property="Foreground" Value="{StaticResource TacticalCritical}" />
                             </DataTrigger>
@@ -130,7 +130,7 @@
             <TextBlock Grid.Column="1" Style="{StaticResource StatusValue}"
                        Foreground="{StaticResource TacticalTextPrimary}">
                 <TextBlock.Text>
-                    <Binding Path="CommDropoutCount" StringFormat="{}{0} kez" />
+                    <Binding Path="SystemStatus.CommDropoutCount" StringFormat="{}{0} kez" />
                 </TextBlock.Text>
             </TextBlock>
         </Grid>

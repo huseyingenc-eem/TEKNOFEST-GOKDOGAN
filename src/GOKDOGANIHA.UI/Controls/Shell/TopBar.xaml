@@ -107,7 +107,7 @@
                         BorderBrush="{StaticResource TacticalAccent}"
                         BorderThickness="1" CornerRadius="3"
                         Padding="8,4" Margin="0,0,8,0"
-                        Visibility="{Binding IsCameraFullscreen, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                        Visibility="{Binding Overlay.IsCameraFullscreen, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
                     <StackPanel Orientation="Horizontal">
                         <materialIcons:MaterialIcon Kind="Video" Width="13" Height="13"
                                                     Foreground="{StaticResource TacticalAccent}"
@@ -116,7 +116,7 @@
                                    FontFamily="Consolas" FontSize="10" FontWeight="SemiBold"
                                    Foreground="{StaticResource TacticalAccent}"
                                    Margin="6,0,8,0" VerticalAlignment="Center" />
-                        <Button Command="{Binding CloseActiveOverlayCommand}"
+                        <Button Command="{Binding Overlay.CloseActiveCommand}"
                                 Style="{StaticResource OverlayChipCloseButton}"
                                 ToolTip="Kapat">
                             <materialIcons:MaterialIcon Kind="Close" Width="12" Height="12"
@@ -130,7 +130,7 @@
                         BorderBrush="{StaticResource TacticalAccent}"
                         BorderThickness="1" CornerRadius="3"
                         Padding="8,4" Margin="0,0,8,0"
-                        Visibility="{Binding IsSettingsOpen, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                        Visibility="{Binding Overlay.IsSettingsOpen, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
                     <StackPanel Orientation="Horizontal">
                         <materialIcons:MaterialIcon Kind="Cog" Width="13" Height="13"
                                                     Foreground="{StaticResource TacticalAccent}"
@@ -139,7 +139,7 @@
                                    FontFamily="Consolas" FontSize="10" FontWeight="SemiBold"
                                    Foreground="{StaticResource TacticalAccent}"
                                    Margin="6,0,8,0" VerticalAlignment="Center" />
-                        <Button Command="{Binding CloseActiveOverlayCommand}"
+                        <Button Command="{Binding Overlay.CloseActiveCommand}"
                                 Style="{StaticResource OverlayChipCloseButton}"
                                 ToolTip="Kapat">
                             <materialIcons:MaterialIcon Kind="Close" Width="12" Height="12"
@@ -153,24 +153,24 @@
                 <core:StatusPill IconKind="DatabaseSync"
                                  IconBrush="{StaticResource TacticalWarn}"
                                  Label="KAYNAK"
-                                 Value="{Binding FlightDataModeText}" />
+                                 Value="{Binding Flight.DataModeText}" />
                 <core:StatusPill IconKind="Robot"
                                  IconBrush="{StaticResource TacticalAccent}"
                                  Label="MOD"
-                                 Value="{Binding FlightModeDisplay}"
+                                 Value="{Binding Flight.FlightModeDisplay}"
                                  Margin="8,0,0,0" />
-                <core:ConnectionStatusPill Status="{Binding TelemetryConnection}"
-                                           RetryCommand="{Binding RetryTelemetryCommand}"
+                <core:ConnectionStatusPill Status="{Binding SystemStatus.TelemetryConnection}"
+                                           RetryCommand="{Binding SystemStatus.RetryTelemetryCommand}"
                                            ShowRetryWhileBusy="True"
                                            Margin="8,0,0,0" VerticalAlignment="Center" />
-                <core:ConnectionStatusPill Status="{Binding ServerConnection}"
-                                           RetryCommand="{Binding RetryServerConnectionCommand}"
+                <core:ConnectionStatusPill Status="{Binding SystemStatus.ServerConnection}"
+                                           RetryCommand="{Binding SystemStatus.RetryServerConnectionCommand}"
                                            Margin="8,0,0,0" VerticalAlignment="Center" />
-                <core:ConnectionStatusPill Status="{Binding VideoConnection}"
+                <core:ConnectionStatusPill Status="{Binding SystemStatus.VideoConnection}"
                                            Margin="8,0,0,0" VerticalAlignment="Center" />
 
                 <!-- Settings pill-button (matches StatusPill geometry) -->
-                <Button Command="{Binding OpenSettingsCommand}"
+                <Button Command="{Binding Overlay.OpenSettingsCommand}"
                         Click="OnSettingsClick"
                         Style="{StaticResource HeaderIconPillButton}"
                         ToolTip="Ayarlar"

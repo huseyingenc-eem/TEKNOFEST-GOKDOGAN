@@ -13,6 +13,6 @@ public partial class TopBar : UserControl
     private void OnSettingsClick(object sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm)
-            vm.IsSettingsOpen = true;
+            vm.Overlay.IsSettingsOpen = true;
     }
 }

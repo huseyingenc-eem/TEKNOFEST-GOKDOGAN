@@ -68,12 +68,12 @@
                                    VerticalAlignment="Center" />
                         <ProgressBar Grid.Column="2"
                                      Minimum="0" Maximum="100"
-                                     Value="{Binding BatteryProgressValue, Mode=OneWay}"
+                                     Value="{Binding Flight.BatteryProgressValue, Mode=OneWay}"
                                      Height="6" VerticalAlignment="Center"
                                      Background="{StaticResource TacticalBgDeep}"
                                      BorderThickness="0"
                                      Foreground="{StaticResource TacticalOk}" />
-                        <TextBlock Grid.Column="3" Text="{Binding BatteryDisplay}"
+                        <TextBlock Grid.Column="3" Text="{Binding Flight.BatteryDisplay}"
                                    FontFamily="Consolas" FontSize="12" FontWeight="Bold"
                                    Foreground="{StaticResource TacticalTextPrimary}"
                                    Margin="8,0,0,0"
@@ -99,7 +99,7 @@
                                        Margin="6,0,0,0"
                                        VerticalAlignment="Center" />
                         </StackPanel>
-                        <TextBlock Text="{Binding ServerTime}"
+                        <TextBlock Text="{Binding SystemStatus.ServerTime}"
                                    FontFamily="Consolas" FontSize="15" FontWeight="Bold"
                                    Foreground="{StaticResource TacticalTextPrimary}"
                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
@@ -119,7 +119,7 @@
                         <core:CollapsiblePanelFrame Header="RAKİP İHA'LAR"
                                                     IconKind="Airplane"
                                                     IsExpanded="True">
-                            <panels:OpponentsPanel DataContext="{Binding MapVm}" />
+                            <panels:OpponentsPanel DataContext="{Binding Map}" />
                         </core:CollapsiblePanelFrame>
 
                         <core:CollapsiblePanelFrame Header="KİLİTLENME"

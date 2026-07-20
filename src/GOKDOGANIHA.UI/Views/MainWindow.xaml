@@ -40,17 +40,18 @@
 
         <!-- ============ HARİTA KOLONU + OVERLAY'LER ============ -->
         <Grid Grid.Column="0">
-            <map:MapPanel DataContext="{Binding MapVm}" />
+            <map:MapPanel DataContext="{Binding Map}" />
 
             <!-- Top: status bar (sunucu saati + status pills) -->
             <shell:TopBar VerticalAlignment="Top" />
 
             <!-- Top-LEFT overlay: HUD-tarzı kompakt telemetri kartı (tıkla → büyüt) -->
             <telemetry:TelemetryPanel
+                DataContext="{Binding Flight}"
                 VerticalAlignment="Top" HorizontalAlignment="Left"
                 Width="280"
                 Margin="16,78,0,0"
-                IsExpanded="{Binding IsTelemetryExpanded, Mode=TwoWay}" />
+                IsExpanded="{Binding DataContext.Overlay.IsTelemetryExpanded, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" />
 
             <!-- Top-right (harita kolonu içinde): video panel — kilit dörtgeni overlay buradan -->
             <video:VideoPanel
@@ -64,7 +65,7 @@
                              Overlay açıkken küçük yüzeyi gerçekten gizle; paylaşılan
                              oynatıcı arka planda akışı kesmeden devam eder. -->
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsAnyOverlayOpen}" Value="True">
+                            <DataTrigger Binding="{Binding Overlay.IsAnyOpen}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -144,8 +145,8 @@
             </ToggleButton>
 
             <!-- Popover — code-behind butonun pencere konumuna göre Placement ayarlar
-                 (Top/Bottom). DataContext = MainWindowViewModel (default) → MapVm.X
-                 ile commands; App.AppOptions ise iç StackPanel'da x:Static ile. -->
+                 (Top/Bottom). Harita komutları Map alt ViewModel'inden gelir;
+                 App.AppOptions ise iç StackPanel'da x:Static ile kullanılır. -->
             <Popup x:Name="MapMenuPopup"
                    IsOpen="{Binding IsChecked, ElementName=MapMenuToggle, Mode=TwoWay}"
                    PlacementTarget="{Binding ElementName=MapMenuToggle}"
@@ -174,17 +175,16 @@
                                        Margin="6,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
 
-                        <!-- ARAÇLAR — MainWindow DataContext = MainWindowViewModel,
-                             MapVm.X commands kullanılıyor -->
+                        <!-- ARAÇLAR — komutlar Map alt ViewModel'ine bağlanır. -->
                         <TextBlock Text="ARAÇLAR" Style="{StaticResource MetricLabel}" Margin="0,0,0,4" />
                         <UniformGrid Columns="2" Margin="0,0,0,4">
                             <Button Margin="0,0,2,2"
-                                    Command="{Binding MapVm.ToggleDrawPolygonCommand}"
+                                    Command="{Binding Map.ToggleDrawPolygonCommand}"
                                     ToolTip="Sol tık vertex · Sağ tık tamamla">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource MapToolButton}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding MapVm.IsDrawingPolygon}" Value="True">
+                                            <DataTrigger Binding="{Binding Map.IsDrawingPolygon}" Value="True">
                                                 <Setter Property="Foreground" Value="{StaticResource TacticalWarn}" />
                                                 <Setter Property="BorderBrush" Value="{StaticResource TacticalWarn}" />
                                             </DataTrigger>
@@ -197,7 +197,7 @@
                                 </StackPanel>
                             </Button>
                             <Button Margin="2,0,0,2" Style="{StaticResource MapToolButton}"
-                                    Command="{Binding MapVm.ClearPolygonCmdCommand}"
+                                    Command="{Binding Map.ClearPolygonCmdCommand}"
                                     ToolTip="Çizilen alanı sil">
                                 <StackPanel Orientation="Horizontal">
                                     <materialIcons:MaterialIcon Kind="VectorPolylineRemove" Width="13" Height="13" VerticalAlignment="Center" />
@@ -205,7 +205,7 @@
                                 </StackPanel>
                             </Button>
                             <Button Margin="0,2,2,0" Style="{StaticResource MapToolButton}"
-                                    Command="{Binding MapVm.ToggleTrailCommand}"
+                                    Command="{Binding Map.ToggleTrailCommand}"
                                     ToolTip="İz çizgisini aç/kapat">
                                 <StackPanel Orientation="Horizontal">
                                     <materialIcons:MaterialIcon Kind="VectorLine" Width="13" Height="13" VerticalAlignment="Center" />
@@ -213,7 +213,7 @@
                                 </StackPanel>
                             </Button>
                             <Button Margin="2,2,0,0" Style="{StaticResource MapToolButton}"
-                                    Command="{Binding MapVm.ClearTrailCmdCommand}"
+                                    Command="{Binding Map.ClearTrailCmdCommand}"
                                     ToolTip="İz çizgisini sil">
                                 <StackPanel Orientation="Horizontal">
                                     <materialIcons:MaterialIcon Kind="Eraser" Width="13" Height="13" VerticalAlignment="Center" />
@@ -223,8 +223,8 @@
 
                             <!-- SAHTE HSS VERISI URETECI BUTONU -->
                             <Button Margin="0,2,2,0" Style="{StaticResource MapToolButton}"
-                                    Command="{Binding MapVm.GenerateMockHssCmdCommand}"
-                                    Visibility="{Binding IsSimulationMode, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}"
+                                    Command="{Binding Map.GenerateMockHssCmdCommand}"
+                                    Visibility="{Binding Flight.IsSimulationMode, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}"
                                     ToolTip="HSS Bölgelerindeki kare/daire sorununu test etmek için sahte HSS ekler">
                                 <StackPanel Orientation="Horizontal">
                                     <materialIcons:MaterialIcon Kind="Radar" Width="13" Height="13" VerticalAlignment="Center" Foreground="{StaticResource TacticalCritical}" />
@@ -279,7 +279,7 @@
 
         <!-- ============ FULLSCREEN OVERLAY'LER (tüm window'u kaplar) ============ -->
         <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
-                          IsOpen="{Binding IsCameraFullscreen, Mode=TwoWay}"
+                          IsOpen="{Binding Overlay.IsCameraFullscreen, Mode=TwoWay}"
                           Title="GÖREV KAMERASI"
                           Subtitle="Tam ekran · ESC veya arka plana tıklayarak kapat"
                           HeaderIconKind="Video"
@@ -288,7 +288,7 @@
         </core:OverlayHost>
 
         <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
-                          IsOpen="{Binding IsSettingsOpen, Mode=TwoWay}"
+                          IsOpen="{Binding Overlay.IsSettingsOpen, Mode=TwoWay}"
                           Title="AYARLAR"
                           Subtitle="GÖKDOĞAN YKİ yapılandırması"
                           HeaderIconKind="Cog"
@@ -301,7 +301,7 @@
              kamera + QR detection) + büyük ABORT butonu. Tasarım: context-aware UI prensibi —
              pilot görev anında tek bir ekrana odaklanır. -->
         <core:OverlayHost Grid.Column="0" Grid.ColumnSpan="2"
-                          IsOpen="{Binding IsKamikazeFullscreen, Mode=TwoWay}"
+                          IsOpen="{Binding Overlay.IsKamikazeFullscreen, Mode=TwoWay}"
                           Title="KAMİKAZE GÖREVİ"
                           Subtitle="Terminal phase · ABORT butonu ile iptal et"
                           HeaderIconKind="Bomb"

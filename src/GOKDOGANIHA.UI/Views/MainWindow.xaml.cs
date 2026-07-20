@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using GOKDOGANIHA.UI.ViewModels;
 
 namespace GOKDOGANIHA.UI.Views;
 
@@ -9,6 +10,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Closed += (_, _) => (DataContext as MainWindowViewModel)?.Dispose();
     }
 
     /// <summary>

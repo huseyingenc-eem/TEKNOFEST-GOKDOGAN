@@ -55,7 +55,7 @@
                 <TextBlock Text="REC" FontFamily="Consolas" FontSize="12" FontWeight="Bold"
                            Foreground="{StaticResource TacticalCritical}"
                            Margin="8,0,12,0" VerticalAlignment="Center" />
-                <TextBlock Text="{Binding RecordingTime}" FontFamily="Consolas" FontSize="12"
+                <TextBlock Text="{Binding Camera.RecordingTime}" FontFamily="Consolas" FontSize="12"
                            Foreground="{StaticResource TacticalTextPrimary}"
                            VerticalAlignment="Center" />
                 <Border Background="{StaticResource TacticalSurfaceHi}" CornerRadius="3"
@@ -79,7 +79,7 @@
                            Foreground="{StaticResource TacticalAccent}"
                            VerticalAlignment="Center">
                     <TextBlock.Text>
-                        <Binding Path="CameraZoom" StringFormat="{}{0:0.0}x" FallbackValue="1.0x" />
+                        <Binding Path="Camera.Zoom" StringFormat="{}{0:0.0}x" FallbackValue="1.0x" />
                     </TextBlock.Text>
                 </TextBlock>
             </StackPanel>
@@ -95,7 +95,7 @@
                                      StreamUrl="{Binding Settings.Video.RtspUrl}"
                                      NetworkCachingMs="{Binding Settings.Video.NetworkCachingMs}"
                                      UseTcp="{Binding Settings.Video.UseTcp}"
-                                     VideoStatus="{Binding VideoConnection}">
+                                     VideoStatus="{Binding SystemStatus.VideoConnection}">
                 <Grid>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <StackPanel.Style>
@@ -128,13 +128,13 @@
                     <flight:PrimaryFlightDisplay
                         HorizontalAlignment="Left" VerticalAlignment="Bottom"
                         Margin="24,0,0,24"
-                        Pitch="{Binding Pitch}"
-                        Roll="{Binding Roll}"
-                        Heading="{Binding Heading}"
-                        Altitude="{Binding Altitude}"
-                        Airspeed="{Binding Airspeed}"
-                        VerticalSpeed="{Binding VerticalSpeed}"
-                        IsDataValid="{Binding IsVehicleDataValid}" />
+                        Pitch="{Binding Flight.Pitch}"
+                        Roll="{Binding Flight.Roll}"
+                        Heading="{Binding Flight.Heading}"
+                        Altitude="{Binding Flight.Altitude}"
+                        Airspeed="{Binding Flight.Airspeed}"
+                        VerticalSpeed="{Binding Flight.VerticalSpeed}"
+                        IsDataValid="{Binding Flight.IsVehicleDataValid}" />
 
                     <!-- Right stack: target lock info (visible only when locked) -->
                     <Border HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -143,7 +143,7 @@
                             BorderBrush="{StaticResource TacticalCritical}"
                             BorderThickness="1" CornerRadius="4"
                             Padding="14,10" MinWidth="220"
-                            Visibility="{Binding IsLockedDisplay, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                            Visibility="{Binding Flight.IsLockedDisplay, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                 <materialIcons:MaterialIcon Kind="Crosshairs" Width="14" Height="14"
@@ -170,7 +170,7 @@
                                            Foreground="{StaticResource TacticalTextSecondary}"
                                            Margin="0,0,10,2" />
                                 <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="{Binding TargetId, FallbackValue=—}"
+                                           Text="{Binding Flight.TargetId, FallbackValue=—}"
                                            FontFamily="Consolas" FontSize="12"
                                            Foreground="{StaticResource TacticalTextPrimary}" Margin="0,0,0,2" />
 
@@ -182,7 +182,7 @@
                                            Foreground="{StaticResource TacticalCritical}"
                                            Margin="0,0,0,2">
                                     <TextBlock.Text>
-                                        <Binding Path="TargetRange" StringFormat="{}{0:0} m" FallbackValue="— m" />
+                                        <Binding Path="Flight.TargetRange" StringFormat="{}{0:0} m" FallbackValue="— m" />
                                     </TextBlock.Text>
                                 </TextBlock>
 
@@ -193,7 +193,7 @@
                                 <TextBlock Grid.Row="2" Grid.Column="1" FontFamily="Consolas" FontSize="12"
                                            Foreground="{StaticResource TacticalOk}">
                                     <TextBlock.Text>
-                                        <Binding Path="TargetConfidence" StringFormat="{}{0}%" FallbackValue="—" />
+                                        <Binding Path="Flight.TargetConfidence" StringFormat="{}{0}%" FallbackValue="—" />
                                     </TextBlock.Text>
                                 </TextBlock>
                             </Grid>
@@ -218,18 +218,18 @@
                     <!-- Hedef kilit dörtgeni — kamera native 640x480 koordinatlarında.
                          Şartname kırmızı (#FF0000) + video kayıtta görünür olmalı. -->
                     <Viewbox Stretch="Uniform" IsHitTestVisible="False"
-                             Visibility="{Binding HasTargetBox, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                             Visibility="{Binding Flight.HasTargetBox, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
                         <Canvas Width="640" Height="480">
                             <Rectangle Stroke="#FF0000" StrokeThickness="2"
-                                       Width="{Binding TargetWidth}"
-                                       Height="{Binding TargetHeight}"
-                                       Canvas.Left="{Binding TargetBoxLeft}"
-                                       Canvas.Top="{Binding TargetBoxTop}" />
-                            <TextBlock Canvas.Left="{Binding TargetBoxLeft}"
-                                       Canvas.Top="{Binding TargetLabelTop}"
+                                       Width="{Binding Flight.TargetWidth}"
+                                       Height="{Binding Flight.TargetHeight}"
+                                       Canvas.Left="{Binding Flight.TargetBoxLeft}"
+                                       Canvas.Top="{Binding Flight.TargetBoxTop}" />
+                            <TextBlock Canvas.Left="{Binding Flight.TargetBoxLeft}"
+                                       Canvas.Top="{Binding Flight.TargetLabelTop}"
                                        FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        Foreground="#FF0000"
-                                       Text="{Binding TargetTeamNumber, StringFormat=T-{0:00}}" />
+                                       Text="{Binding Flight.TargetTeamNumber, StringFormat=T-{0:00}}" />
                         </Canvas>
                     </Viewbox>
 
@@ -238,7 +238,7 @@
                             Margin="0,12,0,0"
                             CornerRadius="3" Padding="14,5"
                             Background="#D9B41E1E" BorderBrush="#FF4444" BorderThickness="1"
-                            Visibility="{Binding IsLockingActive, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
+                            Visibility="{Binding Flight.IsLockingActive, Converter={x:Static materialDesign:BooleanToVisibilityConverter.CollapsedInstance}}">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="9" Height="9" Fill="#FF4444"
                                      VerticalAlignment="Center" Margin="0,0,8,0" />
@@ -246,7 +246,7 @@
                                        FontSize="12" FontWeight="SemiBold"
                                        Foreground="White"
                                        VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding LockProgressText}"
+                            <TextBlock Text="{Binding Flight.LockProgressText}"
                                        FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        Foreground="#FFD700"
                                        VerticalAlignment="Center"
@@ -260,7 +260,7 @@
                             Margin="0,12,12,0"
                             CornerRadius="3" Padding="10,4"
                             Background="#B3000000" BorderBrush="#666" BorderThickness="1">
-                        <TextBlock Text="{Binding ServerTime}"
+                        <TextBlock Text="{Binding SystemStatus.ServerTime}"
                                    FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                    Foreground="#F1C40F" />
                     </Border>
@@ -272,7 +272,7 @@
         <!-- =========== BOTTOM ACTION BAR =========== -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center"
                     Margin="18,14,18,18">
-            <Button Command="{Binding CameraZoomOutCommand}"
+            <Button Command="{Binding Camera.ZoomOutCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Margin="0,0,8,0" Padding="18,8">
                 <StackPanel Orientation="Horizontal">
@@ -282,7 +282,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Command="{Binding ToggleCameraBandCommand}"
+            <Button Command="{Binding Camera.ToggleBandCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Margin="0,0,8,0" Padding="18,8">
                 <StackPanel Orientation="Horizontal">
@@ -293,14 +293,14 @@
             </Button>
 
             <!-- Lock / unlock primary action -->
-            <Button Command="{Binding ToggleLockCommand}"
+            <Button Command="{Binding Camera.ToggleLockCommand}"
                     Margin="0,0,8,0" Padding="24,10" FontWeight="SemiBold">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                         <Setter Property="Background" Value="{StaticResource TacticalAccent}" />
                         <Setter Property="BorderBrush" Value="{StaticResource TacticalAccent}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsLockedDisplay}" Value="True">
+                            <DataTrigger Binding="{Binding Flight.IsLockedDisplay}" Value="True">
                                 <Setter Property="Background" Value="{StaticResource TacticalCritical}" />
                                 <Setter Property="BorderBrush" Value="{StaticResource TacticalCritical}" />
                             </DataTrigger>
@@ -315,7 +315,7 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="Text" Value="KİLİTLE" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLockedDisplay}" Value="True">
+                                    <DataTrigger Binding="{Binding Flight.IsLockedDisplay}" Value="True">
                                         <Setter Property="Text" Value="KİLİDİ BIRAK" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -325,7 +325,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Command="{Binding CameraSnapshotCommand}"
+            <Button Command="{Binding Camera.SnapshotCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Margin="0,0,8,0" Padding="18,8">
                 <StackPanel Orientation="Horizontal">
@@ -335,7 +335,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Command="{Binding CameraZoomInCommand}"
+            <Button Command="{Binding Camera.ZoomInCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Padding="18,8">
                 <StackPanel Orientation="Horizontal">

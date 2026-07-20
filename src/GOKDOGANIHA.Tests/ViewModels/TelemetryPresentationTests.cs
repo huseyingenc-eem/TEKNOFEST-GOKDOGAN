@@ -1,4 +1,5 @@
 using GOKDOGANIHA.UI.ViewModels;
+using GOKDOGANIHA.UI.ViewModels.Flight;
 
 namespace GOKDOGANIHA.Tests.ViewModels;
 
@@ -7,14 +8,14 @@ public class TelemetryPresentationTests
     [Fact]
     public void Disconnected_vehicle_keeps_last_numeric_snapshot_with_short_status()
     {
-        var vm = new MainWindowViewModel(new MapViewModel())
+        var vm = new FlightTelemetryViewModel(new MapViewModel())
         {
             FlightMode = "AUTO",
             Battery = 74,
             IsArmed = true,
             IsAutonomous = true,
             IsLocked = true,
-            FlightBackendStatusText = "BAĞLANTI KOPTU",
+            BackendStatusText = "BAĞLANTI KOPTU",
             HasVehicleTelemetrySnapshot = true,
             IsVehicleDataValid = false
         };
@@ -32,7 +33,7 @@ public class TelemetryPresentationTests
     [Fact]
     public void Valid_vehicle_data_restores_all_shared_telemetry_presentations()
     {
-        var vm = new MainWindowViewModel(new MapViewModel())
+        var vm = new FlightTelemetryViewModel(new MapViewModel())
         {
             FlightMode = "GUIDED",
             Battery = 68,
@@ -56,7 +57,7 @@ public class TelemetryPresentationTests
     [Fact]
     public void Before_first_packet_panel_reports_waiting_without_default_numbers()
     {
-        var vm = new MainWindowViewModel(new MapViewModel());
+        var vm = new FlightTelemetryViewModel(new MapViewModel());
 
         Assert.True(vm.IsVehicleDataUnavailable);
         Assert.Equal("—", vm.FlightModeDisplay);
@@ -67,11 +68,11 @@ public class TelemetryPresentationTests
     [Fact]
     public void Open_link_without_new_frames_reports_waiting_not_disconnected()
     {
-        var vm = new MainWindowViewModel(new MapViewModel())
+        var vm = new FlightTelemetryViewModel(new MapViewModel())
         {
             HasVehicleTelemetrySnapshot = true,
             IsVehicleDataValid = false,
-            FlightBackendStatusText = "TELEMETRİ BEKLENİYOR"
+            BackendStatusText = "TELEMETRİ BEKLENİYOR"
         };
 
         Assert.Equal("TELEMETRİ BEKLENİYOR", vm.TelemetryAvailabilityMessage);

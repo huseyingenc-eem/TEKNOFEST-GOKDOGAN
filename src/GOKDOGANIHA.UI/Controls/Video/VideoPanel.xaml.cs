@@ -11,6 +11,6 @@ public partial class VideoPanel : UserControl
     private void OnExpandClick(object sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm)
-            vm.IsCameraFullscreen = true;
+            vm.Overlay.IsCameraFullscreen = true;
     }
 }
